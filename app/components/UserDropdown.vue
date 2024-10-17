@@ -1,7 +1,10 @@
 <script setup lang="ts">
+import { useAuthStore } from '~/services/authService/authService';
+
 const { isHelpSlideoverOpen } = useDashboard()
 const { isDashboardSearchModalOpen } = useUIState()
 const { metaSymbol } = useShortcuts()
+const { signOut } = useAuthStore();
 
 const items = computed(() => [
   [{
@@ -40,7 +43,10 @@ const items = computed(() => [
     to: 'https://ui.nuxt.com/pro/purchase',
     target: '_blank'
   }], [{
-    label: 'Sign out',
+    click: async () => {
+      await signOut()
+    },
+    label: 'Cerrar sesion',
     icon: 'i-heroicons-arrow-left-on-rectangle'
   }]
 ])

@@ -5,12 +5,32 @@ const { isHelpSlideoverOpen } = useDashboard()
 
 const links = [{
   id: 'home',
-  label: 'Home',
+  label: 'Inicio',
   icon: 'i-heroicons-home',
-  to: '/',
+  to: '/home',
   tooltip: {
-    text: 'Home',
-    shortcuts: ['G', 'H']
+    text: 'Inicio',
+    shortcuts: []
+  }
+},
+{
+  id: 'planificaciones',
+  label: 'Planificaciones',
+  icon: 'i-heroicons-home',
+  to: '/planificaicones',
+  tooltip: {
+    text: 'Planificaciones',
+    shortcuts: []
+  }
+},
+{
+  id: 'secuencias',
+  label: 'Secuencias',
+  icon: 'i-heroicons-home',
+  to: '/secuencias',
+  tooltip: {
+    text: 'Secuencias',
+    shortcuts: [],
   }
 }, {
   id: 'inbox',
@@ -20,7 +40,7 @@ const links = [{
   badge: '4',
   tooltip: {
     text: 'Inbox',
-    shortcuts: ['G', 'I']
+    shortcuts: []
   }
 }, {
   id: 'users',
@@ -29,11 +49,11 @@ const links = [{
   to: '/users',
   tooltip: {
     text: 'Users',
-    shortcuts: ['G', 'U']
+    shortcuts: []
   }
 }, {
   id: 'settings',
-  label: 'Settings',
+  label: 'Ajustes',
   to: '/settings',
   icon: 'i-heroicons-cog-8-tooth',
   children: [{
@@ -49,7 +69,7 @@ const links = [{
   }],
   tooltip: {
     text: 'Settings',
-    shortcuts: ['G', 'S']
+    shortcuts: []
   }
 }]
 

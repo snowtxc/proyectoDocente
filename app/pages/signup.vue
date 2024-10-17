@@ -1,47 +1,81 @@
 <script setup lang="ts">
+import { useAuthStore } from '~/services/authService/authService';
+import type { CreateUserDTO } from '~/types/user';
+
 definePageMeta({
   layout: 'auth'
 })
 
 useSeoMeta({
-  title: 'Sign up'
+  title: 'Crear cuenta'
 })
+const toast = useToast()
+
 
 const fields = [{
   name: 'name',
   type: 'text',
-  label: 'Name',
-  placeholder: 'Enter your name'
-}, {
+  label: 'Nombres',
+  placeholder: 'Ingresa tu nombre'
+},
+{
+  name: 'lastname',
+  type: 'text',
+  label: 'Apellidos',
+  placeholder: 'Ingresa tu apellido'
+},
+{
   name: 'email',
   type: 'email',
   label: 'Email',
-  placeholder: 'Enter your email'
+  placeholder: 'Ingresar email'
 }, {
   name: 'password',
-  label: 'Password',
+  label: 'Contraseña',
   type: 'password',
-  placeholder: 'Enter your password'
+  placeholder: 'Ingresar contraseña'
 }]
 
 const validate = (state: any) => {
   const errors = []
-  if (!state.email) errors.push({ path: 'email', message: 'Email is required' })
-  if (!state.password) errors.push({ path: 'password', message: 'Password is required' })
+  if (!state.email) errors.push({ path: 'email', message: 'El email es requerido' })
+  if (!state.password) errors.push({ path: 'password', message: 'La contraseña es requerida' })
+  if (!state.name) errors.push({ path: 'name', message: 'El nombre el requerido' })
+
   return errors
 }
 
 const providers = [{
-  label: 'Continue with GitHub',
-  icon: 'i-simple-icons-github',
-  color: 'gray' as const,
+  label: 'Continuar con Google',
+  icon: 'i-simple-icons-google',
+  color: 'white' as const,
   click: () => {
-    console.log('Redirect to GitHub')
+    console.log('Redirect to GitHub login')
   }
 }]
 
-function onSubmit(data: any) {
-  console.log('Submitted', data)
+const { signUp } = useAuthStore()
+
+async function onSubmit(data: any) {
+  const signUpInfo: CreateUserDTO = {
+    nombre1: `${data?.name?.split(" ")[0]}`,
+    nombre2: `${data?.name?.split(" ")[1] || ""}`,
+    apellido1: `${data?.lastname?.split(" ")[0]}`,
+    apellido2: `${data?.lastname?.split(" ")[1] || ""}`,
+    email: `${data?.email}`,
+    password: `${data?.password}`
+  }
+  const resp = await signUp(signUpInfo)
+  if (resp?.ok) {
+    toast.add({
+      title: "Cuenta creada",
+      description: "Su cuenta fue creada correctamente",
+      color: "green"
+    })
+    console.log("cuenta creada");
+  } else {
+    console.log(resp?.error)
+  }
 }
 </script>
 
@@ -54,23 +88,23 @@ function onSubmit(data: any) {
       :validate="validate"
       :providers="providers"
       align="top"
-      title="Create an account"
+      title="Crear cuenta"
       :ui="{ base: 'text-center', footer: 'text-center' }"
-      :submit-button="{ label: 'Create account' }"
+      :submit-button="{ label: 'Crear cuenta' }"
       @submit="onSubmit"
     >
       <template #description>
-        Already have an account? <NuxtLink
+        Ya tienes una cuenta? <NuxtLink
           to="/login"
           class="text-primary font-medium"
-        >Login</NuxtLink>.
+        >Iniciar sesión</NuxtLink>.
       </template>
 
       <template #footer>
-        By signing up, you agree to our <NuxtLink
+        Registrandote, aceptas nuestros <NuxtLink
           to="/"
           class="text-primary font-medium"
-        >Terms of Service</NuxtLink>.
+        >Terminos y condiciones</NuxtLink>.
       </template>
     </UAuthForm>
   </UCard>

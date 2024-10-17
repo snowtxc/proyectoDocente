@@ -1,22 +1,26 @@
 <script setup lang="ts">
+// import { login } from '~/services/authService/authService';
+import { useAuthStore } from '~/services/authService/authService';
+import type { LoginDTO } from '~/types/user';
+
 definePageMeta({
   layout: 'auth'
 })
 
 useSeoMeta({
-  title: 'Login'
+  title: 'Iniciar sesión'
 })
 
 const fields = [{
   name: 'email',
   type: 'email',
   label: 'Email',
-  placeholder: 'Enter your email'
+  placeholder: 'Ingresar correo'
 }, {
   name: 'password',
-  label: 'Password',
+  label: 'Contraseña',
   type: 'password',
-  placeholder: 'Enter your password'
+  placeholder: 'Ingresar contraseña'
 }]
 
 const validate = (state: any) => {
@@ -27,16 +31,26 @@ const validate = (state: any) => {
 }
 
 const providers = [{
-  label: 'Continue with GitHub',
-  icon: 'i-simple-icons-github',
+  label: 'Continuar con Google',
+  icon: 'i-simple-icons-google',
   color: 'white' as const,
   click: () => {
-    console.log('Redirect to GitHub')
+    console.log('Redirect to GitHub login')
   }
 }]
 
-function onSubmit(data: any) {
-  console.log('Submitted', data)
+const { login } = useAuthStore()
+
+async function onSubmit(data: any) {
+  const loginInfo: LoginDTO = {
+    email: data?.email,
+    password: data?.password
+  }
+  const resp = await login(loginInfo)
+  if (resp?.ok) {
+    console.log("cuenta creada");
+  } else {
+  }
 }
 </script>
 
@@ -48,32 +62,33 @@ function onSubmit(data: any) {
       :fields="fields"
       :validate="validate"
       :providers="providers"
-      title="Welcome back"
+      title="Bienvenido"
       align="top"
+      :divider="'o'"
       icon="i-heroicons-lock-closed"
       :ui="{ base: 'text-center', footer: 'text-center' }"
-      :submit-button="{ trailingIcon: 'i-heroicons-arrow-right-20-solid' }"
+      :submit-button="{ label: 'Iniciar sesión', trailingIcon: 'i-heroicons-arrow-right-20-solid' }"
       @submit="onSubmit"
     >
       <template #description>
-        Don't have an account? <NuxtLink
+        No tienes cuenta? <NuxtLink
           to="/signup"
           class="text-primary font-medium"
-        >Sign up</NuxtLink>.
+        >Crear cuenta</NuxtLink>.
       </template>
 
       <template #password-hint>
         <NuxtLink
           to="/"
           class="text-primary font-medium"
-        >Forgot password?</NuxtLink>
+        >Olvidaste la contraseña?</NuxtLink>
       </template>
 
       <template #footer>
-        By signing in, you agree to our <NuxtLink
+        Iniciando, aceptas nuestros <NuxtLink
           to="/"
           class="text-primary font-medium"
-        >Terms of Service</NuxtLink>.
+        >Terminos y condiciones</NuxtLink>.
       </template>
     </UAuthForm>
   </UCard>
