@@ -1,8 +1,5 @@
 <script setup lang="ts">
 useHead({
-  bodyAttrs: {
-    class: 'dark:bg-gray-950'
-  }
 })
 </script>
 
@@ -10,13 +7,13 @@ useHead({
   <div class="h-screen flex items-center justify-center overlay">
     <div class="gradient" />
 
-    <UButton
+    <!-- <UButton
       icon="i-heroicons-home"
       label="Home"
       to="/home"
       color="black"
       class="absolute top-4"
-    />
+    /> -->
 
     <slot />
   </div>
