@@ -25,7 +25,6 @@ export const checkUserAuthentication = async (isPublicPath: boolean) => {
             if (token) {
                 loadingStore.setLoading(true);
                 const user = await authStore.getLoggedUser();
-                console.log("user", user)
                 if (isPublicPath && user) {
                     await navigateTo("/home")
                 } else if (!isPublicPath && !user)  {
