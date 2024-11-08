@@ -7,6 +7,7 @@ export default defineNuxtConfig({
   runtimeConfig: {
     public: {
       apiBaseUrl: process.env.NUXT_PUBLIC_API_BASE_URL,
+      DEFAULT_GRUPO_IMAGE_URL: process.env.NUXT_DEFAULT_GRUPO_IMAGE_URL //definimos la variable de entorno con la url de la imagen por defecto del grupo
     },
   },
 

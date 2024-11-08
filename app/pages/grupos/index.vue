@@ -1,27 +1,37 @@
 <script setup lang="ts">
-import type { User } from '~/types'
+import type { Grupo } from '~/types/grupo';
+import { useGrupoService } from '~/services/grupoService/grupoService';
 
-const defaultColumns = [{
-  key: 'id',
-  label: '#'
-}, {
-  key: 'name',
-  label: 'Name',
+const runtimeConfig = useRuntimeConfig()
+const grupoService = useGrupoService();
+
+const defaultGroupImage = runtimeConfig.public.DEFAULT_GRUPO_IMAGE_URL;
+
+const { getAll } = grupoService;
+
+const grupos = computed(()=> grupoService.grupos)
+
+const defaultColumns = [ 
+  {
+  key: 'nombre',
+  label: 'Nombre',
   sortable: true
 }, {
-  key: 'email',
-  label: 'Email',
+  key: 'grados',
+  label: 'Grados',
   sortable: true
 }, {
-  key: 'location',
-  label: 'Location'
+  key: 'year',
+  label: 'Año Escolar'
 }, {
   key: 'status',
   label: 'Status'
 }]
 
+const isSlideoverOpen = ref(false);
+
 const q = ref('')
-const selected = ref<User[]>([])
+const selected = ref<Grupo[]>([]);
 const selectedColumns = ref(defaultColumns)
 const selectedStatuses = ref([])
 const selectedLocations = ref([])
@@ -33,29 +43,33 @@ const columns = computed(() => defaultColumns.filter(column => selectedColumns.v
 
 const query = computed(() => ({ q: q.value, statuses: selectedStatuses.value, locations: selectedLocations.value, sort: sort.value.column, order: sort.value.direction }))
 
-const { data: users, pending } = await useFetch<User[]>('/api/users', { query, default: () => [] })
 
-const defaultLocations = users.value.reduce((acc, user) => {
-  if (!acc.includes(user.location)) {
-    acc.push(user.location)
-  }
-  return acc
-}, [] as string[])
+// const defaultLocations = users.value.reduce((acc, user) => {
+//   if (!acc.includes(user.location)) {
+//     acc.push(user.location)
+//   }
+//   return acc
+// }, [] as string[])
 
-const defaultStatuses = users.value.reduce((acc, user) => {
-  if (!acc.includes(user.status)) {
-    acc.push(user.status)
-  }
-  return acc
-}, [] as string[])
+// const defaultStatuses = users.value.reduce((acc, user) => {
+//   if (!acc.includes(user.status)) {
+//     acc.push(user.status)
+//   }
+//   return acc
+// }, [] as string[])
 
-function onSelect(row: User) {
-  const index = selected.value.findIndex(item => item.id === row.id)
-  if (index === -1) {
-    selected.value.push(row)
-  } else {
-    selected.value.splice(index, 1)
-  }
+onMounted(async()=>{
+    await getAll();
+})
+
+function onSelect(row: Grupo) {
+  console.log(row)
+  // const index = selected.value.findIndex(item => item.id === row.id)
+  // if (index === -1) {
+  //   selected.value.push(row)
+  // } else {
+  //   selected.value.splice(index, 1)
+  // }
 }
 
 defineShortcuts({
@@ -63,14 +77,19 @@ defineShortcuts({
     input.value?.input?.focus()
   }
 })
+
+const handleUpdateSliderOver = (isOpen)=>{
+   isSlideoverOpen.value = isOpen;
+}
+
 </script>
 
 <template>
   <UDashboardPage>
     <UDashboardPanel grow>
       <UDashboardNavbar
-        title="Users"
-        :badge="users.length"
+        title="Grupos"
+        :badge="grupos.length"
       >
         <template #right>
           <UInput
@@ -78,7 +97,7 @@ defineShortcuts({
             v-model="q"
             icon="i-heroicons-funnel"
             autocomplete="off"
-            placeholder="Filter users..."
+            placeholder="Filtrar Grupos..."
             class="hidden lg:block"
             @keydown.esc="$event.target.blur()"
           >
@@ -88,10 +107,10 @@ defineShortcuts({
           </UInput>
 
           <UButton
-            label="New user"
+            label="Nuevo Grupo"
             trailing-icon="i-heroicons-plus"
             color="gray"
-            @click="isNewUserModalOpen = true"
+            @click="isSlideoverOpen = true"
           />
         </template>
       </UDashboardNavbar>
@@ -130,21 +149,14 @@ defineShortcuts({
         </template>
       </UDashboardToolbar>
 
-      <UDashboardModal
-        v-model="isNewUserModalOpen"
-        title="New user"
-        description="Add a new user to your database"
-        :ui="{ width: 'sm:max-w-md' }"
-      >
-        <UsersForm @close="isNewUserModalOpen = false" />
-      </UDashboardModal>
+      
 
       <UTable
         v-model="selected"
         v-model:sort="sort"
-        :rows="users"
+        :rows="grupos"
         :columns="columns"
-        :loading="pending"
+        :loading="grupoService.isLoading"
         sort-mode="manual"
         class="w-full"
         :ui="{ divide: 'divide-gray-200 dark:divide-gray-800' }"
@@ -153,7 +165,7 @@ defineShortcuts({
         <template #name-data="{ row }">
           <div class="flex items-center gap-3">
             <UAvatar
-              v-bind="row.avatar"
+              :src="defaultGroupImage"
               :alt="row.name"
               size="xs"
             />
@@ -172,5 +184,13 @@ defineShortcuts({
         </template>
       </UTable>
     </UDashboardPanel>
+
+    <!-- Slide over con formulario de grupo -->
+    <UDashboardSlideover v-model="isSlideoverOpen" @update:modelValue="handleUpdateSliderOver">
+      <template #title>
+         Crear nuevo Grupo
+      </template>
+      <GruposForm @close="isSlideoverOpen = false" />
+    </UDashboardSlideover>
   </UDashboardPage>
 </template>
