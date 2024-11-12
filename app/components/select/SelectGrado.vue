@@ -43,8 +43,30 @@
             :model-value="props.modelValue"            
         >
         <template #label>
-            <span class="truncate">{{  (props.multiple && props.modelValue  && Array.isArray(props.modelValue)) ?  props.modelValue?.map(x => x.nombre).join(', ') : props.modelValue?.nombre }}</span>
             <span v-if="!props.modelValue || (typeof props.modelValue == 'object' && props.modelValue.length <= 0)"> {{  props.multiple ? 'Seleccionar Grados' : 'Seleccionar Grado' }} </span>
+
+            <span class="truncate flex flex-wrap gap-2" v-else-if="(props.multiple && props.modelValue  && Array.isArray(props.modelValue))">
+                
+                <BadgeGrado
+                v-for="grado in props.modelValue"
+                :key="grado.id"
+                :grado="grado">
+              </BadgeGrado>
+            </span>
+            <span class="trucante" v-else>
+                <BadgeGrado
+                :key="props.modelValue.id"
+                :grado="props.modelValue">
+              </BadgeGrado>
+                
+            </span>
+        </template>
+
+        <template #option="{ option }">
+            <BadgeGrado
+                :key="option.id"
+                :grado="option">
+              </BadgeGrado>
           </template>
     </USelectMenu>
 </template>

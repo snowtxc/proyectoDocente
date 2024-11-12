@@ -5,8 +5,6 @@ definePageMeta({
 
 const { data: page } = await useAsyncData('index', () => queryContent('/').findOne())
 if (!page.value) {
-  console.log('page')
-  console.log(page)
   throw createError({ statusCode: 404, statusMessage: 'Page not found', fatal: true })
 }
 
