@@ -24,10 +24,11 @@ const defaultColumns = [
 }, {
   key: 'grados',
   label: 'Grados',
-  sortable: true
 }, {
   key: 'year',
-  label: 'Año Escolar'
+  label: 'Año Escolar',
+  sortable: true
+
 }]
 
 const isSlideoverOpen = ref(false);
@@ -208,7 +209,7 @@ const onSearch = ()=>{
       <template #title>
          {{ titleModal }}
       </template>
-      <GruposForm @close="isSlideoverOpen = false" :mode="mode" :grupoSelected="grupoSelected"/>
+      <GruposForm @close="isSlideoverOpen = false" :mode="mode" :grupoSelected="grupoSelected" @on:update="loadGrupos"/>
     </UDashboardSlideover>
   </UDashboardPage>
 </template>

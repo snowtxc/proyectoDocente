@@ -21,7 +21,7 @@ const defaultGroupImage = ref<string>(runtimeConfig.public.DEFAULT_GRUPO_IMAGE_U
 
 const props = withDefaults(defineProps<Props>() , {});
 
-const emit = defineEmits(['close'])
+const emit = defineEmits(['on:update','close'])
 
 const grupoService = useGrupoService();
 const loading = ref(false);
@@ -85,6 +85,8 @@ async function onSubmit(event: FormSubmitEvent<any>) {
       description: props.mode == ModeEnum.CREATE ?  `Se ha creado el grupo ${grupo.nombre} correctamente` : `Se ha modificado el grupo ${grupo.nombre} correctamente`,
       color: "green"
     })
+    emit('on:update');
+    emit('close')
   }
 }
 

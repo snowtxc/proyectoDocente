@@ -51,9 +51,7 @@ export const useGrupoService = defineStore('grupo', () => {
 
     const { $request } = useNuxtApp()
     const resp = await $request<FormData>('post', controller, formData,'multipart/form-data');
-    if(resp.ok){
-      grupos.value.push(resp.data as Grupo);
-    }
+
     return resp;
   }
 
@@ -62,9 +60,7 @@ export const useGrupoService = defineStore('grupo', () => {
     const { $request } = useNuxtApp()
 
     const resp = await $request<FormData>('post', `${controller}/${id}`, formData,'multipart/form-data');
-    if(resp.ok){
-      return resp;
-    }
+    
     return resp;
   }
 
