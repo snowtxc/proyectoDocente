@@ -15,6 +15,7 @@ const color = computed(() => colorMode.value === 'dark' ? '#111827' : 'white')
 const authStore = useAuthStore()
 const errorStore = useErrorStore()
 const loadingStore = useLoadingStore()
+
 const toast = useToast()
 const isPublicPath = LIST_PUBLIC_ROUTES.includes(currentPathname);
 
@@ -25,7 +26,6 @@ onMounted(() => {
 });
 
 const isCheckiing = await checkUserAuthentication(isPublicPath)
-
 
 // set global alert error when API error
 watch(
@@ -42,13 +42,6 @@ watch(
         errorStore.clearError()
       }, 5000)
     }
-  }
-)
-
-watch(
-  () => loadingStore.loading,
-  (newValue) => {
-    console.log("loading", newValue)
   }
 )
 
@@ -96,7 +89,7 @@ useSeoMeta({
     <NuxtLoadingIndicator />
 
     <NuxtLayout>
-      <GlobalSpinner v-if="loadingStore.loading || isCheckiing !== true" />
+      <GlobalSpinner v-if="loadingStore.loading === true || isCheckiing !== true" />
       <NuxtPage v-if="isCheckiing === true" />
     </NuxtLayout>
 
@@ -104,3 +97,10 @@ useSeoMeta({
     <UModals />
   </div>
 </template>
+
+
+<style>
+.UDashboardSlideover {
+  z-index: 5000; /* Ajusta según sea necesario */
+}
+</style>

@@ -2,7 +2,7 @@
 export default defineNuxtConfig({
   extends: ['@nuxt/ui-pro'],
   srcDir: "app",
-  plugins: ['~/plugins/axios.ts'],
+  plugins: ['~/plugins/axios.ts', '~/plugins/v-calendar.ts'],
   modules: ['@nuxt/content', '@nuxt/eslint', '@nuxt/fonts', '@nuxt/ui', '@vueuse/nuxt', '@pinia/nuxt', '@pinia/nuxt'],
   runtimeConfig: {
     public: {
@@ -18,6 +18,7 @@ export default defineNuxtConfig({
     disableTransition: true
   },
 
+  ssr: false,
   routeRules: {
     // Temporary workaround for prerender regression. see https://github.com/nuxt/nuxt/issues/27490
     '/': { prerender: true }

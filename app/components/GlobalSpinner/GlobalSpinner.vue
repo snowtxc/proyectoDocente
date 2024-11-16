@@ -1,20 +1,16 @@
 <script setup lang="ts">
-import { Vue3Lottie } from 'vue3-lottie'
-import lottieSpinner from '@/lotties/spinner.json'
-
+import { Vue3Lottie } from "vue3-lottie";
+import lottieSpinner from "@/lotties/spinner.json";
 </script>
 
-
 <template>
-    <section class="w-screen z-[50] fixed top-0 left-0 h-screen flex items-center justify-center globalSpinner">
-        <client-only>
-            <Vue3Lottie
-      :animationData="lottieSpinner"
-      :height="200"
-      :width="200"
-    />
-        </client-only>
+  <Teleport to="body">
+    <section id="spinnerGlobal"
+      class="w-screen z-[9999] fixed top-0 left-0 h-screen flex items-center justify-center globalSpinner">
+      <Vue3Lottie :animationData="lottieSpinner" :height="200" :width="200" />
     </section>
+  </Teleport>
+
 </template>
 
 <style scoped>
@@ -23,7 +19,6 @@ import lottieSpinner from '@/lotties/spinner.json'
   top: 0;
   left: 0;
   background-color: rgba(0, 0, 0, 0.459);
-  z-index: 11111;
+  z-index: 9999;
 }
-
 </style>

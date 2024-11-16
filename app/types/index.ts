@@ -11,6 +11,26 @@ export interface User {
   location: string
 }
 
+export enum EstadoType {
+  Programada = "Pendiente",
+  Finalizada = "Finalizada",
+  EnCurso = "En curso"
+};
+
+export interface PlanificacionList {
+  id: string,
+  nombre: string
+  rangoTiempos: string
+  tramos: string
+  grupo?: {
+    id: string,
+    nombre: string,
+  }
+  grados: string[]
+  estado: EstadoType
+}
+
+
 export interface Mail {
   id: number
   unread?: boolean

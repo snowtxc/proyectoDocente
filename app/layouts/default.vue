@@ -17,7 +17,7 @@ const links = [{
   id: 'planificaciones',
   label: 'Planificaciones',
   icon: 'i-heroicons-home',
-  to: '/planificaicones',
+  to: '/planificaciones',
   tooltip: {
     text: 'Planificaciones',
     shortcuts: []

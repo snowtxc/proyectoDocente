@@ -46,7 +46,7 @@ export default defineNuxtPlugin((nuxtApp) => {
       return response;
     },
     (error) => {
-      if (error.response && error.response.status === 401) {
+      if (error.response && error.response.status === 401 && !LIST_PUBLIC_ROUTES.includes(window.location.pathname)) {
         window.location.href = "/login";
       }
       return Promise.reject(error);
