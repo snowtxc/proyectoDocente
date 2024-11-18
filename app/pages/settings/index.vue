@@ -204,13 +204,13 @@ async function onSubmit(event: FormSubmitEvent<any>) {
     <UDivider class="mb-4" />
 
     <UDashboardSection
-      title="Account"
-      description="No longer want to use our service? You can delete your account here. This action is not reversible. All information related to this account will be deleted permanently."
+      title="Cuenta"
+      description="¿No deseas utilizar mas el servicio? Puedes desactivar tu cuenta si lo deseas. La accion es reversible, pude activar tu cuenta cuando lo desees."
     >
       <div>
         <UButton
           color="red"
-          label="Delete account"
+          label="Desactivar cuenta"
           size="md"
           @click="isDeleteAccountModalOpen = true"
         />

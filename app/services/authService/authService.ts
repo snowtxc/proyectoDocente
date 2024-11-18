@@ -1,5 +1,5 @@
 // src/services/authService.ts
-import type { CreateUserDTO, LoggedUser, LoginDTO } from '~/types/user'
+import type { CreateUserDTO, DeactivateDTO, LoggedUser, LoginDTO } from '~/types/user'
 import { useNuxtApp } from '#app'
 import { defineStore } from 'pinia'
 
@@ -8,6 +8,7 @@ export const userApi = {
   login: '/login',
   user: '/user',
   logout: '/logout',
+  deactivate: '/auth/deactivate-account'
 }
 
 export const useAuthStore = defineStore('auth', () => {
@@ -55,6 +56,16 @@ export const useAuthStore = defineStore('auth', () => {
     return resp;
   }
 
+  const deactivate = async (data: DeactivateDTO) => {
+    const { $requestWithSpinner } = useNuxtApp()
+    const resp = await $requestWithSpinner<DeactivateDTO>('post', userApi.deactivate, data)
+    if (resp?.ok) {
+      handleCleanStoredToken();
+      navigateTo("/login")
+    }
+    return resp;
+  }
+
 
   return {
     login,
@@ -64,6 +75,7 @@ export const useAuthStore = defineStore('auth', () => {
     getLoggedUser,
     user,
     token,
+    deactivate,
   }
 
 })

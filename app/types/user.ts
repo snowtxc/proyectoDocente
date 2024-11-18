@@ -22,3 +22,7 @@ export interface LoggedUser {
   password?: string
   token?: string
 }
+
+export interface DeactivateDTO {
+  userId: any
+}
