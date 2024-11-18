@@ -1,3 +1,14 @@
+import type { BaseModel } from "./base.model"
+
+export interface User extends BaseModel{
+  nombre1: string
+  nombre2: string
+  apellido1: string
+  apellido2: string
+  email: string,
+  url_image_profile: string
+}
+
 export interface CreateUserDTO {
   nombre1: string
   nombre2: string
@@ -12,13 +23,10 @@ export interface LoginDTO {
   password: string
 }
 
-export interface LoggedUser {
-  id: any
-  nombre1?: string
-  nombre2?: string
-  apellido1?: string
-  apellido2?: string
-  email?: string
-  password?: string
-  token?: string
+export interface UpdateUserProfileDTO{
+  nombre1: string
+  nombre2: string
+  apellido1: string
+  apellido2: string;
+  nuevoAvatar? : string;
 }

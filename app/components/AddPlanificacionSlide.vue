@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue';
-import { useGrupoStore } from '~/services/grupoService/grupoService';
+import { useGrupoService } from '~/services/grupoService/grupoService';
 import { usePlanificacionStore } from '~/services/planificacionService/planificacionService';
 import type { CreatePlanificacionDTO } from '~/types/planificacion';
 
@@ -25,9 +25,9 @@ const errors = ref({
 
 const planificacionStore = usePlanificacionStore()
 
-const grupoStore = useGrupoStore();
-const loadingGrupos = computed(() => grupoStore.loading);
-const grupos = computed(() => grupoStore.grupos);
+const grupoService = useGrupoService();
+const loadingGrupos = computed(() => grupoService.isLoading);
+const grupos = computed(() => grupoService.grupos);
 
 const { createPlanificacion } = planificacionStore;
 const loadingCreatePlanificacion = ref(false);

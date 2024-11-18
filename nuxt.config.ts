@@ -2,8 +2,8 @@
 export default defineNuxtConfig({
   extends: ['@nuxt/ui-pro'],
   srcDir: "app",
-  plugins: ['~/plugins/axios.ts', '~/plugins/v-calendar.ts'],
-  modules: ['@nuxt/content', '@nuxt/eslint', '@nuxt/fonts', '@nuxt/ui', '@vueuse/nuxt', '@pinia/nuxt', '@pinia/nuxt'],
+  plugins: ['~/plugins/axios.ts','~/plugins/v-calendar.ts' ],
+  modules: ['@nuxt/content', '@nuxt/eslint', '@nuxt/fonts', '@nuxt/ui', '@vueuse/nuxt', '@pinia/nuxt',  'pinia-plugin-persistedstate/nuxt'],
   runtimeConfig: {
     public: {
       apiBaseUrl: process.env.NUXT_PUBLIC_API_BASE_URL,

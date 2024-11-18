@@ -4,7 +4,9 @@ import { useAuthStore } from '~/services/authService/authService';
 const { isHelpSlideoverOpen } = useDashboard()
 const { isDashboardSearchModalOpen } = useUIState()
 const { metaSymbol } = useShortcuts()
-const { signOut } = useAuthStore();
+const authStore = useAuthStore();
+const { signOut } = authStore;
+const user = computed(() => authStore.user);
 
 const items = computed(() => [
   [{
@@ -12,9 +14,9 @@ const items = computed(() => [
     label: '',
     disabled: true
   }], [{
-    label: 'Settings',
+    label: 'Configuración',
     icon: 'i-heroicons-cog-8-tooth',
-    to: '/settings'
+    to: '/configuracion'
   }, {
     label: 'Command menu',
     icon: 'i-heroicons-command-line',
@@ -65,12 +67,12 @@ const items = computed(() => [
         color="gray"
         variant="ghost"
         class="w-full"
-        label="Benjamin"
+        :label="user.nombre1"
         :class="[open && 'bg-gray-50 dark:bg-gray-800']"
       >
         <template #leading>
           <UAvatar
-            src="https://avatars.githubusercontent.com/u/739984?v=4"
+            :src="user.url_image_profile"
             size="2xs"
           />
         </template>
@@ -87,10 +89,10 @@ const items = computed(() => [
     <template #account>
       <div class="text-left">
         <p>
-          Signed in as
+          Se inició sesión como
         </p>
         <p class="truncate font-medium text-gray-900 dark:text-white">
-          ben@nuxtlabs.com
+           {{ user.email }}
         </p>
       </div>
     </template>
