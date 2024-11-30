@@ -58,7 +58,7 @@ const loadForm = (grupo: Grupo) =>{
 const validate = (state: any): FormError[] => {
   const errors = []
   if (!form.nombre) errors.push({ path: 'nombre', message: 'Por favor ingresa un nombre al grupo.' })
-  if(form.grados == null ||  form.grados.length <= 0) errors.push({path: 'grados', message: 'Debes ingresar al menos un grado al grupo'})
+  if(form.grados == null ||  form.grados?.length <= 0) errors.push({path: 'grados', message: 'Debes ingresar al menos un grado al grupo'})
   if(!form.year) errors.push({path: 'year',message: 'Debes ingresar el año escolar del grupo' })
   return errors
 }

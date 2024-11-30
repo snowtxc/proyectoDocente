@@ -7,9 +7,7 @@ import type { ListResponse } from '~/types/list-response';
 export const controller = "grupos";
 
 // src/services/authService.ts
-import type { CreateUserDTO, LoggedUser, LoginDTO } from '~/types/user'
-import { useNuxtApp } from '#app'
-import { defineStore } from 'pinia'
+import type { CreateUserDTO, LoginDTO } from '~/types/user'
 export const grupoApi = {
   list: '/grupos/paged',
 }
@@ -26,7 +24,7 @@ export const useGrupoStore = defineStore('grupos', () => {
         if (resp?.ok && resp?.data?.list) {
           grupos.value = resp.data.list;
         }
-    return resp;
+        return resp;
     } catch (error) {
         console.log("error", error)
     } finally {

@@ -16,7 +16,7 @@ const searchTimeOut = ref(null);
 
 const grupos = computed(()=> grupoService.grupos)
 
-const defaultColumns = [ 
+const defaultColumns = [
   {
   key: 'nombre',
   label: 'Nombre',

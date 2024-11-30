@@ -18,6 +18,7 @@ export const handleCleanStoredToken = () => {
 
 export const checkUserAuthentication = async (isPublicPath: boolean) => {
     if (typeof window !== "undefined") {
+
         const loadingStore = useLoadingStore()
         const authStore = useAuthStore();
         try {
@@ -29,6 +30,8 @@ export const checkUserAuthentication = async (isPublicPath: boolean) => {
                     await navigateTo("/home")
                 } else if (!isPublicPath && !user)  {
                     await navigateTo("/login")
+                } else {
+                    return true;
                 }
             } else {
                 if (!isPublicPath) {

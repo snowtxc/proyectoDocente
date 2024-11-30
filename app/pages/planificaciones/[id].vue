@@ -1,16 +1,16 @@
 <script setup lang="ts">
-import { usePlanificacionStore } from "~/services/planificacionService/planificacionService";
+import { usePlanificacionService } from "~/services/planificacionService/planificacionService";
 
 const route = useRoute();
 const id = route.params.id;
-const planificacionStore = usePlanificacionStore();
+const planificacionService = usePlanificacionService();
 
-const loadedPlanificacion = computed(() => planificacionStore.loadedPlanificacion)
+const loadedPlanificacion = computed(() => planificacionService.loadedPlanificacion)
 const errorPage = ref({ ok: false, message: "" });
 
 onMounted(async () => {
     if (id) {
-        await planificacionStore.getPlanificacion(id as string, (msg: string) => {
+        await planificacionService.getPlanificacion(id as string, (msg: string) => {
             errorPage.value = {
                 ok: true,
                 message: msg,
