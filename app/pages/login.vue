@@ -11,6 +11,32 @@ useSeoMeta({
   title: 'Iniciar sesión'
 })
 
+
+import {
+  useTokenClient,
+  type AuthCodeFlowSuccessResponse,
+  type AuthCodeFlowErrorResponse,
+} from "vue3-google-signin";
+
+const { login, loginWithGoogleCallback } = useAuthStore()
+
+const handleOnSuccess = (response: AuthCodeFlowSuccessResponse) => {
+  loginWithGoogleCallback(response.access_token).then(data =>{
+    console.log(data);
+  })
+};
+
+const handleOnError = (errorResponse: AuthCodeFlowErrorResponse) => {
+  console.log("Error: ", errorResponse);
+};
+
+const { isReady, login: loginWithGoogle } = useTokenClient({
+  onSuccess: handleOnSuccess,
+  onError: handleOnError,
+  // other options
+});
+
+
 const fields = [{
   name: 'email',
   type: 'email',
@@ -35,11 +61,10 @@ const providers = [{
   icon: 'i-simple-icons-google',
   color: 'white' as const,
   click: () => {
-    console.log('Redirect to GitHub login')
+    loginWithGoogle();
   }
 }]
 
-const { login } = useAuthStore()
 
 async function onSubmit(data: any) {
   const loginInfo: LoginDTO = {

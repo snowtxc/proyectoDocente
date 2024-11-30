@@ -6,6 +6,7 @@ import { defineStore } from 'pinia'
 export const authApi = {
   register: '/register',
   login: '/login',
+  loginWithGoogleCallback: '/login/google/callback',
   user: '/user',
   logout: '/logout',
   updateProfile: '/auth/updateProfile'
@@ -65,6 +66,18 @@ export const useAuthStore = defineStore('auth', () => {
     return resp;
   }
 
+  const loginWithGoogleCallback = async(access_token: string)=>{
+    const { $requestWithSpinner } = useNuxtApp()
+    const resp = await $requestWithSpinner('post', `${authApi.loginWithGoogleCallback}`, {access_token});
+    if(resp.ok){
+      token.value = resp?.data?.token as string;
+      user.value = resp?.data?.user as User;
+      handleSetStoredToken(resp?.data?.token as string)
+    }
+    navigateTo({ path: '/home' })
+    return resp;  
+  }
+
   return {
     login,
     getCsrf,
@@ -73,7 +86,8 @@ export const useAuthStore = defineStore('auth', () => {
     getLoggedUser,
     user,
     token,
-    updateProfile
+    updateProfile,
+    loginWithGoogleCallback
   }
 
 } , 

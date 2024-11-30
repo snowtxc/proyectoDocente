@@ -3,7 +3,11 @@ export default defineNuxtConfig({
   extends: ['@nuxt/ui-pro'],
   srcDir: "app",
   plugins: ['~/plugins/axios.ts','~/plugins/v-calendar.ts' ],
-  modules: ['@nuxt/content', '@nuxt/eslint', '@nuxt/fonts', '@nuxt/ui', '@vueuse/nuxt', '@pinia/nuxt',  'pinia-plugin-persistedstate/nuxt'],
+  modules: ['@nuxt/content', '@nuxt/eslint', '@nuxt/fonts', '@nuxt/ui', '@vueuse/nuxt', '@pinia/nuxt',  'pinia-plugin-persistedstate/nuxt','nuxt-vue3-google-signin'],
+  
+  googleSignIn: {
+    clientId: process.env.NUXT_GOOGLE_CLIENT_ID,
+  },
   runtimeConfig: {
     public: {
       apiBaseUrl: process.env.NUXT_PUBLIC_API_BASE_URL,
