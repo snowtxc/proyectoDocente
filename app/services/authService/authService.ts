@@ -74,7 +74,6 @@ export const useAuthStore = defineStore('auth', () => {
       user.value = resp?.data?.user as User;
       handleSetStoredToken(resp?.data?.token as string)
     }
-    navigateTo({ path: '/home' })
     return resp;  
   }
 

@@ -16,9 +16,9 @@ const isDeleteAccountModalOpen = ref(false)
 
 const form = reactive<UpdateUserProfileDTO>({
   nombre1: user.value.nombre1,
-  nombre2: user.value.nombre2,
-  apellido1: user.value.apellido1,
-  apellido2: user.value.apellido2,
+  nombre2: user.value.nombre2 || "",
+  apellido1: user.value.apellido1 || "",
+  apellido2: user.value.apellido2 || "",
   nuevoAvatar: undefined
 })
 

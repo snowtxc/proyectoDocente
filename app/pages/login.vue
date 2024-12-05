@@ -18,22 +18,27 @@ import {
   type AuthCodeFlowErrorResponse,
 } from "vue3-google-signin";
 
+import { useErrorStore } from '~/services/errorService/errorService';
+
+const errorService =   useErrorStore();
+
 const { login, loginWithGoogleCallback } = useAuthStore()
 
-const handleOnSuccess = (response: AuthCodeFlowSuccessResponse) => {
-  loginWithGoogleCallback(response.access_token).then(data =>{
-    console.log(data);
-  })
-};
+const handleOnSuccess = async(response: AuthCodeFlowSuccessResponse) => {
+  const responseGoogle =  await loginWithGoogleCallback(response.access_token);
+  if(responseGoogle){
+    navigateTo({ path: '/home' });
+  }
+}
+
 
 const handleOnError = (errorResponse: AuthCodeFlowErrorResponse) => {
-  console.log("Error: ", errorResponse);
+  errorService.setError(errorResponse.error_description);
 };
 
 const { isReady, login: loginWithGoogle } = useTokenClient({
   onSuccess: handleOnSuccess,
   onError: handleOnError,
-  // other options
 });
 
 
@@ -61,6 +66,7 @@ const providers = [{
   icon: 'i-simple-icons-google',
   color: 'white' as const,
   click: () => {
+    // Se abré el login en base a nuestro client-id generado
     loginWithGoogle();
   }
 }]
