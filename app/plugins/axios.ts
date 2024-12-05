@@ -20,10 +20,11 @@ export default defineNuxtPlugin((nuxtApp) => {
 
   const api = axios.create({
     baseURL: `${runtimeConfig.public.apiBaseUrl}`,
-    timeout: 10000,
+    timeout: 100000,
     withCredentials: true,
     withXSRFToken: true,
   });
+  
   const errorStore = useErrorStore((nuxtApp as any).$pinia)
   const loadingStore = useLoadingStore((nuxtApp as any).$pinia)
 
@@ -46,19 +47,20 @@ export default defineNuxtPlugin((nuxtApp) => {
       return response;
     },
     (error) => {
-      if (error.response && error.response.status === 401) {
+      if (error.response && error.response.status === 401 && !LIST_PUBLIC_ROUTES.includes(window.location.pathname)) {
         window.location.href = "/login";
       }
       return Promise.reject(error);
     }
   );
 
-  const request = async (method, url, data = null) => {
+  const request = async (method, url, data = null, contentType = 'application/json') => {
     try {
       const csrfCookie = getCookie("XSRF-TOKEN");
       const response = await api({ method, url, data } as any, {
         headers: {
           "X-CSRF-TOKEN": csrfCookie || "",
+          'Content-Type': contentType
         },
       });
       return {

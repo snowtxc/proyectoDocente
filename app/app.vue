@@ -15,17 +15,25 @@ const color = computed(() => colorMode.value === 'dark' ? '#111827' : 'white')
 const authStore = useAuthStore()
 const errorStore = useErrorStore()
 const loadingStore = useLoadingStore()
+
 const toast = useToast()
 const isPublicPath = LIST_PUBLIC_ROUTES.includes(currentPathname);
+const isChecking = ref(true);
 
-onMounted(() => {
+onMounted(async () => {
   if (LIST_PUBLIC_ROUTES.includes(currentPathname)) {
     authStore.getCsrf()
   }
+  try {
+    isChecking.value = true;
+    await checkUserAuthentication(isPublicPath)
+  } catch (error) {
+    console.error(error);
+  } finally {
+    isChecking.value = false;
+  }
+
 });
-
-const isCheckiing = await checkUserAuthentication(isPublicPath)
-
 
 // set global alert error when API error
 watch(
@@ -45,17 +53,11 @@ watch(
   }
 )
 
-watch(
-  () => loadingStore.loading,
-  (newValue) => {
-    console.log("loading", newValue)
-  }
-)
 
 watch(
   () => [authStore.token, authStore.user],
   (newValue) => {
-    if (handleGetSotredToken() && !authStore.user) {
+    if (authStore.token || !authStore.user) {
       checkUserAuthentication(isPublicPath)
     }
 
@@ -96,11 +98,18 @@ useSeoMeta({
     <NuxtLoadingIndicator />
 
     <NuxtLayout>
-      <GlobalSpinner v-if="loadingStore.loading || isCheckiing !== true" />
-      <NuxtPage v-if="isCheckiing === true" />
+      <GlobalSpinner v-if="loadingStore.loading === true || isChecking === true" />
+      <NuxtPage v-if="isChecking == false" />
     </NuxtLayout>
 
     <UNotifications />
     <UModals />
   </div>
 </template>
+
+
+<style>
+.UDashboardSlideover {
+  z-index: 5000; /* Ajusta según sea necesario */
+}
+</style>

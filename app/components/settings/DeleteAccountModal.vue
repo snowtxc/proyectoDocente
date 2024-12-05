@@ -21,8 +21,8 @@ function onDelete() {
 <template>
   <UDashboardModal
     v-model="model"
-    title="Delete account"
-    description="Are you sure you want to delete your account?"
+    title="Eliminar Cuenta"
+    description="¿Estás seguro que deseas eliminar tu cuenta?"
     icon="i-heroicons-exclamation-circle"
     prevent-close
     :close-button="null"
@@ -38,7 +38,7 @@ function onDelete() {
     <template #footer>
       <UButton
         color="red"
-        label="Delete"
+        label="Eliminar Cuenta"
         :loading="loading"
         @click="onDelete"
       />

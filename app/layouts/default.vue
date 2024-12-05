@@ -14,10 +14,21 @@ const links = [{
   }
 },
 {
+  id: 'grupos',
+  label: 'Grupos',
+  icon: 'healthicons:i-groups-perspective-crowd-outline',
+  to: '/grupos',
+  tooltip: {
+    text: 'Grupos',
+    shortcuts: []
+  }
+},
+
+{
   id: 'planificaciones',
   label: 'Planificaciones',
   icon: 'i-heroicons-home',
-  to: '/planificaicones',
+  to: '/planificaciones',
   tooltip: {
     text: 'Planificaciones',
     shortcuts: []
