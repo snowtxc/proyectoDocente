@@ -5,7 +5,6 @@ import type { ListRequest } from '~/types/list-request';
 import type { ListResponse } from '~/types/list-response';
 
 export const controller = "grupos";
-
 export const grupoApi = {
   list: '/grupos/paged',
 }
@@ -21,7 +20,7 @@ export const useGrupoStore = defineStore('grupos', () => {
         if (resp?.ok && resp?.data?.list) {
           grupos.value = resp.data.list;
         }
-    return resp;
+        return resp;
     } catch (error) {
         console.log("error", error)
     } finally {

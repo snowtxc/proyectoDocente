@@ -10,10 +10,10 @@ export const formattedImageUrlGrupo = (image_url: any) => {
 
 export const getColorsEstado = (estado: string): string => {
     if (estado == EstadoType.Finalizada) {
-        return `ring-2 bg-opacity-10 bg-green-500 text-green-600 ring-green-500`
+        return `green`
     } else if (estado === EstadoType.EnCurso) {
-        return `ring-2 bg-opacity-10 bg-yellow-500 text-yellow-600 ring-yellow-500`
+        return `orange`
     } else {
-        return `ring-2 bg-opacity-10 bg-blue-500 text-blue-600 ring-blue-500`
+        return `blue`
     }
 };

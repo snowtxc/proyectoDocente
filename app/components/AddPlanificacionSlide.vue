@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue';
-import { useGrupoService } from '~/services/grupoService/grupoService';
-import { usePlanificacionStore } from '~/services/planificacionService/planificacionService';
+import { useGrupoService, useGrupoStore } from '~/services/grupoService/grupoService';
+import { usePlanificacionService } from '~/services/planificacionService/planificacionService';
 import type { CreatePlanificacionDTO } from '~/types/planificacion';
 
 const props = defineProps<{ open: boolean }>();
@@ -23,31 +23,31 @@ const errors = ref({
     selectedGrupo: '',
 });
 
-const planificacionStore = usePlanificacionStore()
+const planificacionService = usePlanificacionService()
 
-const grupoService = useGrupoService();
-const loadingGrupos = computed(() => grupoService.isLoading);
-const grupos = computed(() => grupoService.grupos);
+const grupoStore = useGrupoStore()
+const loadingGrupos = computed(() => grupoStore.loading);
+const grupos = computed(() => grupoStore.grupos);
 
-const { createPlanificacion } = planificacionStore;
+const { createPlanificacion } = planificacionService;
 const loadingCreatePlanificacion = ref(false);
 
 const valComputed = computed(() => loadingCreatePlanificacion);
 
 watch(
-  () => props.open,
-  async (newVal) => {
-    if (newVal) {
-        await grupoStore.getGrupos();
+    () => props.open,
+    async (newVal) => {
+        if (newVal) {
+            await grupoStore.getGrupos();
+        }
     }
-  }
 );
 
 watch(
-  () => planificacionStore.loading,
-  async (newVal) => {
-    loadingCreatePlanificacion.value = newVal;
-  }
+    () => planificacionService.loading,
+    async (newVal) => {
+        loadingCreatePlanificacion.value = newVal;
+    }
 );
 
 
@@ -79,9 +79,9 @@ const handleSubmit = async () => {
         const resp = await createPlanificacion(dataToCreatePlanificacion);
         if (resp?.ok) {
             closeSlideover();
-        } 
+        }
     } else {
-        
+
     }
 };
 </script>
@@ -97,13 +97,13 @@ const handleSubmit = async () => {
         <div class="flex w-full flex-col items-center justify-start gap-5">
             <div class="w-full">
                 <label for="name" class="block text-gray-700 mb-2">Nombre</label>
-                <UInput id="name" v-model="formData.nombre" icon="i-heroicons-magnifying-glass" placeholder="Ingresa un nombre"
-                    class="w-full" autofocus color="gray" />
+                <UInput id="name" v-model="formData.nombre" icon="i-heroicons-magnifying-glass"
+                    placeholder="Ingresa un nombre" class="w-full" autofocus color="gray" />
                 <p v-if="errors.nombre" class="text-red-500 text-sm mt-1">{{ errors.nombre }}</p>
             </div>
 
             <div class="w-full relative">
-                <label for="date" class="block text-gray-700 mb-2">Rango de fechas</label>
+                <label for="date" class="block text-gray-700 mb-2">Fechas</label>
                 <v-date-picker :focus="false" id="date" v-model="formData.rangeDate" is-range>
                     <template #default="{ inputValue, inputEvents }">
                         <UInput :autofocus="false" color="gray" icon="material-symbols-light:calendar-month-rounded"
@@ -117,8 +117,9 @@ const handleSubmit = async () => {
 
             <div class="w-full">
                 <label for="date" class="block text-gray-700 mb-2">Grupo</label>
-                <USelectMenu searchable v-model="formData.selectedGrupo" :options="grupos?.map((grupo) => ({ key: grupo?.id, label: grupo?.nombre, image: grupo?.url_image }))"
-                    placeholder="Selecciinar grupo">
+                <USelectMenu searchable v-model="formData.selectedGrupo"
+                    :options="grupos?.map((grupo) => ({ key: grupo?.id, label: grupo?.nombre, image: grupo?.url_image }))"
+                    placeholder="Seleccionar grupo">
                     <template #leading>
                         <UAvatar v-bind="{ src: formattedImageUrl }" size="2xs" />
                     </template>
@@ -126,7 +127,11 @@ const handleSubmit = async () => {
                 <p v-if="errors.selectedGrupo" class="text-red-500 text-sm mt-1">{{ errors.selectedGrupo }}</p>
             </div>
 
-            <UButton :loading="loadingCreatePlanificacion || grupoStore.loading" label="Crear planificacion" @click="handleSubmit" color="blue" block />
+            <div class="flex w-full justify-end gap-3">
+                <UButton label="Cancelar" color="gray" variant="ghost" @click="closeSlideover" />
+                <UButton type="submit" @click="handleSubmit" label="Guardar" color="black"
+                    :loading="loadingCreatePlanificacion || grupoStore.loading" />
+            </div>
         </div>
     </UDashboardSlideover>
 </template>
