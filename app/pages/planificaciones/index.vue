@@ -39,7 +39,6 @@ const selectedColumns = ref(defaultColumns);
 const openAddModal = ref(false);
 const sort = ref({ column: "id", direction: "asc" as const });
 const input = ref<{ input: HTMLInputElement }>();
-const isNewUserModalOpen = ref(false);
 const planificacionesStore = usePlanificacionService();
 const { getPlanificaciones, paginationFilters } = planificacionesStore;
 const columns = computed(() =>
@@ -211,12 +210,7 @@ defineShortcuts({
                 </template>
             </UDashboardToolbar>
 
-            <UDashboardModal v-model="isNewUserModalOpen" title="New user" description="Add a new user to your database"
-                :ui="{ width: 'sm:max-w-md' }">
-                <!-- ~/components/users/UsersForm.vue -->
-                <UsersForm @close="isNewUserModalOpen = false" />
-            </UDashboardModal>
-
+    
             <UTable :empty-state="{
                 icon: 'i-heroicons-circle-stack-20-solid',
                 label: 'No hay planificaciones creadas',

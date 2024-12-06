@@ -1,8 +1,15 @@
 <script setup lang="ts">
+
+const runtimeConfig = useRuntimeConfig()
+
+const defaultLogo= ref<string>(runtimeConfig.public.DEFAULT_GRUPO_IMAGE_URL);
+
+
+
 const teams = [{
-  label: 'Nuxt',
+  label: 'Proyecto Docentes',
   avatar: {
-    src: 'https://avatars.githubusercontent.com/u/23360933?s=200&v=4'
+    src: defaultLogo
   },
   click: () => {
     team.value = teams[0]

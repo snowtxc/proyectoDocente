@@ -36,7 +36,7 @@ const categories = computed(() => [{
     { shortcuts: [metaSymbol.value, 'K'], name: 'Command menu' },
     { shortcuts: ['N'], name: 'Notifications' },
     { shortcuts: ['?'], name: 'Help & Support' },
-    { shortcuts: ['/'], name: 'Search' }
+    { shortcuts: ['/'], name: 'Buscar ..' }
   ]
 }, {
   title: 'Navigation',
@@ -86,7 +86,7 @@ const filteredCategories = computed(() => {
       <UInput
         v-model="query"
         icon="i-heroicons-magnifying-glass"
-        placeholder="Search..."
+        placeholder="Buscar ..."
         autofocus
         color="gray"
       />

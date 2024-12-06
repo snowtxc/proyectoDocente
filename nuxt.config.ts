@@ -3,7 +3,24 @@ export default defineNuxtConfig({
   extends: ['@nuxt/ui-pro'],
   srcDir: "app",
   plugins: ['~/plugins/axios.ts','~/plugins/v-calendar.ts' ],
-  modules: ['@nuxt/content', '@nuxt/eslint', '@nuxt/fonts', '@nuxt/ui', '@vueuse/nuxt', '@pinia/nuxt',  'pinia-plugin-persistedstate/nuxt','nuxt-vue3-google-signin'],
+  modules: [
+    '@nuxt/content',
+    '@nuxt/eslint',
+    '@nuxt/fonts',
+    '@nuxt/ui',
+    '@vueuse/nuxt',
+    '@pinia/nuxt',
+    'pinia-plugin-persistedstate/nuxt',
+    'nuxt-vue3-google-signin',
+    '@nuxtjs/i18n'
+  ],
+
+  i18n: {
+    locales: [
+      { code: 'es', name: 'Español', iso: 'es-UY' } // Definir el idioma español
+    ],
+    defaultLocale: 'es' // Idioma por defecto
+  },
   
   googleSignIn: {
     clientId: process.env.NUXT_GOOGLE_CLIENT_ID,
