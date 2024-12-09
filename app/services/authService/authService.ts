@@ -9,7 +9,8 @@ export const authApi = {
   loginWithGoogleCallback: '/login/google/callback',
   user: '/user',
   logout: '/logout',
-  updateProfile: '/auth/updateProfile'
+  updateProfile: '/auth/updateProfile',
+  forgotPassword: '/forgot-password',
 }
 
 export const useAuthStore = defineStore('auth', () => {
@@ -74,7 +75,13 @@ export const useAuthStore = defineStore('auth', () => {
       user.value = resp?.data?.user as User;
       handleSetStoredToken(resp?.data?.token as string)
     }
-    return resp;  
+    return resp;
+  }
+
+  const forgotPassword = async (email: string) => {
+    const { $requestWithSpinner } = useNuxtApp()
+    const resp = await $requestWithSpinner('post', authApi.forgotPassword, {email});
+    return resp;
   }
 
   return {
@@ -86,10 +93,11 @@ export const useAuthStore = defineStore('auth', () => {
     user,
     token,
     updateProfile,
-    loginWithGoogleCallback
+    loginWithGoogleCallback,
+    forgotPassword,
   }
 
-} , 
+} ,
 {
   persist: true
 })
