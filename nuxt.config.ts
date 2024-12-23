@@ -12,8 +12,12 @@ export default defineNuxtConfig({
     '@pinia/nuxt',
     'pinia-plugin-persistedstate/nuxt',
     'nuxt-vue3-google-signin',
-    '@nuxtjs/i18n'
+    '@nuxtjs/i18n',
+    'nuxt-tiptap-editor'
   ],
+  tiptap: {
+    prefix: 'Tiptap', //prefix for Tiptap imports, composables not included
+  },
 
   i18n: {
     locales: [
