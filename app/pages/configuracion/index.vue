@@ -92,7 +92,6 @@ async function onSubmit(event: FormSubmitEvent<any>) {
             <UButton label="Importar Foto de Perfil" class="mt-2"  color="white" size="md" @click="onFileClick" />
           </div>
 
-
           <input ref="fileRef" type="file" class="hidden" accept=".jpg, .jpeg, .png, .gif" @change="onFileChange">
         </UFormGroup>
 
