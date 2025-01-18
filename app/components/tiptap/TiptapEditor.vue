@@ -10,10 +10,21 @@ import TableHeader from "@tiptap/extension-table-header";
 import { Image } from "./extensions/image-extension";
 import BubbleMenu from "@tiptap/extension-bubble-menu"
 import { Editor} from '@tiptap/vue-3'
+import Underline  from "@tiptap/extension-underline";
+import TextStyle from "@tiptap/extension-text-style";
+import { Color } from '@tiptap/extension-color'
+import Highlight from "@tiptap/extension-highlight";
+import FontFamily from "@tiptap/extension-font-family";
+import FontSize from "tiptap-extension-font-size";
+import Paragraph from '@tiptap/extension-paragraph';
+
 
 // Bubble Menus.
 import ImageBubbleMenu from './bubble-menus/ImageBubbleMenu.vue'
 import TextBubbleMenu from './bubble-menus/TextBubbleMenu.vue'
+import LinkBubbleMenu from './bubble-menus/LinkBubbleMenu.vue'
+
+import { Link } from './extensions/link-extension'
 
 // enums
 import { AlignEnum } from '~/utils/enums/AlignEnum'
@@ -156,6 +167,17 @@ onMounted(()=>{
         Image,
         Gapcursor,
         TiptapHorizontalRule,
+        Underline,
+        TextStyle.configure({ mergeNestedSpanStyles: true }),
+        Color,
+        FontSize,
+        Paragraph,
+        Link.configure({
+          openOnClick: false,
+        }),
+        Highlight.configure({
+          multicolor: true,
+        }),
         BubbleMenu.configure({
           pluginKey: 'imageBubbleMenu',
           element: document.querySelector('.image-menu'),
@@ -173,8 +195,22 @@ onMounted(()=>{
             // Verifica si el nodo seleccionado es un texto
             const { from, to } = editor.state.selection;
             const node = editor.state.doc.nodeAt(from);
-            return node && node.type.name === 'text'; // Se muestra solo si el nodo es un párrafo (texto)
+            return node && node.type.name === 'text' && !editor.isActive('link'); // Se muestra solo si el nodo es un párrafo (texto)
           }
+        }),
+
+        BubbleMenu.configure({
+          pluginKey: 'linkBubbleMenu',
+          element: document.querySelector('.link-menu'),
+          shouldShow: ({ editor }) => {
+            // Verifica si el nodo seleccionado es un texto
+            const { from, to } = editor.state.selection;
+            const node = editor.state.doc.nodeAt(from);
+            return node && node.type.name === 'text' && editor.isActive('link'); // Se muestra solo si el nodo es un texto y tiene activo el link
+          }
+        }),
+        FontFamily.configure({
+          types: ['textStyle']
         })
       ],
 
@@ -248,8 +284,12 @@ const handleUpdateRangeImageEvent = (range)=>{
         </div>
     
         <!-- Menu para texto -->
-        <div class="text-menu" >
+        <div class="text-menu w-full" >
           <TextBubbleMenu :editor="editor"> </TextBubbleMenu>
+        </div>
+
+        <div class="link-menu w-full" >
+           <LinkBubbleMenu :editor="editor"></LinkBubbleMenu>
         </div>
 
 
@@ -265,17 +305,15 @@ const handleUpdateRangeImageEvent = (range)=>{
     margin-top: 0;
   }
 
-  /* List styles */
-  ul,
-  ol {
-    padding: 0 1rem;
-    margin: 1.25rem 1rem 1.25rem 0.4rem;
-
-    li p {
-      margin-top: 0.25em;
-      margin-bottom: 0.25em;
-    }
+  p{
+    margin: 0 0;
+    padding: 0 0;
+    font-size: 16px;
+    color: black;
   }
+
+  /* List styles */
+  
 
   /* Task list specific styles */
   ul[data-type="taskList"] {
@@ -284,7 +322,7 @@ const handleUpdateRangeImageEvent = (range)=>{
     padding: 0;
 
     li {
-      align-items: flex-start;
+      align-items: center;
       display: flex;
 
       > label {
@@ -404,6 +442,45 @@ const handleUpdateRangeImageEvent = (range)=>{
     padding: 5px 10px;
     text-align: center;
   }
+
+  
+
+  ul {
+    margin-left: 1em;
+    padding: 0 !important;    
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding-left: 0;
+  }
+  
+
+  ul li {
+    align-items: center;
+    padding: 0 !important;
+    margin: 0 !important; /* Espaciado entre elementos */    
+  }
+
+  
+  ul li::marker {
+    color: black; /* Cambia el color de las viñetas */
+  }
+
+  ol{
+    margin-left: -1em;
+  }
+
+  ol li::marker {
+    color: black; /* Cambia el color de las viñetas */
+    font-size: 16px;
+  }
+
+
+  a {
+    color: #3b82f6;
+    cursor: pointer;
+  }
+  
 }
 
 
