@@ -4,8 +4,6 @@ const runtimeConfig = useRuntimeConfig()
 
 const defaultLogo= ref<string>(runtimeConfig.public.DEFAULT_GRUPO_IMAGE_URL);
 
-
-
 const teams = [{
   label: 'Proyecto Docentes',
   avatar: {

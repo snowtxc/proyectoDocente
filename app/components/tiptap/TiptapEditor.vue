@@ -3,10 +3,10 @@
 import TaskItem from '@tiptap/extension-task-item'
 import TaskList from '@tiptap/extension-task-list'
 import Table from '@tiptap/extension-table'
-import TableCell from '@tiptap/extension-table-cell'
+import { TableCell } from './extensions/table-cell-extension'
 import TableRow from '@tiptap/extension-table-row'
 import Gapcursor from '@tiptap/extension-gapcursor'
-import TableHeader from "@tiptap/extension-table-header";
+import { TableHeader } from "./extensions/table-header-extension";
 import { Image } from "./extensions/image-extension";
 import BubbleMenu from "@tiptap/extension-bubble-menu"
 import { Editor} from '@tiptap/vue-3'
@@ -23,6 +23,7 @@ import Paragraph from '@tiptap/extension-paragraph';
 import ImageBubbleMenu from './bubble-menus/ImageBubbleMenu.vue'
 import TextBubbleMenu from './bubble-menus/TextBubbleMenu.vue'
 import LinkBubbleMenu from './bubble-menus/LinkBubbleMenu.vue'
+import TableBubbleMenu from "./bubble-menus/TableBubbleMenu.vue";
 
 import { Link } from './extensions/link-extension'
 
@@ -98,7 +99,7 @@ const itemsAddBtn = computed(() => [
     label: 'Tabla',
     icon: 'tabler:table-dashed',
     click: () => {
-      editor.value.chain().focus().insertTable({  withHeaderRow: true }).run()
+      editor.value.chain().focus().insertTable({  rows: 4, cols: 4,withHeaderRow: true }).run()
     }
   },
   {
@@ -209,6 +210,18 @@ onMounted(()=>{
             return node && node.type.name === 'text' && editor.isActive('link'); // Se muestra solo si el nodo es un texto y tiene activo el link
           }
         }),
+
+        BubbleMenu.configure({
+          pluginKey: 'tableHeaderBubbleMenu',
+          element: document.querySelector('.table-bubble-menu'),
+          shouldShow: ({ editor }) => {
+            // Verifica si el nodo seleccionado es un texto
+            const { from, to } = editor.state.selection;
+            const node = editor.state.doc.nodeAt(from);
+            return editor.isActive('table');
+          }
+        }),
+
         FontFamily.configure({
           types: ['textStyle']
         })
@@ -291,6 +304,10 @@ const handleUpdateRangeImageEvent = (range)=>{
         <div class="link-menu w-full" >
            <LinkBubbleMenu :editor="editor"></LinkBubbleMenu>
         </div>
+
+        <div class="table-bubble-menu w-full" >
+          <TableBubbleMenu :editor="editor"></TableBubbleMenu>
+       </div>
 
 
         <TiptapEditorContent :editor="editor" />

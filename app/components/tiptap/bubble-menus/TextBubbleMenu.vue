@@ -107,38 +107,6 @@ const itemsTypes = computed(() => [
       }
     }]])
 
-const itemsFonts = computed(() => [
-  [
-    {
-      label: 'Inter',
-      click: () => {
-
-
-      }
-    },
-    {
-      label: 'Arial',
-      click: () => {
-      }
-    }
-  ]
-])
-
-const itemsSizes = computed(() => [
-  [
-    {
-      label: 'Más pequeño',
-      click: () => {
-
-      }
-    },
-    {
-      label: 'Pequeño',
-      click: () => {
-      }
-    }
-  ]
-])
 
 const isBoldActive = computed(() => {
   return props.editor?.isActive('bold');
