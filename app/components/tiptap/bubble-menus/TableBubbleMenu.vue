@@ -35,7 +35,6 @@
       }
     },
 
-
     {
       label: 'Pintar Celda',
       icon: 'tabler:palette',

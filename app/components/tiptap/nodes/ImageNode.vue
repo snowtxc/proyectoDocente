@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { NodeViewWrapper } from '@tiptap/vue-3';
-import ImageBubbleMenu from '../bubble-menus/ImageBubbleMenu.vue';
 import ImagePicker from '~/components/image-picker/ImagePicker.vue';
 
 const props = defineProps({

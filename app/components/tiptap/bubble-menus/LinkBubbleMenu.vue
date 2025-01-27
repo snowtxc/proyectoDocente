@@ -51,7 +51,9 @@
   
         <template #panel>
 
-          <FormLink :defaultForm="defaultFormLink" @on:submit="handleEventLink"></FormLink>
+          <FormLink 
+          :defaultForm="defaultFormLink" 
+          @on:submit="handleEventLink"></FormLink>
 
         </template>
     </UPopover>

@@ -104,8 +104,7 @@ const itemsTypes = computed(() => [
         iconBtnTypeText.value = 'tabler:blockquote';
         props.editor.chain().focus().toggleBlockquote().run()
 
-      }
-    }]])
+      }}]])
 
 
 const isBoldActive = computed(() => {
@@ -140,7 +139,6 @@ const handleSetTextBackground = ($event) => {
     const rgbColor = $event.target.value;
     props.editor?.chain().focus().setHighlight({ color: rgbColor }).run()
   }
-
 }
 
 const openTextColorPicker = () => {
@@ -150,7 +148,11 @@ const openTextColorPicker = () => {
 const handleSetTextColor = ($event) => {
   if ($event) {
     const rgbColor = $event.target.value;
-    props.editor?.chain().focus().setMark('textStyle', { color: rgbColor }).run();
+
+    props.editor?.chain()
+      .focus()
+      .setMark('textStyle', { color: rgbColor }) // Restaurar el color
+      .run();
   }
 }
 
@@ -168,7 +170,7 @@ const handleSetFontSize = (label:string, px:string) => {
 
 <template>
   <div
-    class="flex justify-between items-center w-full min-w-md p-2 min-w-[550px] bg-white/75 dark:bg-white/5 backdrop-blur shadow rounded-lg ring-1 ring-gray-200 dark:ring-gray-800">
+    class="bg-white flex justify-between items-center w-full min-w-md p-2 min-w-[550px] bg-white/75 dark:bg-white/5 backdrop-blur shadow rounded-lg ring-1 ring-gray-200 dark:ring-gray-800">
     <UDropdown :items="itemsTypes">
       <UButton color="gray" variant="ghost" :icon="iconBtnTypeText ? iconBtnTypeText : 'tabler:align-box-left-bottom'">
       </UButton>
@@ -261,8 +263,6 @@ const handleSetFontSize = (label:string, px:string) => {
       <input type="color" ref="textColorPicker" class="invisible absolute" @input="handleSetTextBackground"
         :value="props.editor?.getAttributes('textStyle').color" />
     </div>
-
-
 
 
   </div>

@@ -17,6 +17,7 @@ import Highlight from "@tiptap/extension-highlight";
 import FontFamily from "@tiptap/extension-font-family";
 import FontSize from "tiptap-extension-font-size";
 import Paragraph from '@tiptap/extension-paragraph';
+import { Youtube } from "./extensions/youtube-extension";
 
 
 // Bubble Menus.
@@ -29,6 +30,17 @@ import { Link } from './extensions/link-extension'
 
 // enums
 import { AlignEnum } from '~/utils/enums/AlignEnum'
+import YoutubeBubbleMenu from './bubble-menus/YoutubeBubbleMenu.vue'
+
+import FormLink from '../forms/FormLink.vue'
+import type { LinkForm } from '~/utils/forms/link-form'
+
+
+const props = defineProps({
+  defaultContent: { type: String ,required: false}
+});
+
+const emit = defineEmits(['on:update']);
 
 const editorContainer = ref(null);
 
@@ -123,6 +135,15 @@ const itemsAddBtn = computed(() => [
   {
     label : 'Tabla de Contenido',
     icon : 'tabler:layout-navbar-collapse'
+  },
+  {
+    label: 'Video de Youtube',
+    icon : 'tabler:brand-youtube',
+    slot: 'youtube',
+    click: ()=>{
+      showYouTubeLinkModal.value = true;
+      return;
+    }
   }]
 ])
 
@@ -145,9 +166,9 @@ const itemsAppBtn = computed(() => [
     icon : "tabler:trash",
     color: 'red'
   }]
-
-  
 ])
+
+const showYouTubeLinkModal = ref(false);
 
 onMounted(()=>{
   if(editorContainer.value){
@@ -178,6 +199,13 @@ onMounted(()=>{
         }),
         Highlight.configure({
           multicolor: true,
+        }),
+        Youtube.configure({
+          width: 640,
+          height:  480,
+          controls: true,
+          ccLanguage: 'es',
+          allowFullscreen: true
         }),
         BubbleMenu.configure({
           pluginKey: 'imageBubbleMenu',
@@ -222,24 +250,51 @@ onMounted(()=>{
           }
         }),
 
+        BubbleMenu.configure({
+          pluginKey: 'youtubeBubbleMenu',
+          element: document.querySelector('.youtube-menu'),
+          shouldShow: ({ editor }) => {
+            // Verifica si el nodo seleccionado es un video de youtube embebido.
+            const { from, to } = editor.state.selection;
+            const node = editor.state.doc.nodeAt(from);
+            console.log(node);
+            return node && node.type.name === 'youtube' && node.attrs.src; // Se muestra solo si es un video de youtube
+          }
+        }),
+        
         FontFamily.configure({
           types: ['textStyle']
         })
       ],
+      
+      onUpdate: ({ editor }) => {
+        // Se obtiene cada actualizacion del editor de cualquier nodo o marca.
+        const contentHtml = editor.getHTML(); // Para HTML
+        const contentJson = editor.getJSON(); // Para JSON
+
+        emit('on:update', {
+          contentHtml,
+          contentJson
+        });
+      },
 
       editorProps: {
         attributes: {
           class: 'prose prose-sm sm:prose lg:prose-lg xl:prose-2xl mx-auto focus:outline-none',
         },
       },
+      
     })
+
+    if(props.defaultContent){
+      editor.value.commands.setContent(props.defaultContent);
+    }
   }
-  });
+});
 
 onBeforeUnmount(() => {
   unref(editor).destroy();
 });
-
 
 // Actualizacion de alineacion de una imagen.
 const handleAlignImageEvent = (align: AlignEnum)=>{
@@ -262,6 +317,24 @@ const handleUpdateRangeImageEvent = (range)=>{
   editor.value.chain().focus().setImage({ ...attrs, width: range }).run();
 }
 
+const handleYoutubeLinkForm = (formLink: LinkForm)=>{
+  showYouTubeLinkModal.value = false;
+  editor.value.commands.setYoutubeVideo({
+        src: formLink.link,
+  })
+}
+
+
+const handleSetAlignYoutubeVideo = (align:AlignEnum)=>{
+  const alignVideo = align == AlignEnum.CENTER ? 'center' : align == AlignEnum.LEFT ? 'left': 'right';
+    
+  const { from, to } = editor.value.state.selection;
+  const node = editor.value.state.doc.nodeAt(from);
+
+  const attrs = node.attrs;
+
+  editor.value.chain().focus().setYoutubeVideo({ ...attrs, align: alignVideo }).run();
+}
 
 </script>
 
@@ -309,8 +382,27 @@ const handleUpdateRangeImageEvent = (range)=>{
           <TableBubbleMenu :editor="editor"></TableBubbleMenu>
        </div>
 
+       <div class="youtube-menu">
+         <YoutubeBubbleMenu :editor="editor" @on-align-event="handleSetAlignYoutubeVideo"></YoutubeBubbleMenu>
+       </div>
+
+       
 
         <TiptapEditorContent :editor="editor" />
+
+
+        <!--Youtube Modal-->
+        <UModal v-model="showYouTubeLinkModal">
+          <FormLink
+          description="Inserta un link de youtube"
+          :isYoutubeLink="true"
+          label="Link de Youtube"
+          @on:submit="handleYoutubeLinkForm"
+          :showCloseButton="true"
+          @close="showYouTubeLinkModal = false"
+          ></FormLink>
+        </UModal>
+    
     </div>
   </template>
 
@@ -496,6 +588,11 @@ const handleUpdateRangeImageEvent = (range)=>{
   a {
     color: #3b82f6;
     cursor: pointer;
+  }
+
+ 
+  [data-youtube] iframe {
+    display: inline-block;
   }
   
 }
