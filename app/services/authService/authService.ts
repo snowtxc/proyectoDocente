@@ -9,7 +9,8 @@ export const authApi = {
   loginWithGoogleCallback: '/login/google/callback',
   user: '/user',
   logout: '/logout',
-  updateProfile: '/auth/updateProfile'
+  updateProfile: '/auth/updateProfile',
+  linkOrUpdateGoogleAccount : 'auth/linkOrUpdateGoogleAccount'
 }
 
 export const useAuthStore = defineStore('auth', () => {
@@ -66,15 +67,22 @@ export const useAuthStore = defineStore('auth', () => {
     return resp;
   }
 
-  const loginWithGoogleCallback = async(access_token: string)=>{
+  const loginWithGoogleCallback = async(code: string)=>{
     const { $requestWithSpinner } = useNuxtApp()
-    const resp = await $requestWithSpinner('post', `${authApi.loginWithGoogleCallback}`, {access_token});
+    const resp = await $requestWithSpinner('post', `${authApi.loginWithGoogleCallback}`, {code});
     if(resp.ok){
       token.value = resp?.data?.token as string;
       user.value = resp?.data?.user as User;
       handleSetStoredToken(resp?.data?.token as string)
     }
     return resp;  
+  }
+
+  // Link que nos permite linkear o actualizar datos de la cuenta de google de un user ya logeado
+  const linkOrUpdateGoogleAccount = async(access_token: string)=>{
+    const { $requestWithSpinner } = useNuxtApp()
+    const resp = await $requestWithSpinner('post', `${authApi. linkOrUpdateGoogleAccount}`, {access_token});
+    return resp.data;  
   }
 
   return {
@@ -86,7 +94,8 @@ export const useAuthStore = defineStore('auth', () => {
     user,
     token,
     updateProfile,
-    loginWithGoogleCallback
+    loginWithGoogleCallback,
+    linkOrUpdateGoogleAccount
   }
 
 } , 

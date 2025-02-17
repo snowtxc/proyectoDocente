@@ -23,7 +23,7 @@ export default defineNuxtConfig({
   },
   
   googleSignIn: {
-    clientId: process.env.NUXT_GOOGLE_CLIENT_ID,
+    clientId: process.env.NUXT_GOOGLE_CLIENT_ID
   },
   runtimeConfig: {
     public: {

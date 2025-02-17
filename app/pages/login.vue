@@ -11,12 +11,26 @@ useSeoMeta({
   title: 'Iniciar sesión'
 })
 
-
 import {
-  useTokenClient,
-  type AuthCodeFlowSuccessResponse,
-  type AuthCodeFlowErrorResponse,
+  useCodeClient,
+  type ImplicitFlowSuccessResponse,
+  type ImplicitFlowErrorResponse,
+  type ImplicitFlowOptions
 } from "vue3-google-signin";
+
+
+const googleSignInOptions: ImplicitFlowOptions = {
+  scope: ['profile', 'email','https://www.googleapis.com/auth/drive' ,'https://www.googleapis.com/auth/drive.file'], // Los permisos solicitados
+  onSuccess: async(response: ImplicitFlowSuccessResponse) => {
+    const responseGoogle =  await loginWithGoogleCallback(response.code);
+    if(responseGoogle){
+      navigateTo({ path: '/home' });
+    }
+  },
+  onError: (errorResponse: ImplicitFlowErrorResponse) => {
+    errorService.setError(errorResponse.error_description);
+  }
+};
 
 import { useErrorStore } from '~/services/errorService/errorService';
 
@@ -24,22 +38,7 @@ const errorService =   useErrorStore();
 
 const { login, loginWithGoogleCallback } = useAuthStore()
 
-const handleOnSuccess = async(response: AuthCodeFlowSuccessResponse) => {
-  const responseGoogle =  await loginWithGoogleCallback(response.access_token);
-  if(responseGoogle){
-    navigateTo({ path: '/home' });
-  }
-}
-
-
-const handleOnError = (errorResponse: AuthCodeFlowErrorResponse) => {
-  errorService.setError(errorResponse.error_description);
-};
-
-const { isReady, login: loginWithGoogle } = useTokenClient({
-  onSuccess: handleOnSuccess,
-  onError: handleOnError,
-});
+const { isReady, login: loginWithGoogle } = useCodeClient(googleSignInOptions);
 
 
 const fields = [{
