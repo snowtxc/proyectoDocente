@@ -128,7 +128,12 @@ const onSubmit = async () => {
 
             <!--Planificaciones-->
             <div class="md:flex-none">
-              <DriveSelectFolder @on:select="onChangePlanificacionesFolder"
+              <DriveSelectFolder 
+                @on:select="onChangePlanificacionesFolder"
+                :defaultFolder="{
+                  name: form.drive_planificaciones_folder_name,
+                  id: form.drive_planificaciones_folder_id
+                }"
                 :defaultFolderId="form.drive_planificaciones_folder_id"></DriveSelectFolder>
             </div>
           </div>
@@ -147,7 +152,10 @@ const onSubmit = async () => {
             <div class="md:flex-none">
               <DriveSelectFolder 
                 @on:select="onChangeSecuenciasFolder"
-                :defaultFolderId="form.drive_secuencias_folder_id"></DriveSelectFolder>
+                :defaultFolder="{
+                  name: form.drive_secuencias_folder_name,
+                  id: form.drive_secuencias_folder_id
+                }"></DriveSelectFolder>
             </div>
           </div>
 
