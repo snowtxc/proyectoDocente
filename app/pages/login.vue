@@ -1,7 +1,14 @@
 <script setup lang="ts">
-// import { login } from '~/services/authService/authService';
-import { useAuthStore } from '~/services/authService/authService';
+
 import type { LoginDTO } from '~/types/user';
+
+import { apiAuthRoutes } from "~/utils/apiRoutes";
+
+import { useErrorStore } from '~/services/errorService/errorService';
+
+import { HttpMethodEnum } from '~/utils/enums/HttpMethodEnum';
+
+import { useAuthStore } from '~/utils/authStore';
 
 definePageMeta({
   layout: 'auth'
@@ -11,36 +18,44 @@ useSeoMeta({
   title: 'Iniciar sesión'
 })
 
+const { $apiRest } = useNuxtApp();
+
+const toast = useToast();
+const authStore = useAuthStore();
 
 import {
-  useTokenClient,
-  type AuthCodeFlowSuccessResponse,
-  type AuthCodeFlowErrorResponse,
+  useCodeClient,
+  type ImplicitFlowSuccessResponse,
+  type ImplicitFlowErrorResponse,
+  type ImplicitFlowOptions
 } from "vue3-google-signin";
 
-import { useErrorStore } from '~/services/errorService/errorService';
+
+const googleSignInOptions: ImplicitFlowOptions = {
+  onSuccess: async(response: ImplicitFlowSuccessResponse) => {
+    try{
+      const { code } = response;
+      const responseGoogle =  await $apiRest(apiAuthRoutes.loginWithGoogleCallback, HttpMethodEnum.POST, { code });
+      if(responseGoogle){
+        const { user, token } = responseGoogle;
+        console.log(user,token);
+        authStore.setToken(token);
+        authStore.setUser(user);
+        navigateTo({ path: '/home' });
+      }
+    }catch(e){
+      // ToDo
+    }
+   
+  },
+  onError: (errorResponse: ImplicitFlowErrorResponse) => {
+    errorService.setError(errorResponse.error_description);
+  }
+};
 
 const errorService =   useErrorStore();
 
-const { login, loginWithGoogleCallback } = useAuthStore()
-
-const handleOnSuccess = async(response: AuthCodeFlowSuccessResponse) => {
-  const responseGoogle =  await loginWithGoogleCallback(response.access_token);
-  if(responseGoogle){
-    navigateTo({ path: '/home' });
-  }
-}
-
-
-const handleOnError = (errorResponse: AuthCodeFlowErrorResponse) => {
-  errorService.setError(errorResponse.error_description);
-};
-
-const { isReady, login: loginWithGoogle } = useTokenClient({
-  onSuccess: handleOnSuccess,
-  onError: handleOnError,
-});
-
+const { isReady, login: loginWithGoogle } = useCodeClient(googleSignInOptions);
 
 const fields = [{
   name: 'email',
@@ -77,12 +92,23 @@ async function onSubmit(data: any) {
     email: data?.email,
     password: data?.password
   }
-  const resp = await login(loginInfo)
-  if (resp?.ok) {
-    console.log("cuenta creada");
-  } else {
+
+  try{
+    const response =  await $apiRest(apiAuthRoutes.login, HttpMethodEnum.POST, loginInfo);
+    const { token , user} = response;
+    authStore.setToken(token);
+    authStore.setUser(user);
+    navigateTo("/home");
+
+  }catch(messageError){
+    toast.add({
+      title: "Error",
+      description: messageError,
+      color: "red"
+    })
   }
 }
+
 </script>
 
 <!-- eslint-disable vue/multiline-html-element-content-newline -->

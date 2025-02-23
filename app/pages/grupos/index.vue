@@ -1,20 +1,17 @@
 <script setup lang="ts">
 import type { Grupo } from '~/types/grupo';
-import { useGrupoService } from '~/services/grupoService/grupoService';
 import { ModeEnum } from '~/utils/enums/ModeEnum';
 import type { ListRequest } from '~/types/list-request';
 import type { Grado } from '~/types/grado';
+import { HttpMethodEnum } from '~/utils/enums/HttpMethodEnum';
+import { apiGrupoRoutes } from '~/utils/apiRoutes';
 
-const grupoService = useGrupoService();
-
+const {  $apiRest  } = useNuxtApp();
 const  { page, rowsPerPage, totalRows,changePage, changeTotalRows  }  = usePagination();
 
-const { getPaginate } = grupoService;
-
+const grupos = ref<Grupo[]>([]);
 const filters  =  ref<{ nombre: string, year?: number , grado?: Grado}>({ nombre: '', year: null, grado: null })
 const searchTimeOut = ref(null);
-
-const grupos = computed(()=> grupoService.grupos)
 
 const defaultColumns = [
   {
@@ -45,20 +42,22 @@ const input = ref<{ input: HTMLInputElement }>()
 
 const columns = computed(() => defaultColumns.filter(column => selectedColumns.value.includes(column)))
 
-const query = computed(() => ({ q: q.value, statuses: selectedStatuses.value, locations: selectedLocations.value, sort: sort.value.column, order: sort.value.direction }))
-
+const isLoading = ref(false);
 
 onMounted(async()=>{
   loadGrupos();
 })
 
 const loadGrupos = async()=>{
+  isLoading.value = true;
   const listReq: ListRequest = {
     page: page.value,
     rowsPerPage: rowsPerPage.value,
     filters: filters.value
   }
-  const listResponse  = await getPaginate(listReq);
+  const listResponse  = await $apiRest(apiGrupoRoutes.getPaginate, HttpMethodEnum.POST, listReq);
+  isLoading.value = false;
+  grupos.value = listResponse.list;
   changeTotalRows(listResponse.totalCount);  
 }
 
@@ -171,10 +170,11 @@ const onSearch = ()=>{
         v-model:sort="sort"
         :rows="grupos"
         :columns="columns"
-        :loading="grupoService.isLoading"
+        :loading="isLoading"
         sort-mode="manual"
         class="w-full"
         :ui="{ divide: 'divide-gray-200 dark:divide-gray-800' }"
+        :empty-state="{icon: 'tabler:butterfly-filled',label: 'No se encontró ningún grupo'}"
         @select="onSelect"
       >
         <template #nombre-data="{ row }">
