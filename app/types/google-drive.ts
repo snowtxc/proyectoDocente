@@ -1,13 +1,16 @@
-export interface UpdateGoogleDriveInfoDTO{
-    path_planificaciones?: string;
-    path_secuencias?: string;
-}
+import type { DriveListModeEnum } from "~/utils/enums/DriveListModeEnum";
 
 export interface ListFoldersDTO {
-    baseFolder? : string;
+    folderId? : string;
+    listMode? : DriveListModeEnum
 }
 
-export interface DriveFolder {
+export interface DriveFolder{
     id: string;
     name: string;
+}
+
+export interface DriveFolderList {
+    isRoot:boolean;
+    folders: DriveFolder[]
 }

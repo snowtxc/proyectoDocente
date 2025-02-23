@@ -1,8 +1,7 @@
 <script setup lang="ts">
-import { useAuthStore } from '~/services/authService/authService';
+import { useAuthStore } from '~/utils/authStore';
 
 const authStore = useAuthStore();
-const { signOut } = authStore;
 const user = computed(() => authStore.user);
 
 const items = computed(() => [

@@ -1,10 +1,12 @@
 <script setup lang="ts">
 
+import { useAuthStore } from '~/utils/authStore';
+
 const runtimeConfig = useRuntimeConfig()
 
+const authStore = useAuthStore();
+
 const defaultLogo= ref<string>(runtimeConfig.public.DEFAULT_GRUPO_IMAGE_URL);
-
-
 
 const teams = [{
   label: 'Proyecto Docentes',
@@ -35,7 +37,8 @@ const actions = [{
 const team = ref(teams[0])
 </script>
 
-<template>
+<template>  
+
   <UDropdown
     v-slot="{ open }"
     mode="hover"

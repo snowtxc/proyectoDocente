@@ -8,7 +8,7 @@ export const useGoogleDriveService = defineStore('google-drive', () => {
 
   const listFolders = async (body: ListFoldersDTO) => {
     const { $request } = useNuxtApp()
-    const resp = await $request<{ok:boolean}[]>('post', `${controller}/listFolders`)
+    const resp = await $request<ListFoldersDTO>('post', `${controller}/listFolders`, body);
     const { data } = resp;
     return data;
   }

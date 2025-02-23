@@ -1,16 +1,19 @@
 <script setup lang="ts">
 import type { FormError, FormSubmitEvent } from '#ui/types'
-import { useGrupoService } from '~/services/grupoService/grupoService';
 import SelectYear from '../select/SelectYear.vue';
 import type { CreateOrUpdateGrupoDTO, Grupo } from '~/types/grupo';
 import { useErrorStore } from '~/services/errorService/errorService';
 import { ModeEnum } from '~/utils/enums/ModeEnum';
 import type { Grado } from '~/types/grado';
+import { HttpMethodEnum } from '~/utils/enums/HttpMethodEnum';
+import { apiGrupoRoutes } from '~/utils/apiRoutes';
 
 interface Props {
     mode: ModeEnum,
     grupoSelected?: Grupo
 }
+
+const {  $apiRest } = useNuxtApp();
 
 const toast = useToast()
 
@@ -23,7 +26,6 @@ const props = withDefaults(defineProps<Props>() , {});
 
 const emit = defineEmits(['on:update','close'])
 
-const grupoService = useGrupoService();
 const loading = ref(false);
 
 const fileRef = ref<HTMLInputElement>()
@@ -63,6 +65,26 @@ const validate = (state: any): FormError[] => {
   return errors
 }
 
+const createFormData = (data:CreateOrUpdateGrupoDTO) =>{
+    const formData = new FormData();
+    Object.keys(data).map(key => {
+      if(key === 'grados'){
+          formData.append('grados', JSON.stringify(data.grados));
+      }else if(key == 'esMultiGrado'){
+        formData.append('esMultiGrado', data.esMultiGrado ? Number(1).toString() : Number(0).toString())
+      }else if(key == 'logo'){
+        if(data.logo){  // Solo si viene un archivo se agrega al formData
+          formData.append('logo', data.logo)
+        }
+      }
+      else{
+        formData.append(key, data[key]);
+      }
+    });
+
+    return formData;
+}
+
 async function onSubmit(event: FormSubmitEvent<any>) {
 
   const body: CreateOrUpdateGrupoDTO = {
@@ -70,24 +92,30 @@ async function onSubmit(event: FormSubmitEvent<any>) {
     grados: Array.isArray(form.grados) ? form.grados: [form.grados]
   }
 
-  let response;
-  loading.value = true;
-  if(props.mode == ModeEnum.UPDATE && props.grupoSelected){
-    response = await grupoService.update(props.grupoSelected.id, body);
-  }else{
-    response = await grupoService.create(body);
-  }
-  loading.value = false;
-  if(response.ok && response.data){
-    const grupo = response.data;
+  try{
+    let grupoResponse: Grupo;
+    loading.value = true;
+    if(props.mode == ModeEnum.UPDATE && props.grupoSelected){
+      grupoResponse  = await $apiRest<Grupo>(apiGrupoRoutes.update(props.grupoSelected.id), HttpMethodEnum.POST,  createFormData(body));
+    }else{
+      grupoResponse =  await $apiRest<Grupo>(apiGrupoRoutes.create, HttpMethodEnum.POST,createFormData(body));
+    }
+    loading.value = false;
     toast.add({
       title: "Grupo creado",
-      description: props.mode == ModeEnum.CREATE ?  `Se ha creado el grupo ${grupo.nombre} correctamente` : `Se ha modificado el grupo ${grupo.nombre} correctamente`,
+      description: props.mode == ModeEnum.CREATE ?  `Se ha creado el grupo ${grupoResponse.nombre} correctamente` : `Se ha modificado el grupo ${grupoResponse.nombre} correctamente`,
       color: "green"
     })
     emit('on:update');
-    emit('close')
-  }
+    emit('close');
+  }catch(message){
+    loading.value = false;
+    toast.add({
+      title: "Error",
+      description: message ? message : 'Error al crear el grupo',
+      color: "red"
+    })
+  }  
 }
 
 const handleChangeMultiGrado = () => {

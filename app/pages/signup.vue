@@ -1,5 +1,11 @@
 <script setup lang="ts">
-import { useAuthStore } from '~/services/authService/authService';
+
+import { useAuthStore } from '~/utils/authStore';
+
+import { apiAuthRoutes } from "~/utils/apiRoutes";
+
+import { HttpMethodEnum } from '~/utils/enums/HttpMethodEnum';
+
 import type { CreateUserDTO } from '~/types/user';
 
 definePageMeta({
@@ -9,7 +15,10 @@ definePageMeta({
 useSeoMeta({
   title: 'Crear cuenta'
 })
+
+const {  $apiRest  } = useNuxtApp();
 const toast = useToast()
+const authStore = useAuthStore();
 
 
 const fields = [{
@@ -54,8 +63,6 @@ const providers = [{
   }
 }]
 
-const { signUp } = useAuthStore()
-
 async function onSubmit(data: any) {
   const signUpInfo: CreateUserDTO = {
     nombre1: `${data?.name?.split(" ")[0]}`,
@@ -65,18 +72,30 @@ async function onSubmit(data: any) {
     email: `${data?.email}`,
     password: `${data?.password}`
   }
-  const resp = await signUp(signUpInfo)
-  if (resp?.ok) {
+  try{
+    const response =  await $apiRest(apiAuthRoutes.register, HttpMethodEnum.POST, signUpInfo);
+    const { user, token }  = response;
+
+    authStore.setToken(token);
+    authStore.setUser(user);
+
+    navigateTo('/home');
+
     toast.add({
-      title: "Cuenta creada",
-      description: "Su cuenta fue creada correctamente",
-      color: "green"
+      title: "Cuenta Creada",
+      description: "Se ha creado correctamente su cuenta",
+      color: "red"
+    });
+
+  }catch(message){
+    toast.add({
+      title: "Error",
+      description: message,
+      color: "red"
     })
-    console.log("cuenta creada");
-  } else {
-    console.log(resp?.error)
-  }
+  }   
 }
+
 </script>
 
 <!-- eslint-disable vue/multiline-html-element-content-newline -->

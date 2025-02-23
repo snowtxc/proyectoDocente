@@ -2,8 +2,6 @@
 import SelectStatus from "~/components/select/SelectStatus.vue";
 import { usePlanificacionService } from "~/services/planificacionService/planificacionService";
 import type { PlanificacionList } from "~/types/index";
-import { EstadoType } from "~/types/index";
-import type { ListRequest } from "~/types/list-request";
 
 let timeoutSearch: any = 0;
 const defaultColumns = [
@@ -121,20 +119,6 @@ const clearRangeSelection = () => {
     planificacionesStore.filters.rangeDates.from = undefined;
     planificacionesStore.filters.rangeDates.to = undefined;
 }
-
-// const defaultLocations = planificaciones.reduce((acc, user) => {
-//   if (!acc.includes(user.location)) {
-//     acc.push(user.location)
-//   }
-//   return acc
-// }, [] as string[])
-
-// const defaultStatuses = users.value.reduce((acc, user) => {
-//   if (!acc.includes(user.status)) {
-//     acc.push(user.status)
-//   }
-//   return acc
-// }, [] as string[])
 
 function onSelect(row: PlanificacionList) {
     const index = selected.value.findIndex((item) => item.id === row.id);

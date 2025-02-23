@@ -1,14 +1,18 @@
 <script setup lang="ts">
-import { useAuthStore } from '~/services/authService/authService';
+import { useAuthStore } from '~/utils/authStore';
 import type { FormError, FormSubmitEvent } from '#ui/types'
 import type { UpdateUserProfileDTO } from '~/types/user';
 import { useErrorStore } from "~/services/errorService/errorService";
 
-const authService = useAuthStore();
+import { HttpMethodEnum } from '~/utils/enums/HttpMethodEnum';
+import { apiAuthRoutes } from '~/utils/apiRoutes';
+
+const { $apiRest } =  useNuxtApp();
 const errorService =   useErrorStore();
 
-const user = computed(() => authService.user);
-const { updateProfile } = authService;
+const user = computed(() => authStore.user);
+const  authStore = useAuthStore();
+
 const updating = ref(false);
 
 const fileRef = ref<HTMLInputElement>()
@@ -58,12 +62,21 @@ function onFileClick() {
 
 async function onSubmit(event: FormSubmitEvent<any>) {
   updating.value = true;
-  const resp = await updateProfile(form);
-  form.nuevoAvatar = undefined;
-  updating.value = false;
-  if(resp.ok){
-    toast.add({ title: 'Perfil actualizado!', icon: 'i-heroicons-check-circle' })
-  }
+  try{
+    const userUpdated = await $apiRest(apiAuthRoutes.updateProfile,HttpMethodEnum.POST,form);
+    authStore.setUser(userUpdated);
+    form.nuevoAvatar = undefined;
+    updating.value = false;
+    toast.add({ title: 'Perfil actualizado!', color: 'green', icon: 'i-heroicons-check-circle' })
+  }catch(message){
+    updating.value =  false;
+    toast.add({ 
+      title: 'Error',
+      description: message ? message : 'Error al actualizar perfil',
+      color: 'red', 
+      icon: 'i-heroicons-check-circle' 
+    })
+  } 
 }
 
 </script>
@@ -74,8 +87,6 @@ async function onSubmit(event: FormSubmitEvent<any>) {
     <UDashboardSection title="Personalización de Tema" description="Personaliza la apariencia y el diseño del sistema">
       <template #links>
         <UColorModeSelect color="gray" />
-
-
       </template>
     </UDashboardSection>
 

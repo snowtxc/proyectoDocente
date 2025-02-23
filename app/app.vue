@@ -2,68 +2,11 @@
 
 import { useRoute } from '#app'
 import GlobalSpinner from './components/GlobalSpinner/GlobalSpinner.vue';
-import { useAuthStore } from './services/authService/authService';
-import { useErrorStore } from './services/errorService/errorService';
 import { useLoadingStore } from './services/loadingService/loadingService';
-import { checkUserAuthentication } from './utils/user';
 
 let timeout: any = 0;
 const colorMode = useColorMode()
-const route = useRoute()
-const currentPathname = route?.path
 const color = computed(() => colorMode.value === 'dark' ? '#111827' : 'white')
-const authStore = useAuthStore()
-const errorStore = useErrorStore()
-const loadingStore = useLoadingStore()
-
-const toast = useToast()
-const isPublicPath = LIST_PUBLIC_ROUTES.includes(currentPathname);
-const isChecking = ref(true);
-
-onMounted(async () => {
-  if (LIST_PUBLIC_ROUTES.includes(currentPathname)) {
-    authStore.getCsrf()
-  }
-  try {
-    isChecking.value = true;
-    await checkUserAuthentication(isPublicPath)
-  } catch (error) {
-    console.error(error);
-  } finally {
-    isChecking.value = false;
-  }
-
-});
-
-// set global alert error when API error
-watch(
-  () => errorStore.errorMessage,
-  (newValue) => {
-    if (newValue && newValue !== "") {
-      toast.add({
-        title: "Error",
-        description: newValue,
-        color: 'red',
-      })
-      clearTimeout(timeout);
-      timeout = setTimeout(() => {
-        errorStore.clearError()
-      }, 5000)
-    }
-  }
-)
-
-
-watch(
-  () => [authStore.token, authStore.user],
-  (newValue) => {
-    if (authStore.token || !authStore.user) {
-      checkUserAuthentication(isPublicPath)
-    }
-
-  }
-)
-
 
 useHead({
   meta: [
@@ -98,8 +41,7 @@ useSeoMeta({
     <NuxtLoadingIndicator />
 
     <NuxtLayout>
-      <GlobalSpinner v-if="loadingStore.loading === true || isChecking === true" />
-      <NuxtPage v-if="isChecking == false" />
+      <NuxtPage />
     </NuxtLayout>
 
     <UNotifications />
