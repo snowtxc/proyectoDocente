@@ -66,7 +66,6 @@ const onFilter = () => {
 const query = computed({
     get: () => planificacionesStore?.filters?.query,
     set: (value) => {
-        console.log("value", value);
         planificacionesStore.filters.query = value;
     },
 });

@@ -30,7 +30,6 @@ export const usePlanificacionService = defineStore("planificacion", () => {
       }
       return resp;
     } catch (error) {
-      console.log("error", error);
     } finally {
       loading.value = false;
     }

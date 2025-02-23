@@ -33,10 +33,7 @@ const mode =  ref<ModeEnum>(null);
 const grupoSelected = ref<Grupo>(null);
 const titleModal = ref<string>('');
 
-const q = ref('')
 const selectedColumns = ref(defaultColumns)
-const selectedStatuses = ref([])
-const selectedLocations = ref([])
 const sort = ref({ column: 'id', direction: 'asc' as const })
 const input = ref<{ input: HTMLInputElement }>()
 

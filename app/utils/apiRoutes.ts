@@ -8,7 +8,8 @@ export const apiAuthRoutes = {
     register: '/register',
     loginWithGoogleCallback: '/login/google/callback',
     linkOrUpdateGoogleAccount : 'auth/linkOrUpdateGoogleAccount',
-    updateProfile: '/auth/updateProfile'
+    updateProfile: '/auth/updateProfile',
+    logout: '/logout',
 }
 
 export const apiUserConfigRoutes = {

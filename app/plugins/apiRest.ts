@@ -4,7 +4,7 @@ import type { HttpMethodEnum } from "~/utils/enums/HttpMethodEnum";
 export default defineNuxtPlugin((nuxtApp) => {
 
     const authStore = useAuthStore();
-    const token = authStore.token;
+
     const config = useRuntimeConfig();
     const { start, finish } = useLoadingIndicator();
 
@@ -15,6 +15,8 @@ export default defineNuxtPlugin((nuxtApp) => {
 
     // Definir el tipo de la función `apiRest`
     const apiRest = async(endpoint: string, method: HttpMethodEnum, body: any, options: Record<string, any> = {}) => {
+        const token = authStore.token;
+
         if(!document.cookie.includes('XSRF-TOKEN')){
             const endpointRequestCrsfToken = config.public.apiBaseUrl.replace("/api","/sanctum/csrf-cookie");
 

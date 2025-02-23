@@ -24,7 +24,6 @@
     onMounted(async()=>{
         isLoading.value = true;
         const gradosResponse  = await $apiRest(apiGradoRoutes.listAll, HttpMethodEnum.GET);
-        console.log(gradosResponse);
         grados.value = gradosResponse;
         isLoading.value = false;
     })

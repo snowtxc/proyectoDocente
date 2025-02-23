@@ -1,7 +1,11 @@
 <script setup lang="ts">
 import { useAuthStore } from '~/utils/authStore';
+import { apiAuthRoutes } from '~/utils/apiRoutes';
+import { HttpMethodEnum } from '~/utils/enums/HttpMethodEnum';
 
 const authStore = useAuthStore();
+const { $apiRest } = useNuxtApp();
+const toast = useToast()
 const user = computed(() => authStore.user);
 
 const items = computed(() => [
@@ -13,6 +17,24 @@ const items = computed(() => [
     label: 'Configuración',
     icon: 'i-heroicons-cog-8-tooth',
     to: '/configuracion'
+  },
+  {
+    label: 'Salir',
+    icon: 'tabler:logout',
+    click: async()=>{
+      try{
+       const response = await $apiRest(apiAuthRoutes.logout,HttpMethodEnum.POST);
+       navigateTo("/login");
+       authStore.setToken(null);
+       authStore.setUser(null);
+      }catch(message){
+        toast.add({
+          title: "Error",
+          description: message ? message : 'Error al deslogearse',
+          color: "red"
+        })
+      }
+    }
   }]
 ])
 </script>

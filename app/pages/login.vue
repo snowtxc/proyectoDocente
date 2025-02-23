@@ -36,6 +36,7 @@ const googleSignInOptions: ImplicitFlowOptions = {
     try{
       const { code } = response;
       const responseGoogle =  await $apiRest(apiAuthRoutes.loginWithGoogleCallback, HttpMethodEnum.POST, { code });
+      console.log(responseGoogle);
       if(responseGoogle){
         const { user, token } = responseGoogle;
         console.log(user,token);
