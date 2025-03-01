@@ -1,12 +1,11 @@
 // src/services/authService.ts
-import type { CreateUserDTO, LoginDTO } from "~/types/user";
 import { useNuxtApp } from "#app";
 import { defineStore } from "pinia";
 import type { CreatePlanificacionDTO, Planificacion } from "~/types/planificacion";
 
 export const planificacionApi = {
   create: "/planificaciones/",
-  get: "/planificaciones/paged/",
+  get: "/planificaciones/paged",
   getById: (id: string) => `/planificaciones/${id}`,
 };
 

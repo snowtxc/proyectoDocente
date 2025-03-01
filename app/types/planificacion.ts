@@ -1,4 +1,5 @@
 import type { EstadoType } from ".";
+import type { Grupo } from "./grupo";
 
 export interface CreatePlanificacionDTO {
   groupId: any;
@@ -15,16 +16,6 @@ type Grado = {
   updated_at: string | null;
 };
 
-type Grupo = {
-  id: number;
-  nombre: string;
-  esMultiGrado: boolean;
-  year: number;
-  created_at: string | null;
-  updated_at: string | null;
-  url_image: string;
-  grados: Grado[];
-};
 
 export type Planificacion = {
   id: number;

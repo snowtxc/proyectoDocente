@@ -7,9 +7,11 @@ export const apiAuthRoutes = {
     getLoggedUser : '/user',
     register: '/register',
     loginWithGoogleCallback: '/login/google/callback',
-    linkOrUpdateGoogleAccount : 'auth/linkOrUpdateGoogleAccount',
+    linkOrUpdateGoogleAccount : '/auth/linkOrUpdateGoogleAccount',
     updateProfile: '/auth/updateProfile',
     logout: '/logout',
+    user: '/user',
+    checkIfUserLogged: '/checkIfUserLogged',
 }
 
 export const apiUserConfigRoutes = {
@@ -18,6 +20,7 @@ export const apiUserConfigRoutes = {
 }
 
 export const apiGrupoRoutes = {
+    listAll: '/grupos',
     list: '/grupos/paged',
     getPaginate: '/grupos/paged',
     create: '/grupos',
@@ -26,4 +29,10 @@ export const apiGrupoRoutes = {
 
 export const apiGradoRoutes = {
     listAll: '/grados',
+}
+
+export const apiPlanificacionesRoutes = {
+    getPaginate: '/planificaciones/paged',
+    create: "/planificaciones",
+    update: (id:number) => `/planificaciones/${id}`
 }

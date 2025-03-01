@@ -1,17 +1,12 @@
 <script setup lang="ts">
 
 import type { LoginDTO } from '~/types/user';
-
 import { apiAuthRoutes } from "~/utils/apiRoutes";
-
-import { useErrorStore } from '~/services/errorService/errorService';
-
 import { HttpMethodEnum } from '~/utils/enums/HttpMethodEnum';
-
 import { useAuthStore } from '~/utils/authStore';
 
 definePageMeta({
-  layout: 'auth'
+  layout: 'auth',
 })
 
 useSeoMeta({
@@ -19,7 +14,6 @@ useSeoMeta({
 })
 
 const { $apiRest } = useNuxtApp();
-
 const toast = useToast();
 const authStore = useAuthStore();
 
@@ -32,14 +26,13 @@ import {
 
 
 const googleSignInOptions: ImplicitFlowOptions = {
+  scope: googleScopes,
   onSuccess: async(response: ImplicitFlowSuccessResponse) => {
     try{
       const { code } = response;
       const responseGoogle =  await $apiRest(apiAuthRoutes.loginWithGoogleCallback, HttpMethodEnum.POST, { code });
-      console.log(responseGoogle);
       if(responseGoogle){
         const { user, token } = responseGoogle;
-        console.log(user,token);
         authStore.setToken(token);
         authStore.setUser(user);
         navigateTo({ path: '/home' });
@@ -50,11 +43,13 @@ const googleSignInOptions: ImplicitFlowOptions = {
    
   },
   onError: (errorResponse: ImplicitFlowErrorResponse) => {
-    errorService.setError(errorResponse.error_description);
+    toast.add({
+      title: "Error",
+      description: errorResponse.error_description,
+      color: "red"
+    });
   }
 };
-
-const errorService =   useErrorStore();
 
 const { isReady, login: loginWithGoogle } = useCodeClient(googleSignInOptions);
 

@@ -3,7 +3,7 @@ import { createSharedComposable } from '@vueuse/core'
 const _usePagination = () => {
 
   const page = ref<number>(1);
-  const rowsPerPage = ref<number>(10);
+  const rowsPerPage = ref<number>(1);
   const totalRows = ref<number>(0);
 
   const changePage = (newPage: number)=>{

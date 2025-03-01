@@ -4,8 +4,44 @@ import type { DriveFolderList, DriveFolder, ListFoldersDTO } from '~/types/googl
 import { apiGoogleDriveRoutes } from "~/utils/apiRoutes";
 import { HttpMethodEnum } from '~/utils/enums/HttpMethodEnum';
 import { DriveListModeEnum } from '~/utils/enums/DriveListModeEnum';
+import {
+  useCodeClient,
+  type ImplicitFlowSuccessResponse,
+  type ImplicitFlowErrorResponse,
+  type ImplicitFlowOptions
+} from "vue3-google-signin";
 
 const {  $apiRest  } = useNuxtApp();
+const toast = useToast()
+
+const googleSignInOptions: ImplicitFlowOptions = {
+  scope: googleScopes,
+  onSuccess: async(responseGoogle: ImplicitFlowSuccessResponse) => {
+    try{
+      const { code } = responseGoogle;
+      const response =  await $apiRest(apiAuthRoutes.linkOrUpdateGoogleAccount, HttpMethodEnum.POST, { code });
+      isOpen.value = true;
+      listFolders(null, DriveListModeEnum.ROOT);
+    }catch(message){
+      toast.add({
+        title: "Error",
+        description: message,
+        color: "red"
+      });
+    }
+   
+  },
+  onError: (errorResponse: ImplicitFlowErrorResponse) => {
+    toast.add({
+      title: "Error",
+      description: errorResponse.error_description,
+      color: "red"
+    })
+  }
+};
+
+const { isReady, login: loginWithGoogle } = useCodeClient(googleSignInOptions);
+
 
 const loading = ref<boolean>(false);
 const folders = ref<DriveFolder[]>([]);
@@ -40,13 +76,36 @@ const folderIsSelected = computed(()=>{
 })
 
 
+const openPopupGoogle = ()=>{
+  loginWithGoogle();
+}
+
 const listFolders = async(folderId?:string, listMode? : DriveListModeEnum) => {
-  loading.value = true;
-  const requestFolder: ListFoldersDTO  = { folderId, listMode };
-  const data : DriveFolderList = await $apiRest(apiGoogleDriveRoutes.listFolders, HttpMethodEnum.POST, requestFolder);
-  folders.value = data.folders;
-  isRootDirectory.value = data.isRoot;
-  loading.value = false;
+  try{
+    loading.value = true;
+    const requestFolder: ListFoldersDTO  = { folderId, listMode };
+    const data : DriveFolderList  = await $apiRest(apiGoogleDriveRoutes.listFolders, HttpMethodEnum.POST, requestFolder);
+    
+    const { status ,relogin} = data;
+    if(!status && relogin){
+      openPopupGoogle();
+      isOpen.value = false;
+      return;
+    }
+
+    folders.value = data.folders;
+    isRootDirectory.value = data.isRoot;
+    loading.value = false;
+  }catch(message){
+    loading.value = false;
+    toast.add({
+      title: "Error",
+      description: message,
+      color: "red"
+    });
+    isOpen.value = false;
+  }
+  
 }
 
 const foldersFiltered = computed(() => {

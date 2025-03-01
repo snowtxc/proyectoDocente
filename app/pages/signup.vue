@@ -84,7 +84,7 @@ async function onSubmit(data: any) {
     toast.add({
       title: "Cuenta Creada",
       description: "Se ha creado correctamente su cuenta",
-      color: "red"
+      color: "green"
     });
 
   }catch(message){

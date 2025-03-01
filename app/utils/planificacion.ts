@@ -1,4 +1,5 @@
 import { EstadoType } from "~/types";
+import { PlanificacionEstadoEnum } from "./enums/PlanificacionEstado.enum";
 
 export const formattedImageUrlGrupo = (image_url: any) => {
     let url = image_url?.replace(/\\/g, '');
@@ -8,10 +9,10 @@ export const formattedImageUrlGrupo = (image_url: any) => {
     return url;
 };
 
-export const getColorsEstado = (estado: string): string => {
-    if (estado == EstadoType.Finalizada) {
+export const getColorsEstado = (estado: PlanificacionEstadoEnum): string => {
+    if (estado == PlanificacionEstadoEnum.FINALIZADA) {
         return `green`
-    } else if (estado === EstadoType.EnCurso) {
+    } else if (estado == PlanificacionEstadoEnum.EN_CURSO) {
         return `orange`
     } else {
         return `blue`

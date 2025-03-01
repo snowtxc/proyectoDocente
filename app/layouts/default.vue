@@ -1,5 +1,18 @@
 <script setup lang="ts">
 
+import { useAuthStore } from '~/utils/authStore';
+import { HttpMethodEnum } from '~/utils/enums/HttpMethodEnum';
+import { apiAuthRoutes } from "~/utils/apiRoutes";
+
+const { $apiRest } = useNuxtApp();
+
+const authStore = useAuthStore();
+
+const user = await $apiRest(apiAuthRoutes.user,HttpMethodEnum.GET);
+
+authStore.setUser(user);
+
+
 const links = [{
   id: 'home',
   label: 'Inicio',
@@ -29,16 +42,6 @@ const links = [{
   tooltip: {
     text: 'Planificaciones',
     shortcuts: []
-  }
-},
-{
-  id: 'secuencias',
-  label: 'Secuencias',
-  icon: 'i-heroicons-home',
-  to: '/secuencias',
-  tooltip: {
-    text: 'Secuencias',
-    shortcuts: [],
   }
 }]
 
