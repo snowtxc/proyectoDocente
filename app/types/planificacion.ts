@@ -31,4 +31,6 @@ export type Planificacion = {
   grados: Grado[];
   grupo: Grupo;
   tramos: number;
+  slug: string;
+  fechas: any;
 };

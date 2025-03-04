@@ -34,5 +34,6 @@ export const apiGradoRoutes = {
 export const apiPlanificacionesRoutes = {
     getPaginate: '/planificaciones/paged',
     create: "/planificaciones",
-    update: (id:number) => `/planificaciones/${id}`
+    update: (id:number) => `/planificaciones/${id}`,
+    getBySlug : (slug: string) => `/planificaciones/${slug}`
 }

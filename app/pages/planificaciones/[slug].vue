@@ -1,16 +1,19 @@
 <script setup lang="ts">
-import { usePlanificacionService } from "~/services/planificacionService/planificacionService";
+import type { Planificacion } from '~/types/planificacion';
+import { HttpMethodEnum } from '~/utils/enums/HttpMethodEnum';
+
+
+const { $apiRest } = useNuxtApp();
 
 const route = useRoute();
-const id = route.params.id;
-const planificacionService = usePlanificacionService();
+const slug = route.params.slug as string;
 
-const loadedPlanificacion = computed(
-  () => planificacionService.loadedPlanificacion
-);
+const loadedPlanificacion =  ref<Planificacion>(null);
+
 const fechas = computed(() => loadedPlanificacion.value?.fechas ?? []);
 const errorPage = ref({ ok: false, message: "" });
-const selectedFecha = ref(fechas?.length > 0 ? fechas[0] : null);
+
+const selectedFecha = ref(fechas?.value.length > 0 ? fechas[0] : null);
 
 const changeSelectedFecha = (direction: "prev" | "next") => {
   const currentIndex = fechas?.value.findIndex(
@@ -32,20 +35,9 @@ watch(
 );
 
 onMounted(async () => {
-  if (id) {
-    await planificacionService.getPlanificacion(id as string, (msg: string) => {
-      errorPage.value = {
-        ok: true,
-        message: msg,
-      };
-    });
-  } else {
-    errorPage.value = {
-      ok: true,
-      message: "La planificacion indicada no existe",
-    };
-  }
+  const planificacion = await $apiRest(apiPlanificacionesRoutes.getBySlug(slug), HttpMethodEnum.GET);
 });
+
 const progress = computed(() => {
   const totalFechas = fechas.value.length;
   if (!selectedFecha.value || totalFechas === 0) {

@@ -188,7 +188,7 @@ const onSearch = ()=>{
         <template #grados-data="{ row }">
           <div class="flex flex-wrap items-center gap-2">
             <BadgeGrado
-            v-for="grado in row.grados"
+            v-for="grado in row.grupo.grados"
             :key="grado.id"
             :grado="grado">
           </BadgeGrado>

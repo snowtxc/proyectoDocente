@@ -207,7 +207,7 @@ const onCreatePlanificacion = ()=>{
                 :ui="{ divide: 'divide-gray-200 dark:divide-gray-800' }"
                  @select="onSelect">
                 <template #nombre-data="{ row }">
-                    <ULink :to="appRoutes.planificacionPage(row.id)" active-class=""
+                    <ULink :to="appRoutes.planificacionPage(row.slug)" active-class=""
                         class="text-green-500 underline dark:text-green-400 hover:text-green-700 dark:hover:text-green-200">
                         {{ row?.nombre }}
                     </ULink>
@@ -230,7 +230,7 @@ const onCreatePlanificacion = ()=>{
                 <template #grados-data="{ row }">
                     <div class="flex items-center gap-2">
                         <span>{{
-                            row.grados.map((grado) => grado?.nombre)?.join(", ")
+                            row.grupo.grados.map((grado) => grado?.nombre)?.join(", ")
                         }}</span>
                     </div>
                 </template>
