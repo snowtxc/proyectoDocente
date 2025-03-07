@@ -132,7 +132,7 @@ async function onSubmit(data: any) {
 
       <template #password-hint>
         <NuxtLink
-          to="/"
+          to="/forgot-password"
           class="text-primary font-medium"
         >Olvidaste la contraseña?</NuxtLink>
       </template>

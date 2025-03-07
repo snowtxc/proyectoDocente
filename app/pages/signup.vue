@@ -46,9 +46,13 @@ const fields = [{
 }]
 
 const validate = (state: any) => {
+
+  const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+
   const errors = []
   if (!state.email) errors.push({ path: 'email', message: 'El email es requerido' })
   if (!state.password) errors.push({ path: 'password', message: 'La contraseña es requerida' })
+  if(state.password  && !passwordRegex.test(state.password)) errors.push({ path: 'password', message: 'La contraseña no es válida. Debe contener al menos una letra mayúscula, una minúscula, un número y un carácter especial.' })
   if (!state.name) errors.push({ path: 'name', message: 'El nombre el requerido' })
 
   return errors
@@ -102,6 +106,7 @@ async function onSubmit(data: any) {
 <!-- eslint-disable vue/singleline-html-element-content-newline -->
 <template>
   <UCard class="max-w-sm w-full bg-white/75 dark:bg-white/5 backdrop-blur">
+    
     <UAuthForm
       :fields="fields"
       :validate="validate"

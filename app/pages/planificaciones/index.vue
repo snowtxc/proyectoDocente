@@ -88,10 +88,12 @@ const loadPlanificaciones = async () => {
         filters: filters.value
     }
 
+    isLoading.value = true;
     try{
         const response = await $apiRest<ListResponse<Planificacion[]>>(apiPlanificacionesRoutes.getPaginate, HttpMethodEnum.POST , listReq);
         changeTotalRows(response.totalCount);
         planificaciones.value = response.list;  
+        isLoading.value = false;
 
     }catch(message){
         toast.add({
@@ -99,6 +101,7 @@ const loadPlanificaciones = async () => {
             description: message,
             color: "red"
         });
+        isLoading.value = false;
     }
 };
 

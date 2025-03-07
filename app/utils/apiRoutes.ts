@@ -12,6 +12,10 @@ export const apiAuthRoutes = {
     logout: '/logout',
     user: '/user',
     checkIfUserLogged: '/checkIfUserLogged',
+    forgotPassword : '/forgot-password',
+    verifyTokenResetPassword: (token:string) => `/verify-token-reset-password/${token}`,
+    resetPassword: '/reset-password',
+
 }
 
 export const apiUserConfigRoutes = {
