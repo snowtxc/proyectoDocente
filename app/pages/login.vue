@@ -68,7 +68,7 @@ const fields = [{
 const validate = (state: any) => {
   const errors = []
   if (!state.email) errors.push({ path: 'email', message: 'Email is required' })
-  if (!state.password) errors.push({ path: 'password', message: 'Password is required' })
+  if (!state.password) errors.push({ path: 'password', message: 'Contraseña es requerida' })
   return errors
 }
 

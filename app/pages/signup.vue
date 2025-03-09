@@ -8,6 +8,14 @@ import { HttpMethodEnum } from '~/utils/enums/HttpMethodEnum';
 
 import type { CreateUserDTO } from '~/types/user';
 
+import {
+  useCodeClient,
+  type ImplicitFlowSuccessResponse,
+  type ImplicitFlowErrorResponse,
+  type ImplicitFlowOptions
+} from "vue3-google-signin";
+
+
 definePageMeta({
   layout: 'auth'
 })
@@ -58,13 +66,45 @@ const validate = (state: any) => {
   return errors
 }
 
+
+
+const googleSignInOptions: ImplicitFlowOptions = {
+  scope: googleScopes,
+  onSuccess: async(response: ImplicitFlowSuccessResponse) => {
+    try{
+      const { code } = response;
+      const responseGoogle =  await $apiRest(apiAuthRoutes.loginWithGoogleCallback, HttpMethodEnum.POST, { code });
+      if(responseGoogle){
+        const { user, token } = responseGoogle;
+        authStore.setToken(token);
+        authStore.setUser(user);
+        navigateTo({ path: '/home' });
+      }
+    }catch(e){
+      // ToDo
+    }
+   
+  },
+  onError: (errorResponse: ImplicitFlowErrorResponse) => {
+    toast.add({
+      title: "Error",
+      description: errorResponse.error_description,
+      color: "red"
+    });
+  }
+};
+
+const { isReady, login: loginWithGoogle } = useCodeClient(googleSignInOptions);
+
+
 const providers = [{
   label: 'Continuar con Google',
   icon: 'i-simple-icons-google',
   color: 'white' as const,
   click: () => {
-    console.log('Redirect to GitHub login')
-  }
+     // Se abré el login en base a nuestro client-id generado
+     loginWithGoogle();
+   }
 }]
 
 async function onSubmit(data: any) {

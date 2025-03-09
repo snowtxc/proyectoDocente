@@ -1,17 +1,12 @@
 <script setup lang="ts">
-    import { HttpMethodEnum } from '~/utils/enums/HttpMethodEnum';
-    import { apiGradoRoutes } from '~/utils/apiRoutes';
 
     import type { Grado } from '~/types/grado';
 
-    const grados = ref<Grado[]>([]);
-    const isLoading = ref<boolean>(false);
-    
-    const {  $apiRest  } = useNuxtApp();
-
     interface Props {
         modelValue: any,
+        grados: Grado[],
         multiple: boolean
+        loading?: boolean
     }
 
     const props = withDefaults(defineProps<Props>(), {
@@ -21,11 +16,10 @@
 
     const emit = defineEmits(['update:modelValue']);
 
-    onMounted(async()=>{
-        isLoading.value = true;
-        const gradosResponse  = await $apiRest(apiGradoRoutes.listAll, HttpMethodEnum.GET);
-        grados.value = gradosResponse;
-        isLoading.value = false;
+    const  grados =  ref<Grado[]>(props.grados);
+
+    watch(() => props.grados, ()=>{
+        grados.value = props.grados;
     })
 
     const updateValue = (value) => {
@@ -44,9 +38,9 @@
             option-attribute="nombre"
             :search-attributes="['nombre']"
             :options="grados"
-            :loading="isLoading"
             :multiple="props.multiple"
-            :model-value="props.modelValue"            
+            :model-value="props.modelValue"         
+            :loading="loading"   
         >
         <template #label>
             <span v-if="!props.modelValue || (typeof props.modelValue == 'object' && props.modelValue.length <= 0)"> {{  props.multiple ? 'Seleccionar Grados' : 'Seleccionar Grado' }} </span>

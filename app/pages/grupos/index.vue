@@ -5,11 +5,12 @@ import type { ListRequest } from '~/types/list-request';
 import type { Grado } from '~/types/grado';
 import { HttpMethodEnum } from '~/utils/enums/HttpMethodEnum';
 import { apiGrupoRoutes } from '~/utils/apiRoutes';
+import type { ListResponse } from '~/types/list-response';
 
 const {  $apiRest  } = useNuxtApp();
+
 const  { page, rowsPerPage, totalRows,changePage, changeTotalRows  }  = usePagination();
 
-const grupos = ref<Grupo[]>([]);
 const filters  =  ref<{ nombre: string, year?: number , grado?: Grado}>({ nombre: '', year: null, grado: null })
 const searchTimeOut = ref(null);
 
@@ -41,18 +42,34 @@ const columns = computed(() => defaultColumns.filter(column => selectedColumns.v
 
 const isLoading = ref(false);
 
-onMounted(async()=>{
-  loadGrupos();
-})
-
-const loadGrupos = async()=>{
-  isLoading.value = true;
-  const listReq: ListRequest = {
+const listReq = ref<ListRequest>({
     page: page.value,
     rowsPerPage: rowsPerPage.value,
     filters: filters.value
-  }
-  const listResponse  = await $apiRest(apiGrupoRoutes.getPaginate, HttpMethodEnum.POST, listReq);
+})
+
+const { data: response } = await useAsyncData('grupos', async() => { 
+
+  const [ listGruposResponse , grados ] =  
+  await Promise.all(
+  [$apiRest<ListResponse<Grupo[]>>(apiGrupoRoutes.getPaginate, HttpMethodEnum.POST, listReq.value),
+   $apiRest<Grado[]>(apiGradoRoutes.listAll, HttpMethodEnum.GET)]);
+
+   return {
+    listGruposResponse,
+    grados
+   }
+});
+
+const { listGruposResponse , grados } = response.value;
+
+const grupos = ref<Grupo[]>(listGruposResponse.list);
+changeTotalRows(listGruposResponse.totalCount);
+
+
+const loadGrupos = async()=>{
+  isLoading.value = true;
+  const listResponse  = await $apiRest(apiGrupoRoutes.getPaginate, HttpMethodEnum.POST, listReq.value);
   isLoading.value = false;
   grupos.value = listResponse.list;
   changeTotalRows(listResponse.totalCount);  
@@ -82,6 +99,7 @@ const openSlideOverNuevoGrupo = ()=>{
 }
 
 watch(()=> page.value, ()=>{
+  listReq.value.page = page.value;
   loadGrupos();
 })
 
@@ -138,10 +156,11 @@ const onSearch = ()=>{
           <div class="w-full flex gap-2">
             <SelectYear v-model="filters.year" class="flex-1 max-w-72" @update:modelValue="onFilter"> </SelectYear>
         
-            <SelectGrado
+          <SelectGrado
               v-model="filters.grado"
               @update:modelValue="onFilter"
               :multiple="false"
+              :grados="grados"
               class="w-full flex-1 max-w-72"
             />
           </div>
@@ -188,7 +207,7 @@ const onSearch = ()=>{
         <template #grados-data="{ row }">
           <div class="flex flex-wrap items-center gap-2">
             <BadgeGrado
-            v-for="grado in row.grupo.grados"
+            v-for="grado in row.grados"
             :key="grado.id"
             :grado="grado">
           </BadgeGrado>

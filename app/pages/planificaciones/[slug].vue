@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import type { Planificacion } from '~/types/planificacion';
 import { HttpMethodEnum } from '~/utils/enums/HttpMethodEnum';
-
+import { format,parseISO } from "date-fns";
+import { es } from 'date-fns/locale';
 
 const { $apiRest } = useNuxtApp();
 
@@ -10,8 +11,31 @@ const slug = route.params.slug as string;
 
 const loadedPlanificacion =  ref<Planificacion>(null);
 
+const { data: planificacion, error, refresh } = await useAsyncData('posts', async () => {
+  const response = await $apiRest(apiPlanificacionesRoutes.getBySlug(slug), HttpMethodEnum.GET);
+  return response;
+});
+
+const grupo  = computed(()=>{
+  return planificacion.value.grupo;
+})
+
+const fechaDesdeFormatted = computed(()=>{
+  const fecha = parseISO(planificacion.value.fechaDesde);
+  let fechaFormateada = format(fecha, "iiii d 'de' MMMM", { locale: es });
+  fechaFormateada = fechaFormateada.charAt(0).toUpperCase() + fechaFormateada.slice(1);
+  return fechaFormateada;
+})
+
+const fechaHastaFormatted = computed(()=>{
+  const fecha = parseISO(planificacion.value.fechaHasta);
+  let fechaFormateada = format(fecha, "iiii d 'de' MMMM", { locale: es });
+  fechaFormateada = fechaFormateada.charAt(0).toUpperCase() + fechaFormateada.slice(1);
+  return fechaFormateada;
+})
+
+
 const fechas = computed(() => loadedPlanificacion.value?.fechas ?? []);
-const errorPage = ref({ ok: false, message: "" });
 
 const selectedFecha = ref(fechas?.value.length > 0 ? fechas[0] : null);
 
@@ -26,10 +50,26 @@ const changeSelectedFecha = (direction: "prev" | "next") => {
   }
 };
 
+const items = ref([
+  {
+    title: 'Address',
+    description: 'Add your address here',
+    icon: 'i-lucide-house'
+  },
+  {
+    title: 'Shipping',
+    description: 'Set your preferred shipping method',
+    icon: 'i-lucide-truck'
+  },
+  {
+    title: 'Checkout',
+    description: 'Confirm your order'
+  }
+])
+
 watch(
   () => fechas.value,
   (newVal) => {
-    console.log("newVal", newVal);
     selectedFecha.value = newVal[0];
   }
 );
@@ -48,144 +88,174 @@ const progress = computed(() => {
   );
   return ((currentIndex + 1) / totalFechas) * 100; // Progress in percentage
 });
+
+const tabItems = [{
+  label: 'All'
+}, {
+  label: 'Unread'
+}]
+const selectedTab = ref(0)
+
+const dropdownItems = [[{
+  label: 'Mark as unread',
+  icon: 'i-heroicons-check-circle'
+}, {
+  label: 'Mark as important',
+  icon: 'i-heroicons-exclamation-circle'
+}], [{
+  label: 'Star thread',
+  icon: 'i-heroicons-star'
+}, {
+  label: 'Mute thread',
+  icon: 'i-heroicons-pause-circle'
+}]]
+
+const { data: mails } = await useFetch<any[]>('/api/mails', { default: () => [] })
+
+// Filter mails based on the selected tab
+const filteredMails = computed(() => {
+  if (selectedTab.value === 1) {
+    return mails.value.filter(mail => !!mail.unread)
+  }
+
+  return mails.value
+})
+
+const selectedMail = ref<any | null>()
+
+const isMailPanelOpen = computed({
+  get() {
+    return !!selectedMail.value
+  },
+  set(value: boolean) {
+    if (!value) {
+      selectedMail.value = null
+    }
+  }
+})
+
+// Reset selected mail if it's not in the filtered mails
+watch(filteredMails, () => {
+  if (!filteredMails.value.find(mail => mail.id === selectedMail.value?.id)) {
+    selectedMail.value = null
+  }
+})
 </script>
 
 <template>
-  <div
-    class="flex w-full flex-grow items-center justify-center h-full"
-    v-if="errorPage.ok"
-  >
-    <UPageError :message="errorPage.message || 'Error'" />
-  </div>
-
-  <UDashboardPage class="relative" v-if="loadedPlanificacion?.id">
-    <UDashboardPanel grow>
-      <UDashboardNavbar class="text-lg" title="Detalle planificacion">
-        <template #badge>
-          <UBadge
-            :label="loadedPlanificacion?.nombre"
-            variant="outline"
-            color="blue"
-            class="px-3 py-1 text-lg ml-2 font-semibold border-2"
-          />
-        </template>
+  <UDashboardPage>
+    <UDashboardPanel
+      id="grupo"
+      :width="400"
+      :resizable="{ min: 300, max: 500 }"
+    >
+      <UDashboardNavbar
+        :title="grupo.nombre"
+      >
         <template #right>
-          <UButton
-            label="Duplicar"
-            icon-class="w-4"
-            icon="i-heroicons-document-duplicate"
-            color="gray"
-          />
-          <UButton label="Editar" icon="i-heroicons-pencil" color="gray" />
-          <UButton
-            label="Exportar PDF"
-            icon="i-heroicons-document-arrow-down"
-            color="gray"
-          />
+          <BadgeGrado
+          v-for="grado in planificacion.grupo.grados"
+          :key="grado.id"
+          :grado="grado">
+        </BadgeGrado>
+      
         </template>
       </UDashboardNavbar>
-      <div
-        class="w-full h-auto px-5 py-4 flex flex-col items-start justify-center gap-5"
+
+      <div>
+        <!-- <UStepper disabled :items="items"/> -->
+
+        <UStepper :items="items" class="w-full" />
+      </div>
+
+    </UDashboardPanel>
+
+    <UDashboardPanel
+      collapsible
+      grow
+      side="right"
+    >
+    <UDashboardNavbar>
+      <template #toggle>
+        <UDashboardNavbarToggle icon="i-heroicons-x-mark" />
+
+        <UDivider
+          orientation="vertical"
+          class="mx-1.5 lg:hidden"
+        />
+      </template>
+
+      <template #left>
+        <UDashboardNavbar
+        :title="planificacion.nombre"
       >
-        <InfoRows
-          :rows="[
-            {
-              key: 'Nombre',
-              value: loadedPlanificacion?.nombre,
-            },
-            {
-              key: 'Rango de tiempos',
-              value: 'Nombre',
-              slotName: `rangoTiempos-slot`,
-            },
-            {
-              key: 'Estado',
-              value: loadedPlanificacion?.estado,
-              slotName: 'estado-slot',
-            },
-            {
-              key: 'Grupo',
-              value: loadedPlanificacion?.grupo,
-              slotName: 'grupo-slot',
-            },
-            {
-              key: 'Grados',
-              value: loadedPlanificacion?.grados,
-              slotName: 'grado-slot',
-            },
-          ]"
-        >
-          <template #estado-slot>
-            <UBadge
-              size="lg"
-              :label="loadedPlanificacion.estado"
-              :variant="'outline'"
-              :ui="{ rounded: 'rounded-full', backgroundColor: '#111111' }"
-              :class="getColorsEstado(loadedPlanificacion.estado ?? '')"
-            />
-          </template>
-          <template #grupo-slot>
-            <div class="w-auto flex flex-row items-center justify-start gap-2">
-              <UAvatar
-                :src="
-                  formattedImageUrlGrupo(loadedPlanificacion?.grupo?.url_image)
-                "
-                alt="Avatar"
+        <template #right>
+            <UBadge class="ml-2">
+              {{ fechaDesdeFormatted }} - {{ fechaHastaFormatted }}
+            </UBadge>
+        </template>
+      </UDashboardNavbar>
+      </template>
+
+      <template #right>
+        <UTooltip text="Archive">
+          <UButton
+            icon="tabler:brand-google-drive"
+            color="gray"
+            variant="ghost"
+          />
+        </UTooltip>
+
+        <UTooltip text="Move to junk">
+          <UButton
+            icon="tabler:trash"
+            color="gray"
+            variant="ghost"
+          />
+        </UTooltip>
+
+        <UDivider
+          orientation="vertical"
+          class="mx-1.5"
+        />
+
+        <UPopover :popper="{ placement: 'bottom-start' }">
+          <template #default="{ open }">
+            <UTooltip
+              text="Snooze"
+              :prevent="open"
+            >
+              <UButton
+                icon="i-heroicons-clock"
+                color="gray"
+                variant="ghost"
+                :class="[open && 'bg-gray-50 dark:bg-gray-800']"
               />
-              <span class="text-neutral-800 font-medium text-sm">{{
-                loadedPlanificacion?.grupo?.nombre
-              }}</span>
-            </div>
+            </UTooltip>
           </template>
-          <template #rangoTiempos-slot>
-            <div class="flex items-center gap-2">
-              <UIcon name="i-heroicons-calendar" class="w-5 h-5" />
-              <span class="font-medium text-sm"
-                >{{ loadedPlanificacion?.fechaDesde }} -
-                {{ loadedPlanificacion?.fechaHasta }}</span
-              >
-            </div>
+
+          <template #panel="{ close }">
+            <DatePicker @close="close" />
           </template>
-          <template #grado-slot>
-            <div class="flex items-center gap-2">
-              <span class="font-medium text-neutral-700">{{
-                loadedPlanificacion?.grados
-                  ?.map((grado) => grado?.nombre)
-                  .join(", ")
-              }}</span>
-            </div>
-          </template>
-        </InfoRows>
-        <div
-          class="flex relative w-full flex-col items-center justify-center gap-4"
-        >
-          <UProgress :value="progress ?? 0" />
-          <div class="flex transition-all font-medium items-center gap-2">
-            <UIcon name="i-heroicons-calendar" class="w-6 h-6" />
-            <span class="font-medium text-xl">{{ selectedFecha?.fecha }}</span>
-          </div>
-          <div
-            class="absolute text-lg text-green-500 underline flex flex-row items-center justify-center gap-1 font-medium cursor-pointer right-0 top-6"
-          >
-            <UIcon
-              class="w-5 h-5 font-bold"
-              name="i-heroicons-chat-bubble-oval-left-ellipsis"
-            />
-            <span>Observaciones</span>
-          </div>
-        </div>
+        </UPopover>
+      </template>
+
+    
+    </UDashboardNavbar>
+      <template v-if="selectedMail">
+        <!-- ~/components/inbox/InboxMail.vue -->
+        <InboxMail :mail="selectedMail" />
+      </template>
+      <div
+        v-else
+        class="flex-1 hidden lg:flex items-center justify-center"
+      >
+        <UIcon
+          name="i-heroicons-inbox"
+          class="w-32 h-32 text-gray-400 dark:text-gray-500"
+        />
       </div>
     </UDashboardPanel>
-    <!-- ~/components/PlanificacionDia.vue -->
-    <PlanificacionDia
-      :disabledBack="selectedFecha?.id === (fechas[0] ? fechas[0]?.id : null)"
-      :disabledNext="
-        selectedFecha?.id ===
-        (fechas[fechas?.length - 1] ? fechas[fechas?.length - 1]?.id : null)
-      "
-      :selectedDay="selectedFecha"
-      @changeDate="changeSelectedFecha"
-      v-if="loadedPlanificacion?.fechas?.length > 0"
-    />
   </UDashboardPage>
+  
 </template>

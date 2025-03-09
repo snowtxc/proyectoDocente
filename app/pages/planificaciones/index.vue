@@ -80,17 +80,24 @@ const handleUpdateSliderOver = (isOpen)=>{
    isSlideoverOpen.value = isOpen;
 }
 
+const listReq = ref<ListRequest>({
+    page: page.value,
+    rowsPerPage: rowsPerPage.value,
+    filters: filters.value
+});
+
+const { data: response } = await useAsyncData('grupos', async() => { 
+     return await  $apiRest<ListResponse<Planificacion[]>>(apiPlanificacionesRoutes.getPaginate, HttpMethodEnum.POST, listReq.value);
+});
+
+planificaciones.value = response.value.list;
+changeTotalRows(response.value.totalCount);
+
+
 const loadPlanificaciones = async () => {
-
-    const listReq: ListRequest = {
-        page: page.value,
-        rowsPerPage: rowsPerPage.value,
-        filters: filters.value
-    }
-
     isLoading.value = true;
     try{
-        const response = await $apiRest<ListResponse<Planificacion[]>>(apiPlanificacionesRoutes.getPaginate, HttpMethodEnum.POST , listReq);
+        const response = await $apiRest<ListResponse<Planificacion[]>>(apiPlanificacionesRoutes.getPaginate, HttpMethodEnum.POST , listReq.value);
         changeTotalRows(response.totalCount);
         planificaciones.value = response.list;  
         isLoading.value = false;
@@ -130,11 +137,9 @@ watch(
     }
 );
 
-onMounted(async () => {
-    loadPlanificaciones();
-});
 
 watch(()=> page.value, ()=>{
+  listReq.value.page = page.value;
   loadPlanificaciones();
 });
 

@@ -1,3 +1,4 @@
+import type { PlanificacionEstadoEnum } from "~/utils/enums/PlanificacionEstado.enum";
 import type { EstadoType } from ".";
 import type { Grupo } from "./grupo";
 
@@ -27,7 +28,7 @@ export type Planificacion = {
   deleted_at: string | null;
   created_at: string;
   updated_at: string;
-  estado: EstadoType;
+  estado: PlanificacionEstadoEnum;
   grados: Grado[];
   grupo: Grupo;
   tramos: number;
