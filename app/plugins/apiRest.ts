@@ -24,8 +24,7 @@ export default defineNuxtPlugin((nuxtApp) => {
 
         //     await $fetch(endpointRequestCrsfToken); // Solo si no está presente la cookie se envia la request para setear la cookie del token csrf.
         // }
-
-    
+        
         const headers = token ? {
             Authorization: `Bearer ${token}`,
             Accept: "application/json",

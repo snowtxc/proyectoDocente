@@ -41,3 +41,12 @@ export const apiPlanificacionesRoutes = {
     update: (id:number) => `/planificaciones/${id}`,
     getBySlug : (slug: string) => `/planificaciones/${slug}`
 }
+
+export const apiPlanificacionesFechaRoutes = {
+    create: "/planificaciones-fecha",
+    find : (id: number) => `/planificaciones-fecha/${id}`
+}
+
+export const apiTramosRoutes = {
+    create: "/tramos",
+}

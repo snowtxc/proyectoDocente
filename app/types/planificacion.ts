@@ -1,12 +1,12 @@
 import type { PlanificacionEstadoEnum } from "~/utils/enums/PlanificacionEstado.enum";
 import type { EstadoType } from ".";
 import type { Grupo } from "./grupo";
+import type { BaseModel } from "./base.model";
+import type { SimplePlanificacionFecha } from "./planificacionFecha";
 
 export interface CreatePlanificacionDTO {
   groupId: any;
   name: string;
-  startDate: string;
-  endDate: string;
 }
 
 type Grado = {
@@ -17,12 +17,9 @@ type Grado = {
   updated_at: string | null;
 };
 
-
 export type Planificacion = {
   id: number;
   nombre: string;
-  fechaDesde: string;
-  fechaHasta: string;
   grupo_id: number;
   user_id: number;
   deleted_at: string | null;
@@ -33,5 +30,5 @@ export type Planificacion = {
   grupo: Grupo;
   tramos: number;
   slug: string;
-  fechas: any;
+  fechas: SimplePlanificacionFecha[];
 };

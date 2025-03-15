@@ -46,17 +46,15 @@ const isEditMode = computed(()=>{
     return false;
 })
 
-const form = reactive<{ grupo: Grupo, name: string, rangeDate: { start: Date, end: Date } }>({
+const form = reactive<{ grupo: Grupo, name: string }>({
     grupo: null,
     name: '',
-    rangeDate: getDefaultRangeDate(),
 });
 
 const patchForm = (planificacionSelected: Planificacion) =>{
-  const { nombre, fechaDesde, fechaHasta , grupo} = planificacionSelected;
+  const { nombre,  grupo} = planificacionSelected;
 
   form.name = nombre;
-  form.rangeDate =  { start : parseISO(fechaDesde)  , end:  parseISO(fechaHasta) }
   form.grupo =  grupo;
 }
 
@@ -64,14 +62,13 @@ const validate = (state: any): FormError[] => {
     const errors = []
     if (!form.grupo) errors.push({ path: 'grupo', message: 'Por favor ingresa un grupo.' })
     if (form.name.trim().length == 0) errors.push({ path: 'name', message: 'Debes ingresar al menos un nombre a la planificación' })
-    if (!form.rangeDate) errors.push({ path: 'rangeDate', message: 'Debes ingresar una Fecha de Inicio y de fin.' });
     
     return errors
 }
 
 async function onSubmit(event: FormSubmitEvent<any>) {
 
-    const { rangeDate, grupo, name } = form;
+    const { grupo, name } = form;
 
     const errors = validate(form); // Obtén los errores de validación
     if (errors.length > 0)
@@ -93,8 +90,6 @@ async function onSubmit(event: FormSubmitEvent<any>) {
             const body: CreatePlanificacionDTO = {
                 groupId : grupo.id,
                 name,
-                startDate:  format(rangeDate.start ,'yyyy-MM-dd'),
-                endDate: format(rangeDate.end, 'yyyy-MM-dd')
             }   
             planificacionResponse = await $apiRest<Planificacion>(apiPlanificacionesRoutes.create, HttpMethodEnum.POST, body);
         }
@@ -133,11 +128,6 @@ async function onSubmit(event: FormSubmitEvent<any>) {
         <UFormGroup label="Grupo" name="grupo">
             <SelectGrupo v-model="form.grupo" :disabled="isEditMode"></SelectGrupo>
         </UFormGroup>
-
-        <UFormGroup label="Duración" name="rangeDate">
-            <PickerDateRange v-model="form.rangeDate" class="w-full" :classes="'w-full flex justify-center'" :disabled="isEditMode"></PickerDateRange>
-        </UFormGroup>
-
             
         <div class="flex w-full justify-end gap-3">
             <UButton label="Cancelar" color="gray" variant="ghost" @click="emit('close')" />

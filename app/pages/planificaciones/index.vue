@@ -18,10 +18,6 @@ const defaultColumns = [
         sortable: true,
     },
     {
-        key: "rangoTiempos",
-        label: "Fechas",
-    },
-    {
         key: "grupo",
         label: "Grupo",
     },
@@ -44,13 +40,11 @@ const search = ref("");
 
 const today = new Date();
 
-const defaultRangeDate = ref<{ start: Date, end: Date }>({ start:  new Date(today.getFullYear(), 0, 1) , end: new Date(today.getFullYear(), 11, 31) });
 const selectedStatus = ref(PlanificacionEstadoEnum.EN_CURSO);
 
-const filters = ref<{query?: string, estado?: string, rangeDates: { fechaDesde?: string, fechaHasta?: string } , search : string }>(
+const filters = ref<{query?: string, estado?: string , search : string }>(
     { query: undefined, 
      estado: selectedStatus.value, 
-     rangeDates: { fechaDesde: format(defaultRangeDate.value.start, 'yyyy-MM-dd'), fechaHasta: format(defaultRangeDate.value.end, 'yyyy-MM-dd')},
      search : ''
     }
 );
@@ -86,9 +80,11 @@ const listReq = ref<ListRequest>({
     filters: filters.value
 });
 
-const { data: response } = await useAsyncData('grupos', async() => { 
+const { data: response, error } = await useAsyncData('planificaciones', async() => { 
      return await  $apiRest<ListResponse<Planificacion[]>>(apiPlanificacionesRoutes.getPaginate, HttpMethodEnum.POST, listReq.value);
 });
+
+console.log(response.value)
 
 planificaciones.value = response.value.list;
 changeTotalRows(response.value.totalCount);
@@ -120,15 +116,12 @@ const onFilter = () => {
 
 watch(
     () => [
-        defaultRangeDate.value,  
         selectedStatus.value,  
         search.value
     ],
     () => {
         filters.value.search = search.value;
         filters.value.estado = selectedStatus.value;
-        filters.value.rangeDates.fechaDesde =  format(defaultRangeDate.value.start, 'yyyy-MM-dd');
-        filters.value.rangeDates.fechaHasta =  format(defaultRangeDate.value.end, 'yyyy-MM-dd');
 
         clearTimeout(timeoutSearch);
         timeoutSearch = setTimeout(() => {
@@ -193,8 +186,6 @@ const onCreatePlanificacion = ()=>{
                             <SelectStatus v-model="selectedStatus" @update:modelValue="() => null" :multiple="false"
                                 class="flex-1 md:w-[200px]" />
                         </div>
-
-                        <PickerDateRange v-model="defaultRangeDate"></PickerDateRange>
                     </div>
                 </template>
 
@@ -221,13 +212,6 @@ const onCreatePlanificacion = ()=>{
                     </ULink>
                 </template>
 
-                <template #rangoTiempos-data="{ row }">
-                    <div class="flex items-center gap-2">
-                        <UIcon name="i-heroicons-calendar" class="w-5 h-5" />
-                        <span>{{ format(parseISO(row?.fechaDesde), 'dd/MM/yyyy') }} - {{ format(parseISO(row?.fechaHasta), 'dd/MM/yyyy') }}</span>
-                    </div>
-                </template>
-
                 <template #grupo-data="{ row }">
                     <div class="flex items-center gap-2">
                         <UAvatar :src="formattedImageUrlGrupo(row.grupo?.url_image)" size="2xs" />
@@ -237,9 +221,8 @@ const onCreatePlanificacion = ()=>{
 
                 <template #grados-data="{ row }">
                     <div class="flex items-center gap-2">
-                        <span>{{
-                            row.grupo.grados.map((grado) => grado?.nombre)?.join(", ")
-                        }}</span>
+                        <BadgeGrado v-for="(grado,idx) in row.grupo.grados" :key="idx" :grado="grado"></BadgeGrado>
+                        
                     </div>
                 </template>
 

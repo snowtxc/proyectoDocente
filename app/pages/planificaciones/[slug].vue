@@ -1,114 +1,74 @@
 <script setup lang="ts">
-import type { Planificacion } from '~/types/planificacion';
+
 import { HttpMethodEnum } from '~/utils/enums/HttpMethodEnum';
-import { format,parseISO } from "date-fns";
-import { es } from 'date-fns/locale';
+import type { Planificacion } from '~/types/planificacion';
+import type { Tramo } from '~/types/tramo';
+import type { PlanificacionFecha, SimplePlanificacionFecha } from '~/types/planificacionFecha';
+import { show } from '@unovis/ts/components/tooltip/style';
 
 const { $apiRest } = useNuxtApp();
 
 const route = useRoute();
+const toast = useToast();
 const slug = route.params.slug as string;
 
-const loadedPlanificacion =  ref<Planificacion>(null);
-
-const { data: planificacion, error, refresh } = await useAsyncData('posts', async () => {
-  const response = await $apiRest(apiPlanificacionesRoutes.getBySlug(slug), HttpMethodEnum.GET);
+const { data: planificacion, error, refresh } = await useAsyncData('planificacionDetalle', async () => {
+  const response = await $apiRest<Planificacion>(apiPlanificacionesRoutes.getBySlug(slug), HttpMethodEnum.GET);
   return response;
 });
+
+const planificacionFechaSelected = ref<PlanificacionFecha>(null);
+
+if(planificacion.value.fechas.length > 0){
+  const { data: planificacionFecha, error: errorPlanificacionFecha, refresh : refreshPlanificacionFecha } = await useAsyncData('planificacionFechaDetalle', async()=>{
+    const planificacionFechaId = planificacion.value.fechas[0].id;
+    const response = await $apiRest<PlanificacionFecha>(apiPlanificacionesFechaRoutes.find(planificacionFechaId), HttpMethodEnum.GET);
+    return response;
+  });
+
+  planificacionFechaSelected.value = planificacionFecha.value;
+}
 
 const grupo  = computed(()=>{
   return planificacion.value.grupo;
 })
 
-const fechaDesdeFormatted = computed(()=>{
-  const fecha = parseISO(planificacion.value.fechaDesde);
-  let fechaFormateada = format(fecha, "iiii d 'de' MMMM", { locale: es });
-  fechaFormateada = fechaFormateada.charAt(0).toUpperCase() + fechaFormateada.slice(1);
-  return fechaFormateada;
+const fechas = computed<SimplePlanificacionFecha[]>(()=>{
+  return planificacion.value.fechas;
 })
 
-const fechaHastaFormatted = computed(()=>{
-  const fecha = parseISO(planificacion.value.fechaHasta);
-  let fechaFormateada = format(fecha, "iiii d 'de' MMMM", { locale: es });
-  fechaFormateada = fechaFormateada.charAt(0).toUpperCase() + fechaFormateada.slice(1);
-  return fechaFormateada;
+const tramos = computed<Tramo[]>(()=>{
+  if(!planificacionFechaSelected.value)
+    return  [];
+
+  return planificacionFechaSelected.value.tramos as Tramo[];
 })
 
+const stepsTramos =  computed(()=>{
+  return tramos.value.map((tramo,idx) =>{
+    const step = idx + 1;
+    return {
+      step,
+      title: `Tramo ${step}`,
+      description: `Tramo ${step}`,      
+      icon: 'tabler:file-text'
+    }
+  })
+})
 
-const fechas = computed(() => loadedPlanificacion.value?.fechas ?? []);
+const showModalAddTramo = ref(false);
+const tramoSelected = ref<Tramo>(null);
 
-const selectedFecha = ref(fechas?.value.length > 0 ? fechas[0] : null);
+const loadingCreatingTramo = ref(false);
 
-const changeSelectedFecha = (direction: "prev" | "next") => {
-  const currentIndex = fechas?.value.findIndex(
-    (fecha) => fecha === selectedFecha.value
-  );
-  if (direction === "prev" && currentIndex > 0) {
-    selectedFecha.value = fechas.value[currentIndex - 1];
-  } else if (direction === "next" && currentIndex < fechas.value.length - 1) {
-    selectedFecha.value = fechas.value[currentIndex + 1];
-  }
-};
+const currentStepTramo  = computed(()=>{
+  if(tramoSelected.value == null)
+    return null;
+  
+  return tramos.value.findIndex(x => x.id == tramoSelected.value.id) + 1;
+})
 
-const items = ref([
-  {
-    title: 'Address',
-    description: 'Add your address here',
-    icon: 'i-lucide-house'
-  },
-  {
-    title: 'Shipping',
-    description: 'Set your preferred shipping method',
-    icon: 'i-lucide-truck'
-  },
-  {
-    title: 'Checkout',
-    description: 'Confirm your order'
-  }
-])
-
-watch(
-  () => fechas.value,
-  (newVal) => {
-    selectedFecha.value = newVal[0];
-  }
-);
-
-onMounted(async () => {
-  const planificacion = await $apiRest(apiPlanificacionesRoutes.getBySlug(slug), HttpMethodEnum.GET);
-});
-
-const progress = computed(() => {
-  const totalFechas = fechas.value.length;
-  if (!selectedFecha.value || totalFechas === 0) {
-    return 0;
-  }
-  const currentIndex = fechas.value.findIndex(
-    (fecha) => fecha === selectedFecha.value
-  );
-  return ((currentIndex + 1) / totalFechas) * 100; // Progress in percentage
-});
-
-const tabItems = [{
-  label: 'All'
-}, {
-  label: 'Unread'
-}]
 const selectedTab = ref(0)
-
-const dropdownItems = [[{
-  label: 'Mark as unread',
-  icon: 'i-heroicons-check-circle'
-}, {
-  label: 'Mark as important',
-  icon: 'i-heroicons-exclamation-circle'
-}], [{
-  label: 'Star thread',
-  icon: 'i-heroicons-star'
-}, {
-  label: 'Mute thread',
-  icon: 'i-heroicons-pause-circle'
-}]]
 
 const { data: mails } = await useFetch<any[]>('/api/mails', { default: () => [] })
 
@@ -121,25 +81,50 @@ const filteredMails = computed(() => {
   return mails.value
 })
 
-const selectedMail = ref<any | null>()
+const onCreateTramo = async()=>{
 
-const isMailPanelOpen = computed({
-  get() {
-    return !!selectedMail.value
-  },
-  set(value: boolean) {
-    if (!value) {
-      selectedMail.value = null
-    }
+  showModalAddTramo.value = false;
+  
+  const newTramo : Tramo = {
+    id: 0,
+    created_at: undefined,
+    updated_at: undefined,
+    planificacion_fecha_id: planificacionFechaSelected.value.id,
+    seDesarrolla: true,
   }
-})
 
-// Reset selected mail if it's not in the filtered mails
-watch(filteredMails, () => {
-  if (!filteredMails.value.find(mail => mail.id === selectedMail.value?.id)) {
-    selectedMail.value = null
+  try{
+   const tramo = await $apiRest(apiTramosRoutes.create, HttpMethodEnum.POST, newTramo);
+
+   planificacionFechaSelected.value.tramos.push(tramo);
+
+   toast.add({
+      title: "Nuevo Tramo",
+      description: 'Se ha extendido la planificación a un nuevo tramo.',
+      color: "green"
+    })
+
+  }catch(message){
+    toast.add({
+      title: "Error",
+      description: message ? message : 'Error al crear un nuevo tramo',
+      color: "red"
+    })
   }
-})
+}
+
+const showPopoverAddFecha = ref<boolean>(true);
+
+const changeSelectedFecha = (): void =>{
+
+}
+
+const onAddPlanificacionFechas = (planificacionFechas: PlanificacionFecha[])=>{
+
+  //ToDo Nos debe llegar un SimpleFecha , obtener la primer fecha , y mandar a cargarla ,ahi actualizar.
+  planificacionFechaSelected.value = planificacionFechas[0];
+}
+
 </script>
 
 <template>
@@ -162,10 +147,16 @@ watch(filteredMails, () => {
         </template>
       </UDashboardNavbar>
 
-      <div>
-        <!-- <UStepper disabled :items="items"/> -->
-
-        <UStepper :items="items" class="w-full" />
+      <!-- Tramos -->
+      <div class="overflow-y-auto mb-8 min-h-full" v-if="planificacionFechaSelected">
+        <Stepper 
+        :showButtonAddStep="true"
+        titleButtonAddStep="Agregar nuevo tramo"
+        descriptionButtonAddStep="Extender un nuevo tramo a la planificación"
+        :currentStep="currentStepTramo"  
+        :steps="stepsTramos"
+        @on:add-step="showModalAddTramo = true"/>
+        
       </div>
 
     </UDashboardPanel>
@@ -189,11 +180,6 @@ watch(filteredMails, () => {
         <UDashboardNavbar
         :title="planificacion.nombre"
       >
-        <template #right>
-            <UBadge class="ml-2">
-              {{ fechaDesdeFormatted }} - {{ fechaHastaFormatted }}
-            </UBadge>
-        </template>
       </UDashboardNavbar>
       </template>
 
@@ -218,44 +204,81 @@ watch(filteredMails, () => {
           orientation="vertical"
           class="mx-1.5"
         />
-
-        <UPopover :popper="{ placement: 'bottom-start' }">
-          <template #default="{ open }">
-            <UTooltip
-              text="Snooze"
-              :prevent="open"
-            >
-              <UButton
-                icon="i-heroicons-clock"
-                color="gray"
-                variant="ghost"
-                :class="[open && 'bg-gray-50 dark:bg-gray-800']"
-              />
-            </UTooltip>
-          </template>
-
-          <template #panel="{ close }">
-            <DatePicker @close="close" />
-          </template>
-        </UPopover>
       </template>
 
     
     </UDashboardNavbar>
-      <template v-if="selectedMail">
-        <!-- ~/components/inbox/InboxMail.vue -->
-        <InboxMail :mail="selectedMail" />
-      </template>
       <div
-        v-else
         class="flex-1 hidden lg:flex items-center justify-center"
-      >
+        v-if="planificacionFechaSelected">
         <UIcon
           name="i-heroicons-inbox"
           class="w-32 h-32 text-gray-400 dark:text-gray-500"
         />
       </div>
+
+      <div v-else class="flex flex-col justify-center items-center h-screen">
+        <UIcon
+          name="tabler:butterfly-filled"
+          size="60px"
+        />
+        <h1 class="mt-1"> No tienes ningún día planificado aún , prueba creando un nuevo día </h1>
+      
+        <PlanificacionesPopoverAddPlanificacionFecha 
+          :show="showPopoverAddFecha" 
+          :planificacionId="planificacion.id"
+          @on:add="onAddPlanificacionFechas"></PlanificacionesPopoverAddPlanificacionFecha>
+
+        
+      </div>
     </UDashboardPanel>
   </UDashboardPage>
+
+  <!--Extender tramo-->
+  <UDashboardModal
+  v-model="showModalAddTramo"
+  title="Agregar nuevo Tramo"
+  description="¿Estás seguro que deseas agregar un siguiente tramo a la planificación?"
+  icon="tabler:butterfly-filled"
+  prevent-close
+  :close-button="null"
+  :ui="{
+    icon: {
+      base: 'text-primary dark:text-red-400'
+    } as any,
+    footer: {
+      base: 'ml-16'
+    } as any
+  }"
+>
+  <template #footer>
+    <UButton
+      color="primary"
+      label="Confirmar"
+      :loading="loadingCreatingTramo"
+      @click="onCreateTramo"
+    />
+
+    <UButton
+        color="white"
+        label="Cancelar"
+        @click="showModalAddTramo = false"
+      />
+  </template>
+</UDashboardModal>
+
+
+
+<PlanificacionDia
+v-if="planificacionFechaSelected"
+:disabledBack="planificacionFechaSelected?.id === (fechas[0] ? fechas[0]?.id : null)"
+:disabledNext="
+  planificacionFechaSelected?.id ===
+  (fechas[fechas?.length - 1] ? fechas[fechas?.length - 1]?.id : null)
+"
+:selectedDay="planificacionFechaSelected"
+:enableDates="planificacion.fechas.map(pf => pf.fecha)"
+@changeDate="changeSelectedFecha"
+/>
   
 </template>

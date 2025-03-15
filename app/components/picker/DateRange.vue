@@ -34,7 +34,7 @@ watch(selected, (newVal) => {
     <template #panel="{ close }">
       <div class="flex items-center sm:divide-x divide-gray-200 dark:divide-gray-800">
 
-        <DatePicker v-model="selected" @close="close" />
+        <DatePicker v-model="selected" @close="close" :disableWeekends="true" />
       </div>
     </template>
   </UPopover>

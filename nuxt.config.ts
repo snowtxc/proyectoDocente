@@ -10,6 +10,7 @@ export default defineNuxtConfig({
     '@nuxt/ui',
     '@vueuse/nuxt',
     '@pinia/nuxt',
+    'reka-ui/nuxt',
     'pinia-plugin-persistedstate/nuxt',
     'nuxt-vue3-google-signin',
     '@nuxtjs/i18n'

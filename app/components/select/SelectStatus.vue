@@ -23,7 +23,7 @@ const clearSelection = () => {
 
 const options = [
     { label : 'En curso', value: PlanificacionEstadoEnum.EN_CURSO},
-    { label : 'Pendiente', value: PlanificacionEstadoEnum.PENDIENTE},
+    { label : 'Sin empezar', value: PlanificacionEstadoEnum.PENDIENTE},
     { label : 'Finalizada' , value: PlanificacionEstadoEnum.FINALIZADA}
 ]
 
