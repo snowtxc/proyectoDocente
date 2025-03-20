@@ -1,7 +1,7 @@
 import type { BaseModel } from "./base.model";
 import type { Tramo } from "./tramo";
 
-export interface SimplePlanificacionFecha  extends BaseModel{
+export interface SimplePlanificacionFecha  extends BaseModel {
     fecha: string;
     observacion?: string;
 }

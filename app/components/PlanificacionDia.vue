@@ -21,14 +21,13 @@ const fechaSelectedFormatted = computed(()=>{
     return fechaFormateada;
 })
 
-const enableDates = computed(()=>{
+const enableDates = computed(()=>{ 
   if(!props.enableDates)
     return null;
 
   const dates = props.enableDates.map(dateStr =>{
-    return convertDateStrToDateLocal(dateStr);
+  return convertDateStrToDateLocal(dateStr);
   })
-
   return dates;
 })
 

@@ -1,9 +1,11 @@
 <script setup lang="ts">
-import type { CreateMultiplePlanificacionFecha, PlanificacionFecha } from '~/types/planificacionFecha';
+import type { CreateMultiplePlanificacionFecha, PlanificacionFecha, SimplePlanificacionFecha } from '~/types/planificacionFecha';
 import { HttpMethodEnum } from '~/utils/enums/HttpMethodEnum';
 
     interface Props {
         planificacionId : number;
+        showSmallBtn? : boolean;
+        fechasDisabled?: string[]
     }
     
     const props = withDefaults(defineProps<Props>(),{});
@@ -19,6 +21,12 @@ import { HttpMethodEnum } from '~/utils/enums/HttpMethodEnum';
     const multipleFecha = ref(false);
 
     const planificacionFechaACrear = ref<CreateMultiplePlanificacionFecha>(null);
+
+    const fechasDisabled = computed(()=>{
+        return props.fechasDisabled.map(fecha => {
+            return convertDateStrToDateLocal(fecha)
+        });
+    })
 
     watch(()=> show.value, ()=>{
         if(!show.value){
@@ -64,9 +72,7 @@ import { HttpMethodEnum } from '~/utils/enums/HttpMethodEnum';
             const fechasCreated = await $apiRest<PlanificacionFecha[]>(apiPlanificacionesFechaRoutes.create, HttpMethodEnum.POST, body);
             if(fechasCreated.length <= 0)
                 return;
-            
-            toast.add({ title: 'Se agregaron nuevos a la planificación correctamente!', color: 'green', icon: 'i-heroicons-check-circle' })
-            
+
             emit('on:add', fechasCreated);
         }
         catch(message){
@@ -83,7 +89,13 @@ import { HttpMethodEnum } from '~/utils/enums/HttpMethodEnum';
 
 <template>
     <UPopover v-model:open="show">
-        <UButton color="primary" icon="tabler:calendar-plus"> 
+        <UButton
+            icon="tabler:calendar-plus"
+            color="gray"
+            variant="ghost"
+            v-if="props.showSmallBtn"
+          />
+        <UButton color="primary" icon="tabler:calendar-plus" v-else> 
             Agregar nuevo día
         </UButton>
         
@@ -94,7 +106,7 @@ import { HttpMethodEnum } from '~/utils/enums/HttpMethodEnum';
                     <UCheckbox size="xl" v-model="multipleFecha" label="Elegir más de 1 día" />
                 </div>
 
-                <DatePicker v-model="fecha"  :disableWeekends="true" :range="multipleFecha"/>
+                <DatePicker v-model="fecha"  :disableWeekends="true" :range="multipleFecha" :disabledDates="fechasDisabled"/>
                 
                 <div class="w-full flex justify-end">
                     <UButton color="primary" icon="tabler:calendar-plus" :disabled="!validForm" @click="onShowModalConfirm"> 

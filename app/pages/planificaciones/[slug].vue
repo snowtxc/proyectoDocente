@@ -4,7 +4,6 @@ import { HttpMethodEnum } from '~/utils/enums/HttpMethodEnum';
 import type { Planificacion } from '~/types/planificacion';
 import type { Tramo } from '~/types/tramo';
 import type { PlanificacionFecha, SimplePlanificacionFecha } from '~/types/planificacionFecha';
-import { show } from '@unovis/ts/components/tooltip/style';
 
 const { $apiRest } = useNuxtApp();
 
@@ -119,10 +118,29 @@ const changeSelectedFecha = (): void =>{
 
 }
 
-const onAddPlanificacionFechas = (planificacionFechas: PlanificacionFecha[])=>{
+const onAddPlanificacionFechas = async(planificacionFechas: PlanificacionFecha[])=>{
 
-  //ToDo Nos debe llegar un SimpleFecha , obtener la primer fecha , y mandar a cargarla ,ahi actualizar.
-  planificacionFechaSelected.value = planificacionFechas[0];
+  try{
+    const planificaciconFechaid = planificacionFechas[0].id;
+    const planificacionFecha = await $apiRest<PlanificacionFecha>(apiPlanificacionesFechaRoutes.find(planificaciconFechaid), HttpMethodEnum.GET);
+    planificacionFechaSelected.value = planificacionFecha;
+    
+    const fechasActualesPlanificacion = [...planificacion.value.fechas];
+    // se agregan las nuevas fechas al array de fecha de la planificacion.
+    planificacion.value.fechas = [...fechasActualesPlanificacion, ...planificacionFechas];
+    
+    
+    toast.add({ title: 'Se agregaron nuevos días a la planificación correctamente!', color: 'green', icon: 'i-heroicons-check-circle' })
+
+
+  }catch(message){
+    toast.add({
+      title: "Error",
+      description: message ? message : 'Error al obtener el día de la planificacion',
+      color: "red"
+    })
+  }
+  
 }
 
 </script>
@@ -177,14 +195,25 @@ const onAddPlanificacionFechas = (planificacionFechas: PlanificacionFecha[])=>{
       </template>
 
       <template #left>
-        <UDashboardNavbar
-        :title="planificacion.nombre"
-      >
-      </UDashboardNavbar>
+
+        <div class="flex items-center">
+          <UDashboardNavbar
+          :title="planificacion.nombre"
+            >
+            </UDashboardNavbar>
+  
+          <PlanificacionesPopoverAddPlanificacionFecha 
+          :show="showPopoverAddFecha" 
+          :planificacionId="planificacion.id"
+          @on:add="onAddPlanificacionFechas"
+          :showSmallBtn="true"
+          :fechasDisabled="planificacion.fechas.map(pf => pf.fecha)"></PlanificacionesPopoverAddPlanificacionFecha>
+        </div>
+       
       </template>
 
       <template #right>
-        <UTooltip text="Archive">
+        <UTooltip text="Exportar planificación a Google Drive">
           <UButton
             icon="tabler:brand-google-drive"
             color="gray"
@@ -192,7 +221,7 @@ const onAddPlanificacionFechas = (planificacionFechas: PlanificacionFecha[])=>{
           />
         </UTooltip>
 
-        <UTooltip text="Move to junk">
+        <UTooltip text="Eliminar">
           <UButton
             icon="tabler:trash"
             color="gray"
@@ -227,7 +256,8 @@ const onAddPlanificacionFechas = (planificacionFechas: PlanificacionFecha[])=>{
         <PlanificacionesPopoverAddPlanificacionFecha 
           :show="showPopoverAddFecha" 
           :planificacionId="planificacion.id"
-          @on:add="onAddPlanificacionFechas"></PlanificacionesPopoverAddPlanificacionFecha>
+          @on:add="onAddPlanificacionFechas"
+          :fechasDisabled="planificacion.fechas.map(pf => pf.fecha)"></PlanificacionesPopoverAddPlanificacionFecha>
 
         
       </div>

@@ -19,63 +19,6 @@ const getDatesBetween = (from: Date, end: Date): Date[] => {
   return dateArray;
 }
 
-const disabledDates = computed(() => {
-  if ((!props.enabledDates || props.enabledDates.length == 0) && !props.disableWeekends)
-    return null;
-
-  let fechasDisabled = [];
-
-  if (props.enabledDates) {
-    const enableDates = props.enabledDates as Date[];
-
-    const orderAscDates = enableDates.sort((a: Date, b: Date) => {
-      if (a.getTime() <= b.getTime()) {
-        return -1;
-      }
-      return 1;
-    });
-
-
-    orderAscDates.reduce((previousValue: Date, currentValue: Date) => {
-      if (previousValue == null) {
-        const end = new Date(currentValue)
-        end.setDate(end.getDate() - 1);
-        fechasDisabled.push({ start: null, end });
-        return currentValue;
-      }
-
-      const datesBetween = getDatesBetween(previousValue, currentValue);
-
-      if (datesBetween.length <= 2)
-        return currentValue;
-
-      if (datesBetween.length == 3) {
-        fechasDisabled.push({ start: new Date(datesBetween[1]), end: new Date(datesBetween[1]) })
-        return;
-      }
-
-      fechasDisabled.push({ start: new Date(datesBetween[1]), end: new Date(datesBetween[datesBetween.length - 2]) })
-      return;
-
-    }, null)
-
-    const lastDay = new Date(orderAscDates[orderAscDates.length - 1]);
-    lastDay.setDate(lastDay.getDate() + 1);
-    fechasDisabled.push({ start: lastDay, end: null });
-
-  }
-
-  if (props.disableWeekends) {
-
-    fechasDisabled.push({
-      repeat: {
-        weekdays: [1, 7],
-      },
-    });
-  }
-  return fechasDisabled;
-})
-
 defineOptions({
   inheritAttrs: false
 })
@@ -86,6 +29,11 @@ const props = defineProps({
     default: null
   },
   enabledDates: {
+    type: [Array],
+    default: null
+  },
+
+  disabledDates: {
     type: [Array],
     default: null
   },
@@ -103,6 +51,65 @@ const props = defineProps({
 })
 
 
+const disabledDates = computed(() => {
+  if ((!props.enabledDates || props.enabledDates.length == 0) && !props.disableWeekends)
+    return null;
+
+  let fechasDisabled = [];
+
+  if (props.enabledDates) {
+    const enableDates = props.enabledDates as Date[];
+
+    const orderAscDates = enableDates.sort((a: Date, b: Date) => a.getTime() - b.getTime());
+
+    orderAscDates.reduce((previousValue: Date, currentValue: Date) => {
+
+      if (previousValue == null) {
+        const end = new Date(currentValue)
+        end.setDate(end.getDate() - 1);
+        fechasDisabled.push({ start: null, end });
+        return currentValue;
+      }
+
+      const datesBetween = getDatesBetween(previousValue, currentValue);
+
+
+      if (datesBetween.length <= 2)
+        return currentValue;
+
+      if (datesBetween.length == 3) {
+        fechasDisabled.push({ start: new Date(datesBetween[1]), end: new Date(datesBetween[1]) })
+        return currentValue;
+      }
+
+      fechasDisabled.push({ start: new Date(datesBetween[1]), end: new Date(datesBetween[datesBetween.length - 2]) })
+      return currentValue;
+
+    }, null)
+
+    const lastDay = new Date(orderAscDates[orderAscDates.length - 1]);
+    lastDay.setDate(lastDay.getDate() + 1);
+    fechasDisabled.push({ start: lastDay, end: null });
+
+  }
+
+  if (props.disableWeekends) {
+
+    fechasDisabled.push({
+      repeat: {
+        weekdays: [1, 7],
+      },
+    });
+  }
+
+  if(props.disabledDates){
+    props.disabledDates.map(fecha =>{
+      fechasDisabled.push({start: fecha, end: fecha});
+    })
+  }
+
+  return fechasDisabled;
+})
 
 const emit = defineEmits(['update:model-value', 'close'])
 
