@@ -16,14 +16,6 @@ export default defineNuxtPlugin((nuxtApp) => {
     // Definir el tipo de la función `apiRest`
     const apiRest = async(endpoint: string, method: HttpMethodEnum, body: any, options: Record<string, any> = {}) => {
         const token = authStore.token;
-
-        // const csrfToken =  getCookie('XSRF-TOKEN');
-
-        // if(!csrfToken){
-        //     const endpointRequestCrsfToken = config.public.apiBaseUrl.replace("/api","/sanctum/csrf-cookie");
-
-        //     await $fetch(endpointRequestCrsfToken); // Solo si no está presente la cookie se envia la request para setear la cookie del token csrf.
-        // }
         
         const headers = token ? {
             Authorization: `Bearer ${token}`,

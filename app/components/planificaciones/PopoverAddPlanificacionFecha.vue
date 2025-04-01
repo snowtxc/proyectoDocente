@@ -94,13 +94,17 @@ import { HttpMethodEnum } from '~/utils/enums/HttpMethodEnum';
             color="gray"
             variant="ghost"
             v-if="props.showSmallBtn"
-          />
+        />
+          
         <UButton color="primary" icon="tabler:calendar-plus" v-else> 
             Agregar nuevo día
         </UButton>
         
         <template #panel>
-            <div class="flex flex-col items-center gap-4 mb-4 p-2">
+            <div class="flex flex-col items-center gap-4 mb-4 p-4">
+                
+                <UDashboardSection title="Agregar nuevo día" description="Agrega un nuevo día a la planificación y empieza a planificar sobre ese día.">
+                </UDashboardSection>
                 
                 <div class="w-full">
                     <UCheckbox size="xl" v-model="multipleFecha" label="Elegir más de 1 día" />

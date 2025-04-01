@@ -16,3 +16,8 @@ export interface CreateMultiplePlanificacionFecha {
     planificacion_id: number;
     fechas: string[]
 }
+
+export interface CambiarPlanificacionFechaDTO {
+    planificacion_fecha_id : number;
+    nuevaFecha: string;
+}

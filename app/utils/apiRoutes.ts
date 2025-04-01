@@ -39,12 +39,14 @@ export const apiPlanificacionesRoutes = {
     getPaginate: '/planificaciones/paged',
     create: "/planificaciones",
     update: (id:number) => `/planificaciones/${id}`,
-    getBySlug : (slug: string) => `/planificaciones/${slug}`
+    getBySlug : (slug: string) => `/planificaciones/${slug}`,
+    verificarFecha:  '/planificaciones/verificar-fecha'
 }
 
 export const apiPlanificacionesFechaRoutes = {
     create: "/planificaciones-fecha",
-    find : (id: number) => `/planificaciones-fecha/${id}`
+    find : (id: number) => `/planificaciones-fecha/${id}`,
+    cambiarFecha : '/planificaciones-fecha/cambiar-fecha'
 }
 
 export const apiTramosRoutes = {

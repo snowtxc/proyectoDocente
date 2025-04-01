@@ -18,8 +18,20 @@ const { data: planificacion, error, refresh } = await useAsyncData('planificacio
 
 const planificacionFechaSelected = ref<PlanificacionFecha>(null);
 
+const ordenarFechasPlanificacion = () : SimplePlanificacionFecha[] =>{
+    const fechas : SimplePlanificacionFecha[] =  [...planificacion.value.fechas];
+    return fechas.sort((a, b) =>{
+      if(new Date(a.fecha).getTime() <= new Date(b.fecha).getTime())
+        return -1
+      return 1;
+    })
+}
+
 if(planificacion.value.fechas.length > 0){
   const { data: planificacionFecha, error: errorPlanificacionFecha, refresh : refreshPlanificacionFecha } = await useAsyncData('planificacionFechaDetalle', async()=>{
+        
+    planificacion.value.fechas = ordenarFechasPlanificacion();
+
     const planificacionFechaId = planificacion.value.fechas[0].id;
     const response = await $apiRest<PlanificacionFecha>(apiPlanificacionesFechaRoutes.find(planificacionFechaId), HttpMethodEnum.GET);
     return response;
@@ -67,19 +79,6 @@ const currentStepTramo  = computed(()=>{
   return tramos.value.findIndex(x => x.id == tramoSelected.value.id) + 1;
 })
 
-const selectedTab = ref(0)
-
-const { data: mails } = await useFetch<any[]>('/api/mails', { default: () => [] })
-
-// Filter mails based on the selected tab
-const filteredMails = computed(() => {
-  if (selectedTab.value === 1) {
-    return mails.value.filter(mail => !!mail.unread)
-  }
-
-  return mails.value
-})
-
 const onCreateTramo = async()=>{
 
   showModalAddTramo.value = false;
@@ -112,11 +111,8 @@ const onCreateTramo = async()=>{
   }
 }
 
-const showPopoverAddFecha = ref<boolean>(true);
-
-const changeSelectedFecha = (): void =>{
-
-}
+const showPopoverAddFecha = ref<boolean>(false);
+const showPopoverChangeFecha = ref<boolean>(false);
 
 const onAddPlanificacionFechas = async(planificacionFechas: PlanificacionFecha[])=>{
 
@@ -129,7 +125,10 @@ const onAddPlanificacionFechas = async(planificacionFechas: PlanificacionFecha[]
     // se agregan las nuevas fechas al array de fecha de la planificacion.
     planificacion.value.fechas = [...fechasActualesPlanificacion, ...planificacionFechas];
     
-    
+    planificacion.value.fechas = ordenarFechasPlanificacion();
+
+    console.log(planificacion.value.fechas)
+
     toast.add({ title: 'Se agregaron nuevos días a la planificación correctamente!', color: 'green', icon: 'i-heroicons-check-circle' })
 
 
@@ -141,6 +140,59 @@ const onAddPlanificacionFechas = async(planificacionFechas: PlanificacionFecha[]
     })
   }
   
+}
+
+const changeSelectedFecha  = (fecha: string)=>{
+  loadPlanificacionFecha(fecha);
+}
+
+const changeFechaDirection = (direction: "prev" | "next") => {
+
+  const currentFechaIdx = fechas.value.findIndex(item => item.id == planificacionFechaSelected.value.id);
+  if(currentFechaIdx < 0)
+    return;
+
+  let idx = direction == "prev" ? currentFechaIdx - 1 : currentFechaIdx + 1;
+
+  const newCurrentFecha =  fechas.value[idx];
+
+  loadPlanificacionFecha(newCurrentFecha.fecha);
+}
+
+const onChangePlanificacionFecha = async(planificacionFechaUpdated: PlanificacionFecha)=>{
+
+  const idxToReplace = planificacion.value.fechas.findIndex(x => x.fecha == planificacionFechaUpdated.fecha);
+
+  const idx = planificacion.value.fechas.findIndex(x => x.id == planificacionFechaUpdated.id);
+
+  if(idxToReplace >= 0){
+    // Se elimina la fecha si es sustituida.
+    planificacion.value.fechas.splice(idxToReplace, 1);
+  }
+
+  if(idx >= 0){
+    // La fecha actualizada cambia
+    planificacion.value.fechas[idx].fecha = planificacionFechaUpdated.fecha;
+  }
+
+  planificacionFechaSelected.value.fecha = planificacionFechaUpdated.fecha;
+  planificacion.value.fechas = ordenarFechasPlanificacion();
+
+  loadPlanificacionFecha(planificacionFechaUpdated.fecha);
+}
+
+const loadPlanificacionFecha = async(fecha: string)  : Promise<void> =>{
+  try{
+    const planificacionFecha = fechas.value.find(planificacionFecha => planificacionFecha.fecha == fecha);
+    const response = await $apiRest<PlanificacionFecha>(apiPlanificacionesFechaRoutes.find(planificacionFecha.id), HttpMethodEnum.GET);
+    planificacionFechaSelected.value = response;
+  }catch(message){
+    toast.add({
+      title: "Error",
+      description: message ? message : 'Error al obtener el dia de planificacion. Por favor vuelve a intentarlo más tarde.',
+      color: "red"
+    })
+  }
 }
 
 </script>
@@ -203,11 +255,16 @@ const onAddPlanificacionFechas = async(planificacionFechas: PlanificacionFecha[]
             </UDashboardNavbar>
   
           <PlanificacionesPopoverAddPlanificacionFecha 
-          :show="showPopoverAddFecha" 
           :planificacionId="planificacion.id"
           @on:add="onAddPlanificacionFechas"
           :showSmallBtn="true"
           :fechasDisabled="planificacion.fechas.map(pf => pf.fecha)"></PlanificacionesPopoverAddPlanificacionFecha>
+
+          <PlanificacionesPopoverChangePlanificacionFecha 
+          :planificacionId="planificacion.id"
+          :planificacionFecha="planificacionFechaSelected"
+          :fechasYaPlanificadas="planificacion.fechas.map(pf => pf.fecha)"
+          @on:change="onChangePlanificacionFecha"></PlanificacionesPopoverChangePlanificacionFecha>
         </div>
        
       </template>
@@ -301,14 +358,10 @@ const onAddPlanificacionFechas = async(planificacionFechas: PlanificacionFecha[]
 
 <PlanificacionDia
 v-if="planificacionFechaSelected"
-:disabledBack="planificacionFechaSelected?.id === (fechas[0] ? fechas[0]?.id : null)"
-:disabledNext="
-  planificacionFechaSelected?.id ===
-  (fechas[fechas?.length - 1] ? fechas[fechas?.length - 1]?.id : null)
-"
 :selectedDay="planificacionFechaSelected"
 :enableDates="planificacion.fechas.map(pf => pf.fecha)"
 @changeDate="changeSelectedFecha"
+@changeDirection="changeFechaDirection"
 />
   
 </template>

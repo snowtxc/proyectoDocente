@@ -4,6 +4,7 @@ import { DatePicker as VCalendarDatePicker } from 'v-calendar'
 // @ts-expect-error - no types available
 import type { DatePickerDate, DatePickerRangeObject } from 'v-calendar/dist/types/src/use/datePicker'
 import 'v-calendar/dist/style.css'
+import { format } from 'date-fns'
 
 
 const getDatesBetween = (from: Date, end: Date): Date[] => {
@@ -47,6 +48,11 @@ const props = defineProps({
   range: {
     type: Boolean,
     default: false
+  },
+
+  highlightedDates: {
+    type: Array,
+    required: false
   }
 })
 
@@ -131,16 +137,31 @@ const attrs = ref({
   'color': 'primary',
   'is-dark': { selector: 'html', darkClass: 'dark' },
   'first-day-of-week': 2,
+  'dot': true,
+  'dates': new Date(),
 
 });
+
+const  attributes = computed(() => {
+  if(!props.highlightedDates){
+    return {}
+  }
+  return props.highlightedDates.map((date: Date) => ({
+    key: `fecha utilizada -${format(date,'dd/MM/yyyy')}`,
+    dates: date,
+    dot: true, //Se Agrega un punto en la fecha
+  }));
+});
+
 
 </script>
 
 <template>
   <VCalendarDatePicker v-if="props.range"
     v-model.range="date" :columns="smallerThanSm ? 1 : 2" :rows="smallerThanSm ? 2 : 1" v-bind="{ ...attrs, ...$attrs }"
-    :disabled-dates="disabledDates" />
-  <VCalendarDatePicker v-else v-model="date" v-bind="{ ...attrs, ...$attrs }" :disabled-dates="disabledDates" />
+    :disabled-dates="disabledDates" 
+    :attributes="attributes"/>
+  <VCalendarDatePicker v-else v-model="date" v-bind="{ ...attrs, ...$attrs }" :disabled-dates="disabledDates"  :attributes="attributes"/>
 
 </template>
 
