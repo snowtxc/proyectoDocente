@@ -52,3 +52,7 @@ export const apiPlanificacionesFechaRoutes = {
 export const apiTramosRoutes = {
     create: "/tramos",
 }
+
+export const apiEspaciosRoutes = {
+    listAll: "/espacios",
+}

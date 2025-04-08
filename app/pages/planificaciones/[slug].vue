@@ -4,6 +4,7 @@ import { HttpMethodEnum } from '~/utils/enums/HttpMethodEnum';
 import type { Planificacion } from '~/types/planificacion';
 import type { Tramo } from '~/types/tramo';
 import type { PlanificacionFecha, SimplePlanificacionFecha } from '~/types/planificacionFecha';
+import type { Espacio } from '~/types/espacio';
 
 const { $apiRest } = useNuxtApp();
 
@@ -11,12 +12,21 @@ const route = useRoute();
 const toast = useToast();
 const slug = route.params.slug as string;
 
-const { data: planificacion, error, refresh } = await useAsyncData('planificacionDetalle', async () => {
-  const response = await $apiRest<Planificacion>(apiPlanificacionesRoutes.getBySlug(slug), HttpMethodEnum.GET);
-  return response;
+const { data: response, error, refresh } = await useAsyncData('planificacionDetalle', async () => {
+  const [planificacion,espacios]= await  Promise.all(
+    [
+      $apiRest<Planificacion>(apiPlanificacionesRoutes.getBySlug(slug), HttpMethodEnum.GET),
+      $apiRest<Espacio[]>(apiEspaciosRoutes.listAll, HttpMethodEnum.GET)
+
+    ]) 
+  return { planificacion,  espacios};
 });
 
-const planificacionFechaSelected = ref<PlanificacionFecha>(null);
+const planificacion = ref<Planificacion>(response.value.planificacion);
+const espacios = ref<Espacio[]>(response.value.espacios);
+
+const planificacionFechaSelected = ref<PlanificacionFecha>();
+const tramoSelected = ref<Tramo>(null);
 
 const ordenarFechasPlanificacion = () : SimplePlanificacionFecha[] =>{
     const fechas : SimplePlanificacionFecha[] =  [...planificacion.value.fechas];
@@ -38,6 +48,10 @@ if(planificacion.value.fechas.length > 0){
   });
 
   planificacionFechaSelected.value = planificacionFecha.value;
+
+  if(planificacionFecha.value.tramos.length > 0){
+    tramoSelected.value = planificacionFecha.value.tramos[0];
+  }
 }
 
 const grupo  = computed(()=>{
@@ -68,8 +82,6 @@ const stepsTramos =  computed(()=>{
 })
 
 const showModalAddTramo = ref(false);
-const tramoSelected = ref<Tramo>(null);
-
 const loadingCreatingTramo = ref(false);
 
 const currentStepTramo  = computed(()=>{
@@ -126,8 +138,6 @@ const onAddPlanificacionFechas = async(planificacionFechas: PlanificacionFecha[]
     planificacion.value.fechas = [...fechasActualesPlanificacion, ...planificacionFechas];
     
     planificacion.value.fechas = ordenarFechasPlanificacion();
-
-    console.log(planificacion.value.fechas)
 
     toast.add({ title: 'Se agregaron nuevos días a la planificación correctamente!', color: 'green', icon: 'i-heroicons-check-circle' })
 
@@ -195,6 +205,19 @@ const loadPlanificacionFecha = async(fecha: string)  : Promise<void> =>{
   }
 }
 
+const onChangeTramo = (currentStep) =>{
+  const idx = currentStep - 1;
+  const tramo = tramos.value[idx];
+  tramoSelected.value = { ... tramo };
+}
+
+watch(()=> tramoSelected.value, ()=>{
+    const idx = tramos.value.findIndex(t => t.id == tramoSelected.value.id);
+    if(idx >= 0){
+      tramos.value[idx] = { ...tramoSelected.value};
+    }  
+})
+
 </script>
 
 <template>
@@ -225,8 +248,11 @@ const loadPlanificacionFecha = async(fecha: string)  : Promise<void> =>{
         descriptionButtonAddStep="Extender un nuevo tramo a la planificación"
         :currentStep="currentStepTramo"  
         :steps="stepsTramos"
-        @on:add-step="showModalAddTramo = true"/>
+        @on:add-step="showModalAddTramo = true"
+        @on:change-step="onChangeTramo"/>
         
+        {{ tramoSelected }}
+
       </div>
 
     </UDashboardPanel>
@@ -294,13 +320,10 @@ const loadPlanificacionFecha = async(fecha: string)  : Promise<void> =>{
 
     
     </UDashboardNavbar>
-      <div
-        class="flex-1 hidden lg:flex items-center justify-center"
+      <div class="p-2"
         v-if="planificacionFechaSelected">
-        <UIcon
-          name="i-heroicons-inbox"
-          class="w-32 h-32 text-gray-400 dark:text-gray-500"
-        />
+
+        <TramosTramoForm v-if="tramoSelected"  v-model="tramoSelected" :tramo="tramoSelected"  :espacios="espacios" ></TramosTramoForm>
       </div>
 
       <div v-else class="flex flex-col justify-center items-center h-screen">

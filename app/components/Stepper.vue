@@ -13,12 +13,16 @@ interface Props {
 
 const props = withDefaults(defineProps<Props>() , {});
 
-const emit = defineEmits(['on:add-step'])
+const emit = defineEmits(['on:add-step','on:change-step'])
 
 const  currentStep = ref(props.currentStep);
 
 const stepAdd = computed(()=>{
   return props.steps.length + 1;
+})
+
+watch(()=> currentStep.value, ()=>{
+  emit('on:change-step', currentStep.value);
 })
 
 </script>

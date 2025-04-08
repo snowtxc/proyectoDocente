@@ -11,7 +11,6 @@ import { HttpMethodEnum } from '~/utils/enums/HttpMethodEnum';
 
 import { defineProps, defineEmits, withDefaults, ref, reactive } from 'vue';
 import type { Grupo } from '~/types/grupo';
-import { format, parseISO } from 'date-fns';
 
 interface Props {
     mode: ModeEnum,
