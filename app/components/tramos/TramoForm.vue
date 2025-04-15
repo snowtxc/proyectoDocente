@@ -1,13 +1,18 @@
 <script setup lang="ts">
+import type { ContenidoFilter } from '~/types/contenido';
 import type { Espacio } from '~/types/espacio';
+import type { ListRequest } from '~/types/list-request';
 import type { Tramo } from '~/types/tramo';
 import type { UnidadCurricular } from '~/types/unidadCurricular';
-
+import { HttpMethodEnum } from '~/utils/enums/HttpMethodEnum';
 
 interface Props {
     modelValue: Tramo,
+    gradosIds: number[]
     espacios: Espacio[]
 }
+
+const { $apiRest } = useNuxtApp();
 
 const props = withDefaults(defineProps<Props>(), {
   modelValue: null,
@@ -63,6 +68,40 @@ watch(()=> props.modelValue ,(newValue: Tramo, oldValue: Tramo)=>{
   }
 })
 
+const onChangeUnidadCurricular = (unidadCurricular: UnidadCurricular)=>{
+  loadContenidosCriteriosDeLogrosYCompetencias(unidadCurricular.id);
+  onChangeModel();
+}
+
+
+const loadContenidosCriteriosDeLogrosYCompetencias = async(unidadCurricularId: number)=>{
+
+   const { gradosIds } = props;
+
+   const filters : ContenidoFilter = {
+      grados_ids : gradosIds,
+      unidad_curricular_id: unidadCurricularId
+   }
+
+   const listReq: ListRequest = {
+    page: -1,
+    rowsPerPage: 1,
+    filters
+   };
+   
+   const response = await $apiRest(apiContenidosRoutes.getPaginate, HttpMethodEnum.POST, listReq);
+
+   console.log(response);
+
+   const response2 = await $apiRest(apiCriteriosDeLogrosRoutes.getPaginate, HttpMethodEnum.POST, listReq);
+
+   console.log(response2);
+
+   const response3 = await $apiRest(apiCompetenciasEspecificasRoutes.getPaginate, HttpMethodEnum.POST, listReq);
+
+   console.log(response3)
+}
+
 
 
 
@@ -72,7 +111,8 @@ watch(()=> props.modelValue ,(newValue: Tramo, oldValue: Tramo)=>{
 
 <template>
   <div class="flex gap-2">
-    <USelectMenu v-model="form.espacio" :options="espacios" option-attribute="id" class="flex-1"
+    <USelectMenu 
+    v-model="form.espacio" :options="espacios" option-attribute="id" class="flex-1"
     @change="onChangeModel">
         <template #label>
           <span 
@@ -91,7 +131,7 @@ watch(()=> props.modelValue ,(newValue: Tramo, oldValue: Tramo)=>{
       </USelectMenu>
 
       <USelectMenu v-model="form.unidad_curricular" :options="unidadesCurriculares" option-attribute="id" class="flex-1"
-      @change="onChangeModel">
+      @change="onChangeUnidadCurricular">
         <template #label>
           <span 
           v-if="form.unidad_curricular"

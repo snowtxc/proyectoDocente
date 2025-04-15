@@ -56,3 +56,15 @@ export const apiTramosRoutes = {
 export const apiEspaciosRoutes = {
     listAll: "/espacios",
 }
+
+export const apiContenidosRoutes = {
+    getPaginate: "/contenidos/paged",
+}
+
+export const apiCriteriosDeLogrosRoutes = {
+    getPaginate: "/criterios-de-logros/paged",
+}
+
+export const apiCompetenciasEspecificasRoutes = {
+    getPaginate: "/competencias-especificas/paged",
+}

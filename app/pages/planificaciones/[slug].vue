@@ -251,8 +251,6 @@ watch(()=> tramoSelected.value, ()=>{
         @on:add-step="showModalAddTramo = true"
         @on:change-step="onChangeTramo"/>
         
-        {{ tramoSelected }}
-
       </div>
 
     </UDashboardPanel>
@@ -323,7 +321,12 @@ watch(()=> tramoSelected.value, ()=>{
       <div class="p-2"
         v-if="planificacionFechaSelected">
 
-        <TramosTramoForm v-if="tramoSelected"  v-model="tramoSelected" :tramo="tramoSelected"  :espacios="espacios" ></TramosTramoForm>
+        <TramosTramoForm 
+          v-if="tramoSelected"  
+          v-model="tramoSelected" 
+          :tramo="tramoSelected"  
+          :espacios="espacios" 
+          :gradosIds="grupo.grados.map(g => g.id)"></TramosTramoForm>
       </div>
 
       <div v-else class="flex flex-col justify-center items-center h-screen">
