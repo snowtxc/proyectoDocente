@@ -58,6 +58,16 @@ const grupo  = computed(()=>{
   return planificacion.value.grupo;
 })
 
+const ciclosGradosIds = computed(()=>{
+  let result = [];
+  grupo.value.grados.map(grado =>{
+    if(result.findIndex(id => id == grado.ciclo_grado_id)  < 0) 
+      result.push(grado.ciclo_grado_id);
+  })
+  return result;
+})
+
+
 const fechas = computed<SimplePlanificacionFecha[]>(()=>{
   return planificacion.value.fechas;
 })
@@ -68,6 +78,7 @@ const tramos = computed<Tramo[]>(()=>{
 
   return planificacionFechaSelected.value.tramos as Tramo[];
 })
+
 
 const stepsTramos =  computed(()=>{
   return tramos.value.map((tramo,idx) =>{
@@ -326,7 +337,8 @@ watch(()=> tramoSelected.value, ()=>{
           v-model="tramoSelected" 
           :tramo="tramoSelected"  
           :espacios="espacios" 
-          :gradosIds="grupo.grados.map(g => g.id)"></TramosTramoForm>
+          :gradosIds="grupo.grados.map(g => g.id)"
+          :ciclosGradosIds="ciclosGradosIds"></TramosTramoForm>
       </div>
 
       <div v-else class="flex flex-col justify-center items-center h-screen">

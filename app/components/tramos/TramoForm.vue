@@ -1,5 +1,7 @@
 <script setup lang="ts">
+import type { CompetenciaEspecificaFilter } from '~/types/competenciaEspecifica';
 import type { ContenidoFilter } from '~/types/contenido';
+import type { CriterioDeLogroFilter } from '~/types/criterioDeLogro';
 import type { Espacio } from '~/types/espacio';
 import type { ListRequest } from '~/types/list-request';
 import type { Tramo } from '~/types/tramo';
@@ -9,10 +11,13 @@ import { HttpMethodEnum } from '~/utils/enums/HttpMethodEnum';
 interface Props {
     modelValue: Tramo,
     gradosIds: number[]
+    ciclosGradosIds: number[],
     espacios: Espacio[]
 }
 
 const { $apiRest } = useNuxtApp();
+
+const toast = useToast();
 
 const props = withDefaults(defineProps<Props>(), {
   modelValue: null,
@@ -76,30 +81,59 @@ const onChangeUnidadCurricular = (unidadCurricular: UnidadCurricular)=>{
 
 const loadContenidosCriteriosDeLogrosYCompetencias = async(unidadCurricularId: number)=>{
 
-   const { gradosIds } = props;
+   const { gradosIds , ciclosGradosIds} = props;
 
-   const filters : ContenidoFilter = {
+   const filtersContenidos : ContenidoFilter = {
       grados_ids : gradosIds,
       unidad_curricular_id: unidadCurricularId
    }
 
-   const listReq: ListRequest = {
+   const filtersCriteriosDeLogros: CriterioDeLogroFilter = {
+    grados_ids : gradosIds,
+    unidad_curricular_id: unidadCurricularId
+   }
+
+   const filtersCompetenciasEspecificas: CompetenciaEspecificaFilter = {
+     ciclos_grados_ids: ciclosGradosIds,
+     unidad_curricular_id: unidadCurricularId
+   }
+
+   const listReqContenidos: ListRequest = {
     page: -1,
     rowsPerPage: 1,
-    filters
+    filters: filtersContenidos
    };
+
+   const listReqCriteriosDeLogros : ListRequest = {
+    page: -1,
+    rowsPerPage: 1,
+    filters: filtersCriteriosDeLogros
+   };
+
+   const listReqCompetenciasEspecificas : ListRequest = {
+    page: -1,
+    rowsPerPage: 1,
+    filters: filtersCompetenciasEspecificas
+   };
+
+   try{
+    const  [contenidosResponse, criteriosDeLogrosResponse, competenciasEspecificasResponse ] =  await Promise.all([
+      $apiRest(apiContenidosRoutes.getPaginate, HttpMethodEnum.POST, listReqContenidos),
+      $apiRest(apiCriteriosDeLogrosRoutes.getPaginate, HttpMethodEnum.POST, listReqCriteriosDeLogros),
+      $apiRest(apiCompetenciasEspecificasRoutes.getPaginate, HttpMethodEnum.POST, listReqCompetenciasEspecificas)
+    ]);
+    console.log(contenidosResponse.list);
+    console.log(criteriosDeLogrosResponse.list);
+    console.log(competenciasEspecificasResponse.list)
+   }catch(message){
+    toast.add({
+      title: "Error",
+      description: message ? message : 'Error al obtener los contenidos ,criterios de logros y competencías especificas para el tramo.',
+      color: "red"
+    })
+   }
    
-   const response = await $apiRest(apiContenidosRoutes.getPaginate, HttpMethodEnum.POST, listReq);
-
-   console.log(response);
-
-   const response2 = await $apiRest(apiCriteriosDeLogrosRoutes.getPaginate, HttpMethodEnum.POST, listReq);
-
-   console.log(response2);
-
-   const response3 = await $apiRest(apiCompetenciasEspecificasRoutes.getPaginate, HttpMethodEnum.POST, listReq);
-
-   console.log(response3)
+  
 }
 
 
