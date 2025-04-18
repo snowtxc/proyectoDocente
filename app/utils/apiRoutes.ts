@@ -68,3 +68,7 @@ export const apiCriteriosDeLogrosRoutes = {
 export const apiCompetenciasEspecificasRoutes = {
     getPaginate: "/competencias-especificas/paged",
 }
+
+export const apiCompetenciasGeneralesRoutes = {
+    listAll: '/competencias-generales'
+}

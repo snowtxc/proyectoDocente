@@ -5,6 +5,7 @@ import type { Planificacion } from '~/types/planificacion';
 import type { Tramo } from '~/types/tramo';
 import type { PlanificacionFecha, SimplePlanificacionFecha } from '~/types/planificacionFecha';
 import type { Espacio } from '~/types/espacio';
+import type { CompetenciaGeneral } from '~/types/competenciaEspecifica';
 
 const { $apiRest } = useNuxtApp();
 
@@ -13,17 +14,18 @@ const toast = useToast();
 const slug = route.params.slug as string;
 
 const { data: response, error, refresh } = await useAsyncData('planificacionDetalle', async () => {
-  const [planificacion,espacios]= await  Promise.all(
+  const [planificacion,espacios, competenciasGenerales]= await  Promise.all(
     [
       $apiRest<Planificacion>(apiPlanificacionesRoutes.getBySlug(slug), HttpMethodEnum.GET),
-      $apiRest<Espacio[]>(apiEspaciosRoutes.listAll, HttpMethodEnum.GET)
-
-    ]) 
-  return { planificacion,  espacios};
+      $apiRest<Espacio[]>(apiEspaciosRoutes.listAll, HttpMethodEnum.GET),
+      $apiRest<CompetenciaGeneral[]>(apiCompetenciasGeneralesRoutes.listAll, HttpMethodEnum.GET)
+    ]);
+  return { planificacion,  espacios , competenciasGenerales};
 });
 
 const planificacion = ref<Planificacion>(response.value.planificacion);
 const espacios = ref<Espacio[]>(response.value.espacios);
+const competenciasGenerales = ref<CompetenciaGeneral[]>(response.value.competenciasGenerales);
 
 const planificacionFechaSelected = ref<PlanificacionFecha>();
 const tramoSelected = ref<Tramo>(null);
@@ -235,8 +237,7 @@ watch(()=> tramoSelected.value, ()=>{
   <UDashboardPage>
     <UDashboardPanel
       id="grupo"
-      :width="400"
-      :resizable="{ min: 300, max: 500 }"
+      :width="200"
     >
       <UDashboardNavbar
         :title="grupo.nombre"
@@ -329,7 +330,7 @@ watch(()=> tramoSelected.value, ()=>{
 
     
     </UDashboardNavbar>
-      <div class="p-2"
+      <div class="p-2 overflow-y-auto"
         v-if="planificacionFechaSelected">
 
         <TramosTramoForm 
@@ -338,7 +339,8 @@ watch(()=> tramoSelected.value, ()=>{
           :tramo="tramoSelected"  
           :espacios="espacios" 
           :gradosIds="grupo.grados.map(g => g.id)"
-          :ciclosGradosIds="ciclosGradosIds"></TramosTramoForm>
+          :ciclosGradosIds="ciclosGradosIds"
+          :competenciasGenerales="competenciasGenerales"></TramosTramoForm>
       </div>
 
       <div v-else class="flex flex-col justify-center items-center h-screen">

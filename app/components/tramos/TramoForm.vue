@@ -1,18 +1,23 @@
 <script setup lang="ts">
-import type { CompetenciaEspecificaFilter } from '~/types/competenciaEspecifica';
-import type { ContenidoFilter } from '~/types/contenido';
-import type { CriterioDeLogroFilter } from '~/types/criterioDeLogro';
+import { type CompetenciaEspecifica, type CompetenciaEspecificaFilter, type CompetenciaGeneral } from '~/types/competenciaEspecifica';
+import type { Contenido, ContenidoFilter } from '~/types/contenido';
+import type { CriterioDeLogro, CriterioDeLogroFilter } from '~/types/criterioDeLogro';
 import type { Espacio } from '~/types/espacio';
 import type { ListRequest } from '~/types/list-request';
 import type { Tramo } from '~/types/tramo';
 import type { UnidadCurricular } from '~/types/unidadCurricular';
 import { HttpMethodEnum } from '~/utils/enums/HttpMethodEnum';
 
+import SelectorContenido from '../contenido/SelectorContenido.vue';
+import SelectorCriteriosDeLogros from '../criterio-de-logro/SelectorCriteriosDeLogros.vue';
+import SelectorCompetenciaEspecifica from '../competencia-especifica/SelectorCompetenciaEspecifica.vue';
+
 interface Props {
     modelValue: Tramo,
     gradosIds: number[]
     ciclosGradosIds: number[],
-    espacios: Espacio[]
+    espacios: Espacio[],
+    competenciasGenerales: CompetenciaGeneral[]
 }
 
 const { $apiRest } = useNuxtApp();
@@ -27,11 +32,17 @@ const emit = defineEmits(['update:modelValue']);
 
 const form = ref({
     espacio: null,
-    unidad_curricular: props.modelValue.unidad_curricular || null
+    unidad_curricular: props.modelValue.unidad_curricular || null,
+    contenido: null,
+    criteriosDeLogros: [],
+    competenciasEspecificas: []
 });
 
 const espacios = ref([...props.espacios]);
 
+const contenidos = ref<Contenido[]>([]);
+const criteriosDeLogros = ref<CriterioDeLogro[]>([]);
+const competenciasEspecificas = ref<CompetenciaEspecifica[]>([]);
 
 const loadForm = (): void =>{
   const { unidad_curricular, espacio } = props.modelValue;
@@ -47,6 +58,12 @@ onMounted(()=>{
 
 const unidadesCurriculares = computed<UnidadCurricular[]>(()=>{
     return form.value.espacio?.unidades_curriculares;
+})
+
+const competenciasGeneralesSelected = computed<CompetenciaGeneral[]>(()=>{
+  return props.competenciasGenerales.filter(cg =>{
+     return form.value.competenciasEspecificas.some((ce:CompetenciaEspecifica) => ce.competencias_generales.some(x => x.id == cg.id))
+  })
 })
 
 const getCurrentData = ()=>{
@@ -122,9 +139,11 @@ const loadContenidosCriteriosDeLogrosYCompetencias = async(unidadCurricularId: n
       $apiRest(apiCriteriosDeLogrosRoutes.getPaginate, HttpMethodEnum.POST, listReqCriteriosDeLogros),
       $apiRest(apiCompetenciasEspecificasRoutes.getPaginate, HttpMethodEnum.POST, listReqCompetenciasEspecificas)
     ]);
-    console.log(contenidosResponse.list);
-    console.log(criteriosDeLogrosResponse.list);
-    console.log(competenciasEspecificasResponse.list)
+     
+    contenidos.value = contenidosResponse.list;
+    criteriosDeLogros.value = criteriosDeLogrosResponse.list;
+    competenciasEspecificas.value = competenciasEspecificasResponse.list;
+    
    }catch(message){
     toast.add({
       title: "Error",
@@ -137,51 +156,159 @@ const loadContenidosCriteriosDeLogrosYCompetencias = async(unidadCurricularId: n
 }
 
 
-
-
-
-
 </script>
 
 <template>
-  <div class="flex gap-2">
-    <USelectMenu 
-    v-model="form.espacio" :options="espacios" option-attribute="id" class="flex-1"
-    @change="onChangeModel">
-        <template #label>
-          <span 
-          v-if="form.espacio"
-          :style="{ backgroundColor: form.espacio?.rgbColor }"
-          :class="['inline-block h-2 w-2 flex-shrink-0 rounded-full']" aria-hidden="true" />
-
-          <span class="truncate" v-if="form.espacio">{{ form.espacio?.nombre }}</span>
-          <span v-else>Selecciona un espacio.</span>
-        </template>
+  <div class="w-full px-2">
+    <div class="flex gap-2">
+      <USelectMenu 
+      v-model="form.espacio" :options="espacios" option-attribute="id" class="flex-1"
+      @change="onChangeModel">
+          <template #label>
+            <span 
+            v-if="form.espacio"
+            :style="{ backgroundColor: form.espacio?.rgbColor }"
+            :class="['inline-block h-2 w-2 flex-shrink-0 rounded-full']" aria-hidden="true" />
+  
+            <span class="truncate" v-if="form.espacio">{{ form.espacio?.nombre }}</span>
+            <span v-else>Selecciona un espacio.</span>
+          </template>
+      
+          <template #option="{ option: espacio }">
+            <span  :style="{ backgroundColor: espacio.rgbColor }" :class="['inline-block h-2 w-2 flex-shrink-0 rounded-full']" aria-hidden="true" />
+            <span class="truncate">{{ espacio.nombre }}</span>
+          </template>
+        </USelectMenu>
+  
+        <USelectMenu v-model="form.unidad_curricular" :options="unidadesCurriculares" option-attribute="id" class="flex-1"
+        @change="onChangeUnidadCurricular">
+          <template #label>
+            <span 
+            v-if="form.unidad_curricular"
+            :style="{ backgroundColor: form.espacio?.rgbColor }"
+            :class="['inline-block h-2 w-2 flex-shrink-0 rounded-full']" aria-hidden="true" />
+  
+            <span class="truncate" v-if="form.unidad_curricular">{{ form.unidad_curricular?.nombre }}</span>
+            <span v-else> Selecciona una unidad curricular.</span>
+          </template>
+      
+          <template #option="{ option:  unidadCurricular }">
+            <span  :style="{ backgroundColor: form.espacio?.rgbColor }" :class="['inline-block h-2 w-2 flex-shrink-0 rounded-full']" aria-hidden="true" />
+            <span class="truncate">{{ unidadCurricular?.nombre }}</span>
+          </template>
+        </USelectMenu>
+    </div>
+  
+    <div class="w-full flex flex-col gap-2 mt-2">
+      
+      <div class="flex gap-2">
+        <UCard class="w-3/5  flex flex-col">
+        <div class="flex items-center justify-between">
+          <span class="font-medium text-xl">Competencias Especificas</span>
+          <SelectorCompetenciaEspecifica 
+          v-model="form.competenciasEspecificas" 
+          :competenciasEspecificas="competenciasEspecificas" 
+          :color="form.espacio?.rgbColor"
+          :disabled="form.unidad_curricular == null"
+          :contenidoSelected="form.contenido"
+          :criteriosDeLogrosSelected="form.criteriosDeLogros"
+          ></SelectorCompetenciaEspecifica>
+        </div>
+        
+        <div class="flex justify-between gap-2 items-center">
+          <div>
+            <ul class="list-disc px-2" v-if="form.competenciasEspecificas.length > 0">
+              <li v-for="competenciaEspecifica in form.competenciasEspecificas" :key="competenciaEspecifica.id" class="my-2">
+                  {{ competenciaEspecifica.codificacion  }} {{ competenciaEspecifica.descripcion }}
+              </li>
+            </ul>
+            <span v-else>
+              No se ha seleccionado ningún criterio de logro.
+            </span>
+          </div>
+        </div>
+        
+        </UCard>
     
-        <template #option="{ option: espacio }">
-          <span  :style="{ backgroundColor: espacio.rgbColor }" :class="['inline-block h-2 w-2 flex-shrink-0 rounded-full']" aria-hidden="true" />
-          <span class="truncate">{{ espacio.nombre }}</span>
-        </template>
-      </USelectMenu>
-
-      <USelectMenu v-model="form.unidad_curricular" :options="unidadesCurriculares" option-attribute="id" class="flex-1"
-      @change="onChangeUnidadCurricular">
-        <template #label>
-          <span 
-          v-if="form.unidad_curricular"
-          :style="{ backgroundColor: form.espacio?.rgbColor }"
-          :class="['inline-block h-2 w-2 flex-shrink-0 rounded-full']" aria-hidden="true" />
-
-          <span class="truncate" v-if="form.unidad_curricular">{{ form.unidad_curricular?.nombre }}</span>
-          <span v-else> Selecciona una unidad curricular.</span>
-        </template>
+        <UCard class="w-2/5 flex flex-col">
+          <div class="flex items-center justify-between">
+            <span class="font-medium text-xl">Competencias Generales</span>
+          </div>
+          
+          <div class="flex flex-col justify-between gap-2 items-center">
+              <div class="grid grid-cols-2 gap-2" v-if="competenciasGeneralesSelected.length > 0" >
+                <UCard 
+                v-for="competenciaGeneral in competenciasGeneralesSelected" 
+                :key="competenciaGeneral.id" >
+                  <div class="w-full flex flex-col h-full items-center justify-center">
+                    <div class="text-sm text-center">{{ competenciaGeneral.nombre }}</div>
+                    <UAvatar :src="competenciaGeneral.url_image" size="xl" class="text-center mt-2"/>
+                  </div>
+                </UCard>
+              </div>
+              
+              <span v-else>
+                No se ha seleccionado ninguna competencia general.
+              </span>
+            </div>        
+        </UCard>
+      </div>
+      
     
-        <template #option="{ option:  unidadCurricular }">
-          <span  :style="{ backgroundColor: form.espacio?.rgbColor }" :class="['inline-block h-2 w-2 flex-shrink-0 rounded-full']" aria-hidden="true" />
-          <span class="truncate">{{ unidadCurricular?.nombre }}</span>
-        </template>
-      </USelectMenu>
-    
+  
+      <UCard class="flex-1 flex flex-col">
+        <div class="flex items-center justify-between">
+          <span class="font-medium text-xl">Criterios de Logros</span>
+          <SelectorCriteriosDeLogros 
+          v-model="form.criteriosDeLogros" 
+          :criteriosDeLogros="criteriosDeLogros" 
+          :color="form.espacio?.rgbColor"
+          :contenidoSelected="form.contenido"
+          :competenciasEspecificasSelected="form.competenciasEspecificas"
+          :disabled="form.unidad_curricular == null"></SelectorCriteriosDeLogros>
+        </div>
+        <div class="flex justify-between gap-2 items-center">
+          <div>
+            <ul class="list-disc" v-if="form.criteriosDeLogros.length > 0">
+              <li v-for="criterioDeLogro in form.criteriosDeLogros" :key="criterioDeLogro.id">
+                {{ criterioDeLogro.descripcion }}
+              </li>
+            </ul>
+            <span v-else>
+              No se ha seleccionado ningún criterio de logro.
+            </span>
+          </div>
+        </div>
+        
+      </UCard>
+  
+      <UCard class="flex-1 flex flex-col">
+        <div class="flex items-center justify-between">
+          <span class="font-medium text-xl">Contenido</span>
+  
+          <SelectorContenido 
+          v-model="form.contenido" 
+          :contenidos="contenidos" 
+          :color="form.espacio?.rgbColor"
+          :competenciasEspecificasSelected="form.competenciasEspecificas"
+          :criteriosDeLogrosSelected="form.criteriosDeLogros"
+          :disabled="form.unidad_curricular == null"></SelectorContenido>
+        </div>
+        <div class="flex justify-between gap-2 items-center">
+          <div>
+            <ul class="list-disc" v-if="form.contenido">
+              <li>{{ form.contenido.descripcion }}</li>
+            </ul>
+            <span v-else>
+              No se ha seleccionado ningún contenido.
+            </span>
+          </div>
+        </div>
+        
+      </UCard>
+      
+    </div>
   </div>
+  
  
 </template>

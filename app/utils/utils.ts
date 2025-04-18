@@ -22,3 +22,36 @@ export function getArrayDatesStrBetweenDates(from: Date, to: Date): string[] {
 
     return dates;
 }
+
+export const getColorBadgeComponente = (rgbColor: string) : any=>{
+    let result: string;
+
+    switch(rgbColor){
+        case "#d71634":
+            result = "red";
+            break;
+        case "#8bc63e":
+            result = "green"
+            break;
+        case "#e8b809":
+            result = ""
+            break;
+        case "#ed028c":
+            result = ""
+            break;
+        case "#90268f":
+            result = ""
+            break;
+        case "#f7931d":
+            result = ""
+            break;
+        case "#015ca3":
+            result = ""
+            break;
+        default:
+            result = "gray"
+            break;
+    }
+
+    return result;
+}
