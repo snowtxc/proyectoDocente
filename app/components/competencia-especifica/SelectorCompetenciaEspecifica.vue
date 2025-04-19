@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { CompetenciaEspecifica, CompetenciaEspecificaItemSelector } from '~/types/competenciaEspecifica';
+import type { CompetenciaEspecifica, CompetenciaEspecificaItemSelector, CompetenciaGeneral } from '~/types/competenciaEspecifica';
 import type { Contenido } from '~/types/contenido';
 import type { CriterioDeLogro } from '~/types/criterioDeLogro';
 import { UPopover } from '#components';
@@ -7,6 +7,7 @@ import { UPopover } from '#components';
   interface Props {
       modelValue: CompetenciaEspecifica[],
       competenciasEspecificas: CompetenciaEspecifica[],
+      competenciasGenerales: CompetenciaGeneral[]
       contenidoSelected?: Contenido,
       criteriosDeLogrosSelected?: CriterioDeLogro[]
       color: string
@@ -146,6 +147,8 @@ import { UPopover } from '#components';
             @click="isOpen = false;"
             />
           </div>
+
+
         </template>
 
         <div class="w-full overflow-y-auto max-h-full h-[75vh]">

@@ -114,6 +114,8 @@ const onCreateTramo = async()=>{
     updated_at: undefined,
     planificacion_fecha_id: planificacionFechaSelected.value.id,
     seDesarrolla: true,
+    criterios_de_logros: [],
+    competencias_especificas: []
   }
 
   try{
