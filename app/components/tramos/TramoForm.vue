@@ -229,7 +229,7 @@ const onConfirmChangeEspacioOUnidad = ()=>{
 </script>
 
 <template>
-  <div class="w-full px-2">
+  <div class="w-full px-2 pb-20">
     <div class="flex gap-2">
       <USelectMenu 
       :model-value="form.espacio"
@@ -273,6 +273,29 @@ const onConfirmChangeEspacioOUnidad = ()=>{
     <div class="w-full flex flex-col gap-2 mt-2">
       
       <div class="flex gap-2">
+        <UCard class="w-2/5 flex flex-col">
+          <div class="flex items-center justify-between">
+            <span class="font-medium text-xl">Competencias Generales</span>
+          </div>
+          
+          <div class="flex flex-col justify-between gap-2 items-center">
+              <div class="grid grid-cols-2 gap-2" v-if="competenciasGeneralesSelected.length > 0" >
+                <UCard 
+                v-for="competenciaGeneral in competenciasGeneralesSelected" 
+                :key="competenciaGeneral.id" >
+                  <div class="w-full flex flex-col h-full items-center justify-center">
+                    <div class="text-sm text-center">{{ competenciaGeneral.nombre }}</div>
+                    <UAvatar :src="competenciaGeneral.url_image" size="xl" class="text-center mt-2"/>
+                  </div>
+                </UCard>
+              </div>
+              
+              <span v-else>
+                No se ha seleccionado ninguna competencia general.
+              </span>
+            </div>        
+        </UCard>
+        
         <UCard class="w-3/5  flex flex-col">
         <div class="flex items-center justify-between">
           <span class="font-medium text-xl">Competencias Especificas</span>
@@ -303,28 +326,6 @@ const onConfirmChangeEspacioOUnidad = ()=>{
         
         </UCard>
     
-        <UCard class="w-2/5 flex flex-col">
-          <div class="flex items-center justify-between">
-            <span class="font-medium text-xl">Competencias Generales</span>
-          </div>
-          
-          <div class="flex flex-col justify-between gap-2 items-center">
-              <div class="grid grid-cols-2 gap-2" v-if="competenciasGeneralesSelected.length > 0" >
-                <UCard 
-                v-for="competenciaGeneral in competenciasGeneralesSelected" 
-                :key="competenciaGeneral.id" >
-                  <div class="w-full flex flex-col h-full items-center justify-center">
-                    <div class="text-sm text-center">{{ competenciaGeneral.nombre }}</div>
-                    <UAvatar :src="competenciaGeneral.url_image" size="xl" class="text-center mt-2"/>
-                  </div>
-                </UCard>
-              </div>
-              
-              <span v-else>
-                No se ha seleccionado ninguna competencia general.
-              </span>
-            </div>        
-        </UCard>
       </div>
       
     

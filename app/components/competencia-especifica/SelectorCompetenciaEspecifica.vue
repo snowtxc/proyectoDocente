@@ -172,8 +172,7 @@ import { FormsCompetenciasGenerales, UPopover } from '#components';
                             <div class="w-2 h-2 rounded-full bg-green-500  absolute float-right" v-if="filters.competenciasGenerales.length > 0"> </div>
                             <UIcon name="tabler:filter-cog" class="size-5" />
                         </div>
-                        
-
+                    
                       </template>
                     </UButton>
                   </UTooltip>
