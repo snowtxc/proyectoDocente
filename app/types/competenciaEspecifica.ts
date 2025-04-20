@@ -9,6 +9,10 @@ export interface CompetenciaGeneral extends BaseModel{
     url_image : string;
 }
 
+export type CompetenciaGeneralItemSelector = CompetenciaGeneral & {
+    checked: boolean;
+};
+
 export interface CompetenciaEspecifica extends BaseModel{
     codificacion: string;
     descripcion: string;

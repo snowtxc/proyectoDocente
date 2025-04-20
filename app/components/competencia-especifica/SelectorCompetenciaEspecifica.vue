@@ -2,7 +2,7 @@
 import type { CompetenciaEspecifica, CompetenciaEspecificaItemSelector, CompetenciaGeneral } from '~/types/competenciaEspecifica';
 import type { Contenido } from '~/types/contenido';
 import type { CriterioDeLogro } from '~/types/criterioDeLogro';
-import { UPopover } from '#components';
+import { FormsCompetenciasGenerales, UPopover } from '#components';
 
   interface Props {
       modelValue: CompetenciaEspecifica[],
@@ -18,7 +18,9 @@ import { UPopover } from '#components';
       modelValue: null,
   });
 
-  console.log(props.competenciasEspecificas);
+  const filters = ref<{competenciasGenerales: CompetenciaGeneral[]}>({
+    competenciasGenerales: []
+  })
 
   const emit = defineEmits(['update:model-value']);
 
@@ -86,6 +88,19 @@ import { UPopover } from '#components';
               if(!descripcionLowerCase.includes(qLowerCase))
                   return false;
           }
+
+
+          //Filtros por filtro de competencias generales.
+
+          if(filters.value.competenciasGenerales.length > 0){
+            const incluyeCompetenciaGeneral = filters.value.competenciasGenerales.every(cg => {
+                return competenciaEspecifica.competencias_generales.some(x => x.id == cg.id);
+            })
+            if(!incluyeCompetenciaGeneral)
+                return false;
+          }
+
+
           return true;
       })
   })
@@ -119,6 +134,7 @@ import { UPopover } from '#components';
     competenciasEspecificas.value = getLista()
   })
 
+
 </script>
 
 <template>
@@ -137,6 +153,41 @@ import { UPopover } from '#components';
         <template #header>
           <div class="flex gap-2 items-center mt-2">
             <UInput v-model="q" icon="i-heroicons-magnifying-glass" placeholder="Buscar competencia especifica" autofocus class="flex-1" />
+            
+            <UPopover :popper="{ placement: 'bottom-start' }" mode="click">
+                <template #default="{ open }">
+                  <UTooltip
+                    :prevent="open"
+                  >
+                  <UButton
+                    size="sm"
+                    color="primary"
+                    square
+                    variant="outline"
+                    class="flex-none"
+                    >
+                    <template #leading="{ modelValue, ui }">
+                        
+                        <div class="flex flex-col">
+                            <div class="w-2 h-2 rounded-full bg-green-500  absolute float-right" v-if="filters.competenciasGenerales.length > 0"> </div>
+                            <UIcon name="tabler:filter-cog" class="size-5" />
+                        </div>
+                        
+
+                      </template>
+                    </UButton>
+                  </UTooltip>
+                </template>
+
+                <template #panel="{ close }">
+                    <div class="p-2 m-4 flex flex-col gap-y-4 max-w-64">
+                        <FormsCompetenciasGenerales 
+                        v-model="filters.competenciasGenerales" 
+                        :competenciasGenerales="props.competenciasGenerales" ></FormsCompetenciasGenerales>
+                    </div>
+                </template>
+             </UPopover>
+
             <UButton
             icon="tabler:x"
             size="sm"
@@ -147,8 +198,7 @@ import { UPopover } from '#components';
             @click="isOpen = false;"
             />
           </div>
-
-
+    
         </template>
 
         <div class="w-full overflow-y-auto max-h-full h-[75vh]">
@@ -200,7 +250,7 @@ import { UPopover } from '#components';
                         </div>
 
                     </template>
-                  </UPopover>
+                </UPopover>
               </div>
             </li>
           </ul>
