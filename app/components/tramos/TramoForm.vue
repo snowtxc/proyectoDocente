@@ -37,7 +37,8 @@ const form = ref({
     unidad_curricular: props.modelValue.unidad_curricular || null,
     contenido: null,
     criteriosDeLogros: [],
-    competenciasEspecificas: []
+    competenciasEspecificas: [],
+    metaDeAprendizaje: ""
 });
 
 const espacios = ref([...props.espacios]);
@@ -55,15 +56,14 @@ const unidadCurricularToChange = ref<UnidadCurricular>(null);
 const optionToChange = ref<EspacioOUnidadOptionEnum>(null);
 
 const loadForm = (): void =>{
-  const { unidad_curricular, espacio , competencias_especificas, criterios_de_logros,contenido } = props.modelValue;
-
-  console.log(props.modelValue);
+  const { unidad_curricular, espacio , competencias_especificas, criterios_de_logros,contenido, metaDeAprendizaje } = props.modelValue;
 
   form.value.espacio = espacio;
   form.value.unidad_curricular = unidad_curricular;
   form.value.competenciasEspecificas = competencias_especificas;
   form.value.criteriosDeLogros = criterios_de_logros;
   form.value.contenido = contenido;
+  form.value.metaDeAprendizaje = metaDeAprendizaje;
 }
 
 onMounted(()=>{
@@ -225,6 +225,10 @@ const onConfirmChangeEspacioOUnidad = ()=>{
   onChangeModel();
 }
 
+const metaAprendizajeResumido = computed(()=>{
+  const texto = form.value.metaDeAprendizaje || '';
+  return texto.length > 500 ? texto.slice(0, 500) + '...' : texto;
+})
 
 </script>
 
@@ -295,7 +299,7 @@ const onConfirmChangeEspacioOUnidad = ()=>{
               </span>
             </div>        
         </UCard>
-        
+
         <UCard class="w-3/5  flex flex-col">
         <div class="flex items-center justify-between">
           <span class="font-medium text-xl">Competencias Especificas</span>
@@ -382,11 +386,35 @@ const onConfirmChangeEspacioOUnidad = ()=>{
         </div>
         
       </UCard>
+
+      <UCard class="flex-1 flex flex-col">
+        <div class="flex items-center justify-between">
+          <span class="font-medium text-xl">Meta de Aprendizaje</span>
+
+          <TextareaMetaAprendizajeTextArea v-model="form.metaDeAprendizaje" :disabled="form.unidad_curricular == null"> </TextareaMetaAprendizajeTextArea>
+
+        </div>
+
+        <p class="max-w-3xl break-words whitespace-pre-wrap">
+          {{ metaAprendizajeResumido  }}
+        </p>
+      </UCard>
+
+      <UCard class="flex-1 flex flex-col">
+        <div class="flex items-center justify-between">
+          <span class="font-medium text-xl">Plan de Aprendizaje</span>
+
+          <TextareaMetaAprendizajeTextArea v-model="form.metaDeAprendizaje" :disabled="form.unidad_curricular == null"> </TextareaMetaAprendizajeTextArea>
+
+        </div>
+
+        <p class="max-w-3xl break-words whitespace-pre-wrap">
+          {{ metaAprendizajeResumido  }}
+        </p>
+      </UCard>
     </div>
   </div>
 
   <ConfirmModal v-model="showModalChangeEspacioOrUnidadCurricular" :title="titleChangeEspacioOrUnidadCurricular" :description="descriptionChangeEspacioOrUnidadCurricular" @onConfirm="onConfirmChangeEspacioOUnidad"></ConfirmModal>
-
-  
- 
+   
 </template>
