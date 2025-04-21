@@ -1,7 +1,13 @@
 <script setup lang="ts">
-    import { useGradoService } from '~/services/gradoService/gradoService';
+    import { HttpMethodEnum } from '~/utils/enums/HttpMethodEnum';
+    import { apiGradoRoutes } from '~/utils/apiRoutes';
 
-    const gradoService = useGradoService();
+    import type { Grado } from '~/types/grado';
+
+    const grados = ref<Grado[]>([]);
+    const isLoading = ref<boolean>(false);
+    
+    const {  $apiRest  } = useNuxtApp();
 
     interface Props {
         modelValue: any,
@@ -16,10 +22,11 @@
     const emit = defineEmits(['update:modelValue']);
 
     onMounted(async()=>{
-        if(gradoService.alreadyLoaded){
-            return;
-        }
-        await gradoService.getAll();
+        isLoading.value = true;
+        const gradosResponse  = await $apiRest(apiGradoRoutes.listAll, HttpMethodEnum.GET);
+        console.log(gradosResponse);
+        grados.value = gradosResponse;
+        isLoading.value = false;
     })
 
     const updateValue = (value) => {
@@ -37,8 +44,8 @@
             by="id"
             option-attribute="nombre"
             :search-attributes="['nombre']"
-            :options="gradoService.grados"
-            :loading="gradoService.isLoading"
+            :options="grados"
+            :loading="isLoading"
             :multiple="props.multiple"
             :model-value="props.modelValue"            
         >
