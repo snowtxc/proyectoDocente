@@ -72,7 +72,7 @@ import type { CriterioDeLogro } from '~/types/criterioDeLogro';
 
     const contenidoIdSelected = ref<number>(props.modelValue ? props.modelValue.id : null);
 
-    const isOpen = ref<boolean>(true);
+    const isOpen = ref<boolean>(false);
 
     const q = ref<string>('');
 

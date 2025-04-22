@@ -13,6 +13,8 @@ import SelectorCriteriosDeLogros from '../criterio-de-logro/SelectorCriteriosDeL
 import SelectorCompetenciaEspecifica from '../competencia-especifica/SelectorCompetenciaEspecifica.vue';
 import { EspacioOUnidadOptionEnum } from '~/utils/enums/EspacioOUnidadOption.enum';
 
+import EditorSlideOver from '../plan-de-aprendizaje/EditorSlideOver.vue';
+
 interface Props {
     modelValue: Tramo,
     gradosIds: number[]
@@ -38,7 +40,8 @@ const form = ref({
     contenido: null,
     criteriosDeLogros: [],
     competenciasEspecificas: [],
-    metaDeAprendizaje: ""
+    metaDeAprendizaje: "",
+    planDeAprendizaje: ""
 });
 
 const espacios = ref([...props.espacios]);
@@ -235,116 +238,102 @@ const metaAprendizajeResumido = computed(()=>{
 <template>
   <div class="w-full px-2 pb-20">
     <div class="flex gap-2">
-      <USelectMenu 
-      :model-value="form.espacio"
-      :options="espacios" option-attribute="id" class="flex-1"
-      @change="onChangeEspacio">
-          <template #label>
-            <span 
-            v-if="form.espacio"
-            :style="{ backgroundColor: form.espacio?.rgbColor }"
+      <USelectMenu :model-value="form.espacio" :options="espacios" option-attribute="id" class="flex-1"
+        @change="onChangeEspacio">
+        <template #label>
+          <span v-if="form.espacio" :style="{ backgroundColor: form.espacio?.rgbColor }"
             :class="['inline-block h-2 w-2 flex-shrink-0 rounded-full']" aria-hidden="true" />
-  
-            <span class="truncate" v-if="form.espacio">{{ form.espacio?.nombre }}</span>
-            <span v-else>Selecciona un espacio.</span>
-          </template>
-      
-          <template #option="{ option: espacio }">
-            <span  :style="{ backgroundColor: espacio.rgbColor }" :class="['inline-block h-2 w-2 flex-shrink-0 rounded-full']" aria-hidden="true" />
-            <span class="truncate">{{ espacio.nombre }}</span>
-          </template>
-        </USelectMenu>
-  
-        <USelectMenu  :model-value="form.unidad_curricular" :options="unidadesCurriculares" option-attribute="id" class="flex-1"
-        @change="onChangeUnidadCurricular">
-          <template #label>
-            <span 
-            v-if="form.unidad_curricular"
-            :style="{ backgroundColor: form.espacio?.rgbColor }"
+
+          <span class="truncate" v-if="form.espacio">{{ form.espacio?.nombre }}</span>
+          <span v-else>Selecciona un espacio.</span>
+        </template>
+
+        <template #option="{ option: espacio }">
+          <span :style="{ backgroundColor: espacio.rgbColor }"
             :class="['inline-block h-2 w-2 flex-shrink-0 rounded-full']" aria-hidden="true" />
-  
-            <span class="truncate" v-if="form.unidad_curricular">{{ form.unidad_curricular?.nombre }}</span>
-            <span v-else> Selecciona una unidad curricular.</span>
-          </template>
-      
-          <template #option="{ option:  unidadCurricular }">
-            <span  :style="{ backgroundColor: form.espacio?.rgbColor }" :class="['inline-block h-2 w-2 flex-shrink-0 rounded-full']" aria-hidden="true" />
-            <span class="truncate">{{ unidadCurricular?.nombre }}</span>
-          </template>
-        </USelectMenu>
+          <span class="truncate">{{ espacio.nombre }}</span>
+        </template>
+      </USelectMenu>
+
+      <USelectMenu :model-value="form.unidad_curricular" :options="unidadesCurriculares" option-attribute="id"
+        class="flex-1" @change="onChangeUnidadCurricular">
+        <template #label>
+          <span v-if="form.unidad_curricular" :style="{ backgroundColor: form.espacio?.rgbColor }"
+            :class="['inline-block h-2 w-2 flex-shrink-0 rounded-full']" aria-hidden="true" />
+
+          <span class="truncate" v-if="form.unidad_curricular">{{ form.unidad_curricular?.nombre }}</span>
+          <span v-else> Selecciona una unidad curricular.</span>
+        </template>
+
+        <template #option="{ option:  unidadCurricular }">
+          <span :style="{ backgroundColor: form.espacio?.rgbColor }"
+            :class="['inline-block h-2 w-2 flex-shrink-0 rounded-full']" aria-hidden="true" />
+          <span class="truncate">{{ unidadCurricular?.nombre }}</span>
+        </template>
+      </USelectMenu>
     </div>
-  
+
     <div class="w-full flex flex-col gap-2 mt-2">
-      
+
       <div class="flex gap-2">
         <UCard class="w-2/5 flex flex-col">
           <div class="flex items-center justify-between">
             <span class="font-medium text-xl">Competencias Generales</span>
           </div>
-          
+
           <div class="flex flex-col justify-between gap-2 items-center">
-              <div class="grid grid-cols-2 gap-2" v-if="competenciasGeneralesSelected.length > 0" >
-                <UCard 
-                v-for="competenciaGeneral in competenciasGeneralesSelected" 
-                :key="competenciaGeneral.id" >
-                  <div class="w-full flex flex-col h-full items-center justify-center">
-                    <div class="text-sm text-center">{{ competenciaGeneral.nombre }}</div>
-                    <UAvatar :src="competenciaGeneral.url_image" size="xl" class="text-center mt-2"/>
-                  </div>
-                </UCard>
-              </div>
-              
-              <span v-else>
-                No se ha seleccionado ninguna competencia general.
-              </span>
-            </div>        
+            <div class="grid grid-cols-2 gap-2" v-if="competenciasGeneralesSelected.length > 0">
+              <UCard v-for="competenciaGeneral in competenciasGeneralesSelected" :key="competenciaGeneral.id">
+                <div class="w-full flex flex-col h-full items-center justify-center">
+                  <div class="text-sm text-center">{{ competenciaGeneral.nombre }}</div>
+                  <UAvatar :src="competenciaGeneral.url_image" size="xl" class="text-center mt-2" />
+                </div>
+              </UCard>
+            </div>
+
+            <span v-else>
+              No se ha seleccionado ninguna competencia general.
+            </span>
+          </div>
         </UCard>
 
         <UCard class="w-3/5  flex flex-col">
-        <div class="flex items-center justify-between">
-          <span class="font-medium text-xl">Competencias Especificas</span>
-          <SelectorCompetenciaEspecifica 
-          v-model="form.competenciasEspecificas" 
-          @update:model-value="onChangeModel"
-          :competenciasEspecificas="competenciasEspecificas" 
-          :color="form.espacio?.rgbColor"
-          :disabled="form.unidad_curricular == null"
-          :contenidoSelected="form.contenido"
-          :criteriosDeLogrosSelected="form.criteriosDeLogros"
-          :competenciasGenerales="props.competenciasGenerales"
-          ></SelectorCompetenciaEspecifica>
-        </div>
-        
-        <div class="flex justify-between gap-2 items-center">
-          <div>
-            <ul class="list-disc px-2" v-if="form.competenciasEspecificas.length > 0">
-              <li v-for="competenciaEspecifica in form.competenciasEspecificas" :key="competenciaEspecifica.id" class="my-2">
-                  {{ competenciaEspecifica.codificacion  }} {{ competenciaEspecifica.descripcion }}
-              </li>
-            </ul>
-            <span v-else>
-              No se ha seleccionado ningún criterio de logro.
-            </span>
+          <div class="flex items-center justify-between">
+            <span class="font-medium text-xl">Competencias Especificas</span>
+            <SelectorCompetenciaEspecifica v-model="form.competenciasEspecificas" @update:model-value="onChangeModel"
+              :competenciasEspecificas="competenciasEspecificas" :color="form.espacio?.rgbColor"
+              :disabled="form.unidad_curricular == null" :contenidoSelected="form.contenido"
+              :criteriosDeLogrosSelected="form.criteriosDeLogros" :competenciasGenerales="props.competenciasGenerales">
+            </SelectorCompetenciaEspecifica>
           </div>
-        </div>
-        
+
+          <div class="flex justify-between gap-2 items-center">
+            <div>
+              <ul class="list-disc px-2" v-if="form.competenciasEspecificas.length > 0">
+                <li v-for="competenciaEspecifica in form.competenciasEspecificas" :key="competenciaEspecifica.id"
+                  class="my-2">
+                  {{ competenciaEspecifica.codificacion }} {{ competenciaEspecifica.descripcion }}
+                </li>
+              </ul>
+              <span v-else>
+                No se ha seleccionado ningún criterio de logro.
+              </span>
+            </div>
+          </div>
+
         </UCard>
-    
+
       </div>
-      
-    
-  
+
+
+
       <UCard class="flex-1 flex flex-col">
         <div class="flex items-center justify-between">
           <span class="font-medium text-xl">Criterios de Logros</span>
-          <SelectorCriteriosDeLogros 
-          v-model="form.criteriosDeLogros" 
-          @update:model-value="onChangeModel"
-          :criteriosDeLogros="criteriosDeLogros" 
-          :color="form.espacio?.rgbColor"
-          :contenidoSelected="form.contenido"
-          :competenciasEspecificasSelected="form.competenciasEspecificas"
-          :disabled="form.unidad_curricular == null"></SelectorCriteriosDeLogros>
+          <SelectorCriteriosDeLogros v-model="form.criteriosDeLogros" @update:model-value="onChangeModel"
+            :criteriosDeLogros="criteriosDeLogros" :color="form.espacio?.rgbColor" :contenidoSelected="form.contenido"
+            :competenciasEspecificasSelected="form.competenciasEspecificas" :disabled="form.unidad_curricular == null">
+          </SelectorCriteriosDeLogros>
         </div>
         <div class="flex justify-between gap-2 items-center">
           <div>
@@ -358,21 +347,17 @@ const metaAprendizajeResumido = computed(()=>{
             </span>
           </div>
         </div>
-        
+
       </UCard>
-  
+
       <UCard class="flex-1 flex flex-col">
         <div class="flex items-center justify-between">
           <span class="font-medium text-xl">Contenido</span>
-  
-          <SelectorContenido 
-          v-model="form.contenido" 
-          @update:model-value="onChangeModel"
-          :contenidos="contenidos" 
-          :color="form.espacio?.rgbColor"
-          :competenciasEspecificasSelected="form.competenciasEspecificas"
-          :criteriosDeLogrosSelected="form.criteriosDeLogros"
-          :disabled="form.unidad_curricular == null"></SelectorContenido>
+
+          <SelectorContenido v-model="form.contenido" @update:model-value="onChangeModel" :contenidos="contenidos"
+            :color="form.espacio?.rgbColor" :competenciasEspecificasSelected="form.competenciasEspecificas"
+            :criteriosDeLogrosSelected="form.criteriosDeLogros" :disabled="form.unidad_curricular == null">
+          </SelectorContenido>
         </div>
         <div class="flex justify-between gap-2 items-center">
           <div>
@@ -384,19 +369,20 @@ const metaAprendizajeResumido = computed(()=>{
             </span>
           </div>
         </div>
-        
+
       </UCard>
 
       <UCard class="flex-1 flex flex-col">
         <div class="flex items-center justify-between">
           <span class="font-medium text-xl">Meta de Aprendizaje</span>
 
-          <TextareaMetaAprendizajeTextArea v-model="form.metaDeAprendizaje" :disabled="form.unidad_curricular == null"> </TextareaMetaAprendizajeTextArea>
+          <TextareaMetaAprendizajeTextArea v-model="form.metaDeAprendizaje" :disabled="form.unidad_curricular == null">
+          </TextareaMetaAprendizajeTextArea>
 
         </div>
 
         <p class="max-w-3xl break-words whitespace-pre-wrap">
-          {{ metaAprendizajeResumido  }}
+          {{ metaAprendizajeResumido }}
         </p>
       </UCard>
 
@@ -404,17 +390,15 @@ const metaAprendizajeResumido = computed(()=>{
         <div class="flex items-center justify-between">
           <span class="font-medium text-xl">Plan de Aprendizaje</span>
 
-          <TextareaMetaAprendizajeTextArea v-model="form.metaDeAprendizaje" :disabled="form.unidad_curricular == null"> </TextareaMetaAprendizajeTextArea>
-
+          <EditorSlideOver v-model="form.planDeAprendizaje" title="Plan de aprendizaje"></EditorSlideOver>
         </div>
 
-        <p class="max-w-3xl break-words whitespace-pre-wrap">
-          {{ metaAprendizajeResumido  }}
-        </p>
+        <div  v-html="form.planDeAprendizaje"></div>
       </UCard>
     </div>
   </div>
 
-  <ConfirmModal v-model="showModalChangeEspacioOrUnidadCurricular" :title="titleChangeEspacioOrUnidadCurricular" :description="descriptionChangeEspacioOrUnidadCurricular" @onConfirm="onConfirmChangeEspacioOUnidad"></ConfirmModal>
-   
+  <ConfirmModal v-model="showModalChangeEspacioOrUnidadCurricular" :title="titleChangeEspacioOrUnidadCurricular"
+    :description="descriptionChangeEspacioOrUnidadCurricular" @onConfirm="onConfirmChangeEspacioOUnidad"></ConfirmModal>
+
 </template>
