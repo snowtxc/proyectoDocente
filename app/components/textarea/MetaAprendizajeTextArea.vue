@@ -1,4 +1,7 @@
 <script setup lang="ts">
+
+    import FlopiBot from '../flopi-bot/FlopiBot.vue';
+
     interface Props {
         modelValue: string;
         disabled?: boolean;
@@ -55,7 +58,10 @@
   
       <!-- Contenido que crece -->
       <div class="flex-1 px-2 mt-2">
-        <UTextarea v-model="value" class="w-full h-full" :rows="28" />
+        <div class="flex justify-end py-2">
+          <FlopiBot></FlopiBot>
+        </div>
+        <UTextarea v-model="value" class="w-full h-full" :rows="25" />
       </div>
   
       <template #footer>
