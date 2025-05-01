@@ -55,7 +55,7 @@ export default defineNuxtConfig({
     middleware: 'userAuth',
   },
   devtools: {
-    enabled: true
+    enabled: false
   },
 
   typescript: {
@@ -72,8 +72,26 @@ export default defineNuxtConfig({
         commaDangle: 'never',
         braceStyle: '1tbs'
       }
+    },
+    vite: {
+      optimizeDeps: {
+        include: ['@vueuse/core', '@pinia/nuxt', 'v-calendar']
+      }
     }
   },
 
-  compatibilityDate: '2024-07-11'
+  compatibilityDate: '2024-07-11',
+
+  vite: {
+    server: {
+      watch: {
+        usePolling: false,
+        interval: 100
+      }
+    }
+  },
+  experimental: {
+    payloadExtraction: true
+  }
+  
 } as any)

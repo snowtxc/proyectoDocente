@@ -17,5 +17,6 @@ export interface Tramo extends BaseModel{
     espacio?: Espacio;
     unidad_curricular_id? : number;
     unidad_curricular?: UnidadCurricular;
-    metaDeAprendizaje?: string;
+    metaDeAprendizaje?: { contentHtml: string, contentJson: string };
+    planDeAprendizaje? : { contentHtml: string, contentJson: string };
 }

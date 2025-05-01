@@ -55,3 +55,5 @@ export const getColorBadgeComponente = (rgbColor: string) : any=>{
 
     return result;
 }
+
+

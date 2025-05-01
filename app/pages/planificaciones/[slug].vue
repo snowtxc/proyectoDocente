@@ -259,6 +259,7 @@ watch(()=> tramoSelected.value, ()=>{
         <Stepper 
         :showButtonAddStep="true"
         titleButtonAddStep="Agregar nuevo tramo"
+        orientation="vertical"
         descriptionButtonAddStep="Extender un nuevo tramo a la planificación"
         :currentStep="currentStepTramo"  
         :steps="stepsTramos"

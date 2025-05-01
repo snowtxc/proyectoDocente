@@ -4,6 +4,8 @@ import { useAuthStore } from '~/utils/authStore';
 import { HttpMethodEnum } from '~/utils/enums/HttpMethodEnum';
 import { apiAuthRoutes } from "~/utils/apiRoutes";
 
+import FlopiBot from '~/components/flopi-bot/FlopiBot.vue';
+
 const { $apiRest } = useNuxtApp();
 
 const authStore = useAuthStore();
@@ -12,6 +14,7 @@ const user = await $apiRest(apiAuthRoutes.user,HttpMethodEnum.GET);
 
 authStore.setUser(user);
 
+const flopiBotRef = ref(null);
 
 const links = [{
   id: 'home',
@@ -41,6 +44,19 @@ const links = [{
   to: '/planificaciones',
   tooltip: {
     text: 'Planificaciones',
+    shortcuts: []
+  }
+},
+{
+  id: 'flopi-bot',
+  label: 'Flopi Bot',
+  icon: 'tabler:robot',
+  click: ()=>{
+    flopiBotRef.value.openModal();
+  },
+
+  tooltip: {
+    text: 'Flopi Bot',
     shortcuts: []
   }
 }]
@@ -100,5 +116,7 @@ const groups = [{
     <ClientOnly>
       <LazyUDashboardSearch :groups="groups" />
     </ClientOnly>
+
+    <FlopiBot :params="{}" ref="flopiBotRef" :hideButton="true" :hideUseResponse="true"></FlopiBot>
   </UDashboardLayout>
 </template>

@@ -14,6 +14,7 @@ import SelectorCompetenciaEspecifica from '../competencia-especifica/SelectorCom
 import { EspacioOUnidadOptionEnum } from '~/utils/enums/EspacioOUnidadOption.enum';
 
 import EditorSlideOver from '../plan-de-aprendizaje/EditorSlideOver.vue';
+import TiptapEditor from '../tiptap/TiptapEditor.vue';
 
 interface Props {
     modelValue: Tramo,
@@ -40,8 +41,8 @@ const form = ref({
     contenido: null,
     criteriosDeLogros: [],
     competenciasEspecificas: [],
-    metaDeAprendizaje: "",
-    planDeAprendizaje: ""
+    metaDeAprendizaje: { contentHtml: "" ,contentJson: "" },
+    planDeAprendizaje: { contentHtml: "" ,contentJson: "" }
 });
 
 const espacios = ref([...props.espacios]);
@@ -228,10 +229,32 @@ const onConfirmChangeEspacioOUnidad = ()=>{
   onChangeModel();
 }
 
-const metaAprendizajeResumido = computed(()=>{
-  const texto = form.value.metaDeAprendizaje || '';
-  return texto.length > 500 ? texto.slice(0, 500) + '...' : texto;
+const paramsBotMetaAprendizaje = computed(()=>{
+
+const { criteriosDeLogros, competenciasEspecificas, contenido, metaDeAprendizaje  } = form.value;
+  return {
+    criteriosDeLogros: criteriosDeLogros.map(x => x.descripcion),
+    competenciasEspecificas:  competenciasEspecificas.map(x => x.descripcion),
+    contenido: contenido?.descripcion,
+    grados : [],
+    metaAprendizajeText: metaDeAprendizaje
+  }
 })
+
+const disabledMetaAprendizaje = computed(()=>{
+  return  !form.value.unidad_curricular || 
+          form.value.competenciasEspecificas.length == 0 || 
+          form.value.competenciasEspecificas.length == 0 || 
+          !form.value.contenido;
+})
+
+const disabledPlanAprendizaje = computed(()=>{
+  return  !form.value.unidad_curricular || 
+          form.value.competenciasEspecificas.length == 0 || 
+          form.value.competenciasEspecificas.length == 0 || 
+          !form.value.contenido;
+})
+
 
 </script>
 
@@ -325,8 +348,6 @@ const metaAprendizajeResumido = computed(()=>{
 
       </div>
 
-
-
       <UCard class="flex-1 flex flex-col">
         <div class="flex items-center justify-between">
           <span class="font-medium text-xl">Criterios de Logros</span>
@@ -354,7 +375,10 @@ const metaAprendizajeResumido = computed(()=>{
         <div class="flex items-center justify-between">
           <span class="font-medium text-xl">Contenido</span>
 
-          <SelectorContenido v-model="form.contenido" @update:model-value="onChangeModel" :contenidos="contenidos"
+          <SelectorContenido 
+            v-model="form.contenido" 
+            @update:model-value="onChangeModel" 
+            :contenidos="contenidos"
             :color="form.espacio?.rgbColor" :competenciasEspecificasSelected="form.competenciasEspecificas"
             :criteriosDeLogrosSelected="form.criteriosDeLogros" :disabled="form.unidad_curricular == null">
           </SelectorContenido>
@@ -376,24 +400,35 @@ const metaAprendizajeResumido = computed(()=>{
         <div class="flex items-center justify-between">
           <span class="font-medium text-xl">Meta de Aprendizaje</span>
 
-          <TextareaMetaAprendizajeTextArea v-model="form.metaDeAprendizaje" :disabled="form.unidad_curricular == null">
-          </TextareaMetaAprendizajeTextArea>
-
+          <EditorSlideOver 
+            v-model="form.metaDeAprendizaje"  
+            title="Meta de Aprendizaje" 
+            :paramsBot="paramsBotMetaAprendizaje"
+            :disabled="disabledMetaAprendizaje"
+            disabledText="Debes seleccionar una unidad curricular ,un contenido, criterios de logros y competencias especificas antes de asignar una meta de aprendizaje"></EditorSlideOver>
         </div>
 
-        <p class="max-w-3xl break-words whitespace-pre-wrap">
-          {{ metaAprendizajeResumido }}
-        </p>
+        <div>
+          <TiptapEditor :defaultContent="form.metaDeAprendizaje" :editable="false"></TiptapEditor>
+        </div>
+
       </UCard>
 
       <UCard class="flex-1 flex flex-col">
         <div class="flex items-center justify-between">
           <span class="font-medium text-xl">Plan de Aprendizaje</span>
 
-          <EditorSlideOver v-model="form.planDeAprendizaje" title="Plan de aprendizaje"></EditorSlideOver>
+          <EditorSlideOver 
+          v-model="form.planDeAprendizaje" 
+          title="Plan de aprendizaje" 
+          :paramsBot="{}"
+          :disabled="disabledPlanAprendizaje"
+          disabledText="Debes seleccionar una unidad curricular ,un contenido, criterios de logros y competencias especificas antes de asignar un plan de aprendizaje"></EditorSlideOver>
         </div>
 
-        <div  v-html="form.planDeAprendizaje"></div>
+        <div>
+          <TiptapEditor :defaultContent="form.planDeAprendizaje" :editable="false"></TiptapEditor>
+        </div>
       </UCard>
     </div>
   </div>

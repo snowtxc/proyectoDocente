@@ -101,7 +101,6 @@ import type { CriterioDeLogro } from '~/types/criterioDeLogro';
 
     const onSelectContenido = ()=>{
         isOpen.value = false;
-
         const contenido = props.contenidos.find(c => c.id == contenidoIdSelected.value);
         emit('update:model-value', contenido);
     }

@@ -3,17 +3,21 @@
     import TiptapEditor from '../tiptap/TiptapEditor.vue';
 
     const isOpen = ref(false);
+    const tiptapRef = ref();
 
     interface Props {
-        modelValue: string,
+        modelValue:  { contentHtml:string , contentJson: string},
         title: string;
         disabled?: boolean;
+        disabledText?: string;
+        paramsBot: any
     }
     const props = withDefaults(defineProps<Props>(), {
         modelValue: null,
-    });
+    })
 
-    const value = ref(props.modelValue);
+    const valueJson = ref(props.modelValue.contentJson);
+    const valueHtml = ref(props.modelValue.contentHtml);
 
     const emit = defineEmits(['update:model-value']);
     
@@ -21,12 +25,20 @@
         contentHtml : string,
         contentJson : string
     })=>{
-        value.value = fields.contentJson;
+        valueJson.value =  fields.contentJson;
+        valueHtml.value = fields.contentHtml;
     }
 
     const onSave = ()=>{
         isOpen.value = false;
-        emit('update:model-value', value.value);
+        emit('update:model-value', {
+          contentJson: valueJson.value,
+          contentHtml: valueHtml.value
+        });
+    }
+
+    const handleOnUseTextResponseBot = (responseTextHtml) =>{
+      tiptapRef.value?.setContentFromHtml(responseTextHtml);
     }
 
 </script>
@@ -35,7 +47,8 @@
 
     <div class="flex justify-end"> 
 
-        <UButton
+      <UTooltip :text="(disabled && disabledText) ? disabledText: 'Editar plan de aprendizaje'">
+            <UButton
             icon="tabler:pencil"
             size="sm"
             color="primary"
@@ -43,8 +56,9 @@
             @click="isOpen = true"
             :disabled="props.disabled"
         />
-            
+      </UTooltip>
 
+  
         <UModal fullscreen title="Modal fullscreen" v-model="isOpen">  
             <UCard
               :ui="{ header: { padding: 'p-4 sm:px-6' }, body: { padding: '' } }"
@@ -52,7 +66,7 @@
             >
               <template #header>
                 <div class="flex gap-2 justify-between items-center mt-2">
-                    <h1 class="font-medium text-xl">Plan de Aprendizaje</h1>
+                    <h1 class="font-medium text-xl"> {{ props.title }}</h1>
         
                     <UButton
                     icon="tabler:x"
@@ -66,8 +80,13 @@
                 </div>
               </template>
 
-              <div class="w-full overflow-y-auto min-h-[80vh] max-h-[80vh]">
-                <TiptapEditor :defaultContent="value" @on:update="handleUpdateContent"></TiptapEditor>
+              <div class="flex justify-end py-2 px-2">
+                <FlopiBot :params="paramsBot" @on:use-text-response="handleOnUseTextResponseBot"></FlopiBot>
+              </div>
+
+              <div class="w-full overflow-y-auto min-h-[70vh] max-h-[70vh]">
+                <TiptapEditor  :defaultContent="props.modelValue" @on:update="handleUpdateContent"  :editable="true" ref="tiptapRef"
+                ></TiptapEditor>
               </div>
 
               <template #footer>

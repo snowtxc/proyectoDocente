@@ -72,3 +72,11 @@ export const apiCompetenciasEspecificasRoutes = {
 export const apiCompetenciasGeneralesRoutes = {
     listAll: '/competencias-generales'
 }
+
+export const apiPromptsRoutes = {
+    getPaginate : '/prompts/paged',
+}
+
+export const apiFlopiBot = {
+    sendPromptMessage : "/flopi-bot/send-prompt-message"
+}

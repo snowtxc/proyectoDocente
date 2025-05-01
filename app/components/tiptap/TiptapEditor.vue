@@ -35,9 +35,14 @@ import YoutubeBubbleMenu from './bubble-menus/YoutubeBubbleMenu.vue'
 import FormLink from '../forms/FormLink.vue'
 import type { LinkForm } from '~/utils/forms/link-form'
 
+interface Props {
+    defaultContent:  { contentHtml : string, contentJson: string },
+    editable: boolean
+}
 
-const props = defineProps({
-  defaultContent: { type: String ,required: false}
+
+const props = withDefaults(defineProps<Props>(), {
+  defaultContent: null,
 });
 
 const emit = defineEmits(['on:update']);
@@ -173,7 +178,8 @@ const showYouTubeLinkModal = ref(false);
 onMounted(()=>{
   if(editorContainer.value){
     editor.value =  new Editor({
-      content: "<p>I'm running Tiptap with Vue.js. 🎉</p>",
+      content: "",
+      editable: props.editable ? props.editable : false,
       extensions: [
         TiptapStarterKit, 
         TaskList, 
@@ -287,8 +293,7 @@ onMounted(()=>{
     })
 
     if(props.defaultContent){
-      console.log(props.defaultContent)
-      editor.value.commands.setContent(props.defaultContent);
+      editor.value.commands.setContent(props.defaultContent?.contentJson);
     }
   }
 });
@@ -337,75 +342,75 @@ const handleSetAlignYoutubeVideo = (align:AlignEnum)=>{
   editor.value.chain().focus().setYoutubeVideo({ ...attrs, align: alignVideo }).run();
 }
 
+function setContentFromHtml(html: string) {
+  editor.value?.commands.setContent(html, false);
+}
+
+defineExpose({
+  setContentFromHtml
+});
+
+watch(()=> props.defaultContent, ()=>{
+  editor.value.commands.setContent(props.defaultContent?.contentJson);
+})
+
 </script>
 
 
 <template>
-    <div class="w-full" ref="editorContainer">
-        <div v-if="editor">
-          <TiptapFloatingMenu :editor="editor" :tippy-options="{ duration: 100 }">
-            <div class="flex gap-2">
-  
-              <UDropdown :items="itemsAddBtn">
-                <UButton
-                  trailing-icon="i-heroicons-plus"
-                  color="white"/>
-              </UDropdown>
-              <UDropdown :items="itemsAppBtn">
-                <UButton
-                trailing-icon="i-heroicons-squares-2x2"
-                color="white"/>
-              </UDropdown>
-              
-            </div>
-          </TiptapFloatingMenu>
+  <div class="w-full" ref="editorContainer">
+    <div v-if="editor">
+      <TiptapFloatingMenu :editor="editor" :tippy-options="{ duration: 100 }">
+        <div class="flex gap-2">
+
+          <UDropdown :items="itemsAddBtn">
+            <UButton trailing-icon="i-heroicons-plus" color="white" />
+          </UDropdown>
+          <UDropdown :items="itemsAppBtn">
+            <UButton trailing-icon="i-heroicons-squares-2x2" color="white" />
+          </UDropdown>
+
         </div>
-        
-
-        <!-- Bubble menus -->
-
-        <div class="image-menu">
-          <ImageBubbleMenu 
-          @update:range="handleUpdateRangeImageEvent"
-          @on-align-event="handleAlignImageEvent" ></ImageBubbleMenu>
-        </div>
-    
-        <!-- Menu para texto -->
-        <div class="text-menu w-full" >
-          <TextBubbleMenu :editor="editor"> </TextBubbleMenu>
-        </div>
-
-        <div class="link-menu w-full" >
-           <LinkBubbleMenu :editor="editor"></LinkBubbleMenu>
-        </div>
-
-        <div class="table-bubble-menu w-full" >
-          <TableBubbleMenu :editor="editor"></TableBubbleMenu>
-       </div>
-
-       <div class="youtube-menu">
-         <YoutubeBubbleMenu :editor="editor" @on-align-event="handleSetAlignYoutubeVideo"></YoutubeBubbleMenu>
-       </div>
-
-       
-
-        <TiptapEditorContent :editor="editor" />
-
-
-        <!--Youtube Modal-->
-        <UModal v-model="showYouTubeLinkModal">
-          <FormLink
-          description="Inserta un link de youtube"
-          :isYoutubeLink="true"
-          label="Link de Youtube"
-          @on:submit="handleYoutubeLinkForm"
-          :showCloseButton="true"
-          @close="showYouTubeLinkModal = false"
-          ></FormLink>
-        </UModal>
-    
+      </TiptapFloatingMenu>
     </div>
-  </template>
+
+
+    <!-- Bubble menus -->
+
+    <div class="image-menu" v-if="props.editable">
+      <ImageBubbleMenu @update:range="handleUpdateRangeImageEvent" @on-align-event="handleAlignImageEvent">
+      </ImageBubbleMenu>
+    </div>
+
+    <!-- Menu para texto -->
+    <div class="text-menu w-full" v-if="props.editable">
+      <TextBubbleMenu :editor="editor"> </TextBubbleMenu>
+    </div>
+
+    <div class="link-menu w-full" v-if="props.editable">
+      <LinkBubbleMenu :editor="editor"></LinkBubbleMenu>
+    </div>
+
+    <div class="table-bubble-menu w-full" v-if="props.editable">
+      <TableBubbleMenu :editor="editor"></TableBubbleMenu>
+    </div>
+
+    <div class="youtube-menu" v-if="props.editable">
+      <YoutubeBubbleMenu :editor="editor" @on-align-event="handleSetAlignYoutubeVideo"></YoutubeBubbleMenu>
+    </div>
+
+
+    <TiptapEditorContent :editor="editor" />
+
+
+    <!--Youtube Modal-->
+    <UModal v-model="showYouTubeLinkModal" v-if="props.editable">
+      <FormLink description="Inserta un link de youtube" :isYoutubeLink="true" label="Link de Youtube"
+        @on:submit="handleYoutubeLinkForm" :showCloseButton="true" @close="showYouTubeLinkModal = false"></FormLink>
+    </UModal>
+
+  </div>
+</template>
 
   <style lang="scss">
 /* Basic editor styles */
