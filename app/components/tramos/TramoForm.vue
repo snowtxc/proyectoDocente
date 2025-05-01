@@ -15,6 +15,7 @@ import { EspacioOUnidadOptionEnum } from '~/utils/enums/EspacioOUnidadOption.enu
 
 import EditorSlideOver from '../plan-de-aprendizaje/EditorSlideOver.vue';
 import TiptapEditor from '../tiptap/TiptapEditor.vue';
+import { PromptCategory } from '~/utils/enums/PromptCategory.enum';
 
 interface Props {
     modelValue: Tramo,
@@ -401,6 +402,7 @@ const disabledPlanAprendizaje = computed(()=>{
           <span class="font-medium text-xl">Meta de Aprendizaje</span>
 
           <EditorSlideOver 
+            :promptCategories="[PromptCategory.META_DE_APRENDIZAJE]"
             v-model="form.metaDeAprendizaje"  
             title="Meta de Aprendizaje" 
             :paramsBot="paramsBotMetaAprendizaje"
@@ -419,6 +421,7 @@ const disabledPlanAprendizaje = computed(()=>{
           <span class="font-medium text-xl">Plan de Aprendizaje</span>
 
           <EditorSlideOver 
+          :promptCategories="[PromptCategory.OTROS]"
           v-model="form.planDeAprendizaje" 
           title="Plan de aprendizaje" 
           :paramsBot="{}"

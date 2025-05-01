@@ -1,5 +1,6 @@
 <script setup lang="ts">
 
+    import type { PromptCategory } from '~/utils/enums/PromptCategory.enum';
     import TiptapEditor from '../tiptap/TiptapEditor.vue';
 
     const isOpen = ref(false);
@@ -10,7 +11,8 @@
         title: string;
         disabled?: boolean;
         disabledText?: string;
-        paramsBot: any
+        paramsBot: any,
+        promptCategories: PromptCategory[]
     }
     const props = withDefaults(defineProps<Props>(), {
         modelValue: null,
@@ -81,7 +83,8 @@
               </template>
 
               <div class="flex justify-end py-2 px-2">
-                <FlopiBot :params="paramsBot" @on:use-text-response="handleOnUseTextResponseBot"></FlopiBot>
+                <FlopiBot :params="paramsBot" @on:use-text-response="handleOnUseTextResponseBot" :categories="props.promptCategories
+                "></FlopiBot>
               </div>
 
               <div class="w-full overflow-y-auto min-h-[70vh] max-h-[70vh]">

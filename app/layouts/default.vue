@@ -5,6 +5,7 @@ import { HttpMethodEnum } from '~/utils/enums/HttpMethodEnum';
 import { apiAuthRoutes } from "~/utils/apiRoutes";
 
 import FlopiBot from '~/components/flopi-bot/FlopiBot.vue';
+import { PromptCategory } from '~/utils/enums/PromptCategory.enum';
 
 const { $apiRest } = useNuxtApp();
 
@@ -117,6 +118,6 @@ const groups = [{
       <LazyUDashboardSearch :groups="groups" />
     </ClientOnly>
 
-    <FlopiBot :params="{}" ref="flopiBotRef" :hideButton="true" :hideUseResponse="true"></FlopiBot>
+    <FlopiBot :params="{}" ref="flopiBotRef" :hideButton="true" :hideUseResponse="true" :categories="[PromptCategory.OTROS]"></FlopiBot>
   </UDashboardLayout>
 </template>

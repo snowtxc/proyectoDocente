@@ -6,11 +6,13 @@ import type { Prompt } from '~/types/prompt';
 import { HttpMethodEnum } from '~/utils/enums/HttpMethodEnum';
 import Stepper from '../Stepper.vue';
 import type { SendTextPrompt } from '~/types/flopiBot';
+import type { PromptCategory } from '~/utils/enums/PromptCategory.enum';
 
 interface Props {
     params: Object,
     hideButton? : boolean;
     hideUseResponse? : boolean;
+    categories?: PromptCategory[]
 }
 
 const { $apiRest } = useNuxtApp();
@@ -44,8 +46,6 @@ const  formattedResponseText = computed(()=>{
   return responseText.value.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>'); ;
 })
 
-
-
 const steps =    [{
   step: 1,
   title: `Seleccionar prompt`,
@@ -71,7 +71,9 @@ onMounted(async()=>{
     const listReq : ListRequest = {
       page: -1,
       rowsPerPage: 1,
-      filters: []
+      filters: {
+        promptCategoriesIds: props.categories ? props.categories : null
+      }
     }
 
     const data  = await $apiRest<ListResponse<Prompt[]>>(apiPromptsRoutes.getPaginate, HttpMethodEnum.POST,listReq);
@@ -224,37 +226,35 @@ defineExpose({
           </ul>
 
           <UDivider class="mt-4"></UDivider>
-          <h1 class="text-center py-2">Instrucciones a usar</h1>
-          <div class="w-full overflow-y-auto max-h-full h-[50vh]">
-            <div v-if="emptyPrompts && !loading" class="flex flex-col justify-center items-center mt-5 text-center px-2" >
-              <UIcon name="tabler:search" class="w-8 h-8"/>
-              <span>
-                No pudimos encontrar ningún prompt
-              </span>
-            </div>
-            <ul v-else role="list" class="divide-y divide-gray-200 dark:divide-gray-800 overflow-y-auto">
-              <li v-for="(prompt, index) in prompts" :key="prompt.id"
-                class="flex items-center justify-between gap-3 py-3 px-4 sm:px-6">
-                <div class="flex items-center gap-3 w-full">
-    
-                  <div class="text-sm min-w-0 flex gap-2">
-                    <UIcon name="tabler:input-ai" class="w-5 h-5"/>
-                    <p class="text-gray-900 dark:text-white font-medium">
-                    {{ prompt.description }}
-                    </p>
+          <div v-if="!emptyPrompts">
+            <h1 class="text-center py-2">Instrucciones a usar</h1>
+            <div class="w-full overflow-y-auto max-h-full h-[50vh]">
+        
+              <ul  role="list" class="divide-y divide-gray-200 dark:divide-gray-800 overflow-y-auto">
+                <li v-for="(prompt, index) in prompts" :key="prompt.id"
+                  class="flex items-center justify-between gap-3 py-3 px-4 sm:px-6">
+                  <div class="flex items-center gap-3 w-full">
+      
+                    <div class="text-sm min-w-0 flex gap-2">
+                      <UIcon name="tabler:input-ai" class="w-5 h-5"/>
+                      <p class="text-gray-900 dark:text-white font-medium">
+                      {{ prompt.description }}
+                      </p>
+                    </div>
                   </div>
-                </div>
-    
-                <div class="flex items-center gap-3">
-                  <UDropdown position="bottom-end">
-                    <UTooltip :text="prompt.additional_description">
-                      <UButton icon="tabler:chevron-right" color="gray" variant="ghost"  @click="selectPrompt(prompt)" />
-                    </UTooltip>
-                  </UDropdown>
-                </div>
-              </li>
-            </ul>
+      
+                  <div class="flex items-center gap-3">
+                    <UDropdown position="bottom-end">
+                      <UTooltip :text="prompt.additional_description">
+                        <UButton icon="tabler:chevron-right" color="gray" variant="ghost"  @click="selectPrompt(prompt)" />
+                      </UTooltip>
+                    </UDropdown>
+                  </div>
+                </li>
+              </ul>
+            </div>
           </div>
+          
         </div>
       </template>
 
