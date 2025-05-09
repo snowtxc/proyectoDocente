@@ -61,14 +61,17 @@ const unidadCurricularToChange = ref<UnidadCurricular>(null);
 const optionToChange = ref<EspacioOUnidadOptionEnum>(null);
 
 const loadForm = (): void =>{
-  const { unidad_curricular, espacio , competencias_especificas, criterios_de_logros,contenido, metaDeAprendizaje } = props.modelValue;
+  const { unidad_curricular, espacio , competencias_especificas, criterios_de_logros,contenido, actividad } = props.modelValue;
+
+  const  {  meta_de_aprendizaje_html , meta_de_aprendizaje_json, plan_de_aprendizaje_html, plan_de_aprendizaje_json} =  actividad;
 
   form.value.espacio = espacio;
   form.value.unidad_curricular = unidad_curricular;
   form.value.competenciasEspecificas = competencias_especificas;
   form.value.criteriosDeLogros = criterios_de_logros;
   form.value.contenido = contenido;
-  form.value.metaDeAprendizaje = metaDeAprendizaje;
+  form.value.metaDeAprendizaje =  { contentHtml : meta_de_aprendizaje_html, contentJson : meta_de_aprendizaje_json};
+  form.value.planDeAprendizaje = { contentHtml : plan_de_aprendizaje_html , contentJson: plan_de_aprendizaje_json}
 }
 
 onMounted(()=>{
@@ -87,18 +90,30 @@ const competenciasGeneralesSelected = computed<CompetenciaGeneral[]>(()=>{
 })
 
 const getCurrentData = ()=>{
-  const {  unidad_curricular , espacio, contenido, competenciasEspecificas, criteriosDeLogros}  = form.value
+
+  const { actividad } = props.modelValue;
+  const {  unidad_curricular , espacio, contenido, competenciasEspecificas, criteriosDeLogros , metaDeAprendizaje, planDeAprendizaje}  = form.value
+
+  const meta_de_aprendizaje_html = metaDeAprendizaje.contentHtml;
+  const plan_de_aprendizaje_html = planDeAprendizaje.contentHtml;
+  const meta_de_aprendizaje_json = metaDeAprendizaje.contentJson;
+  const plan_de_aprendizaje_json = planDeAprendizaje.contentJson
 
   const data  = {
     ...props.modelValue,
     ...{
       unidad_curricular,
+      unidad_curricular_id: unidad_curricular ? unidad_curricular.id : null,
       espacio,
+      espacio_id : espacio ? espacio.id : null,
       contenido,
+      contenido_id: contenido ? contenido.id : null,
       competencias_especificas:  competenciasEspecificas,
-      criterios_de_logros: criteriosDeLogros
+      criterios_de_logros: criteriosDeLogros,
+      actividad : { ...actividad, meta_de_aprendizaje_html, meta_de_aprendizaje_json, plan_de_aprendizaje_html, plan_de_aprendizaje_json }
     }
   }  
+    
   return data;
 }
 
@@ -404,6 +419,7 @@ const disabledPlanAprendizaje = computed(()=>{
           <EditorSlideOver 
             :promptCategories="[PromptCategory.META_DE_APRENDIZAJE]"
             v-model="form.metaDeAprendizaje"  
+            @update:model-value="onChangeModel"
             title="Meta de Aprendizaje" 
             :paramsBot="paramsBotMetaAprendizaje"
             :disabled="disabledMetaAprendizaje"
@@ -423,6 +439,7 @@ const disabledPlanAprendizaje = computed(()=>{
           <EditorSlideOver 
           :promptCategories="[PromptCategory.OTROS]"
           v-model="form.planDeAprendizaje" 
+          @update:model-value="onChangeModel"
           title="Plan de aprendizaje" 
           :paramsBot="{}"
           :disabled="disabledPlanAprendizaje"

@@ -13,6 +13,9 @@ const route = useRoute();
 const toast = useToast();
 const slug = route.params.slug as string;
 
+const pendingSave = ref<boolean>(true);
+const isSaving = ref<boolean>(true);
+
 const { data: response, error, refresh } = await useAsyncData('planificacionDetalle', async () => {
   const [planificacion,espacios, competenciasGenerales]= await  Promise.all(
     [
@@ -115,10 +118,12 @@ const onCreateTramo = async()=>{
     planificacion_fecha_id: planificacionFechaSelected.value.id,
     seDesarrolla: true,
     criterios_de_logros: [],
-    competencias_especificas: []
+    competencias_especificas: [],
+    actividad: undefined
   }
 
   try{
+
    const tramo = await $apiRest(apiTramosRoutes.create, HttpMethodEnum.POST, newTramo);
 
    planificacionFechaSelected.value.tramos.push(tramo);
@@ -226,12 +231,34 @@ const onChangeTramo = (currentStep) =>{
   tramoSelected.value = { ... tramo };
 }
 
+const onSavePlanificacionFecha = async()=>{
+    if(!planificacionFechaSelected.value)
+      return;
+
+    isSaving.value = true;
+    try{
+
+      const response = await $apiRest<PlanificacionFecha>(apiPlanificacionesFechaRoutes.guardar(planificacionFechaSelected.value.id), HttpMethodEnum.POST, planificacionFechaSelected.value);
+      isSaving.value = false;
+
+    }catch(message){
+      isSaving.value = false;
+      toast.add({
+        title: "Error",
+        description: message ? message : 'Error al obtener el dia de planificacion. Por favor vuelve a intentarlo más tarde.',
+        color: "red"
+      })
+    }
+}
+
 watch(()=> tramoSelected.value, ()=>{
     const idx = tramos.value.findIndex(t => t.id == tramoSelected.value.id);
     if(idx >= 0){
       tramos.value[idx] = { ...tramoSelected.value};
     }  
 })
+
+
 
 </script>
 
@@ -309,6 +336,25 @@ watch(()=> tramoSelected.value, ()=>{
       </template>
 
       <template #right>
+
+        <UTooltip text="Guardar planificación">
+          <UButton
+            icon="tabler:device-floppy"
+            color="gray"
+            variant="ghost"
+            @click="onSavePlanificacionFecha()"
+          >
+          <template #leading="{ modelValue, ui }">
+                        
+            <div class="flex flex-col">
+                <div class="w-2 h-2 rounded-full bg-primary  absolute float-right" v-if="pendingSave"> </div>
+                <UIcon name="tabler:device-floppy" class="size-5" />
+            </div>
+        
+          </template>
+        </UButton>
+        </UTooltip>
+
         <UTooltip text="Exportar planificación a Google Drive">
           <UButton
             icon="tabler:brand-google-drive"
@@ -358,8 +404,6 @@ watch(()=> tramoSelected.value, ()=>{
           :planificacionId="planificacion.id"
           @on:add="onAddPlanificacionFechas"
           :fechasDisabled="planificacion.fechas.map(pf => pf.fecha)"></PlanificacionesPopoverAddPlanificacionFecha>
-
-        
       </div>
     </UDashboardPanel>
   </UDashboardPage>

@@ -1,3 +1,4 @@
+import type { Actividad } from "./actividad";
 import type { BaseModel } from "./base.model";
 import type { CompetenciaEspecifica } from "./competenciaEspecifica";
 import type { Contenido } from "./contenido";
@@ -17,6 +18,5 @@ export interface Tramo extends BaseModel{
     espacio?: Espacio;
     unidad_curricular_id? : number;
     unidad_curricular?: UnidadCurricular;
-    metaDeAprendizaje?: { contentHtml: string, contentJson: string };
-    planDeAprendizaje? : { contentHtml: string, contentJson: string };
+    actividad: Actividad;
 }

@@ -46,7 +46,8 @@ export const apiPlanificacionesRoutes = {
 export const apiPlanificacionesFechaRoutes = {
     create: "/planificaciones-fecha",
     find : (id: number) => `/planificaciones-fecha/${id}`,
-    cambiarFecha : '/planificaciones-fecha/cambiar-fecha'
+    cambiarFecha : '/planificaciones-fecha/cambiar-fecha',
+    guardar: (id:number)=> `/planificaciones-fecha/${id}/guardar`
 }
 
 export const apiTramosRoutes = {
