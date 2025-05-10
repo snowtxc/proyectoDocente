@@ -22,6 +22,7 @@ interface Props {
     gradosIds: number[]
     ciclosGradosIds: number[],
     espacios: Espacio[],
+    nroTramo: number;
     competenciasGenerales: CompetenciaGeneral[]
 }
 
@@ -60,6 +61,8 @@ const espacioToChange = ref<Espacio>(null);
 const unidadCurricularToChange = ref<UnidadCurricular>(null);
 const optionToChange = ref<EspacioOUnidadOptionEnum>(null);
 
+const loadingMoreData = ref(false);
+
 const loadForm = (): void =>{
   const { unidad_curricular, espacio , competencias_especificas, criterios_de_logros,contenido, actividad } = props.modelValue;
 
@@ -72,6 +75,11 @@ const loadForm = (): void =>{
   form.value.contenido = contenido;
   form.value.metaDeAprendizaje =  { contentHtml : meta_de_aprendizaje_html, contentJson : meta_de_aprendizaje_json};
   form.value.planDeAprendizaje = { contentHtml : plan_de_aprendizaje_html , contentJson: plan_de_aprendizaje_json}
+
+  if(form.value.unidad_curricular){
+    // Si la carga del formulario ya tiene una unidad curricular entonces mandamos a cargar los contenidos y los criterios de logros para ese tramo.
+    loadContenidosCriteriosDeLogrosYCompetencias(form.value.unidad_curricular.id)
+  }
 }
 
 onMounted(()=>{
@@ -161,6 +169,8 @@ const onChangeUnidadCurricular = (unidadCurricular: UnidadCurricular)=>{
 
 const loadContenidosCriteriosDeLogrosYCompetencias = async(unidadCurricularId: number)=>{
 
+    loadingMoreData.value = true;
+
    const { gradosIds , ciclosGradosIds} = props;
 
    const filtersContenidos : ContenidoFilter = {
@@ -206,6 +216,8 @@ const loadContenidosCriteriosDeLogrosYCompetencias = async(unidadCurricularId: n
     contenidos.value = contenidosResponse.list;
     criteriosDeLogros.value = criteriosDeLogrosResponse.list;
     competenciasEspecificas.value = competenciasEspecificasResponse.list;
+
+    loadingMoreData.value = false;
     
    }catch(message){
     toast.add({
@@ -213,6 +225,7 @@ const loadContenidosCriteriosDeLogrosYCompetencias = async(unidadCurricularId: n
       description: message ? message : 'Error al obtener los contenidos ,criterios de logros y competencías especificas para el tramo.',
       color: "red"
     })
+    loadingMoreData.value = false;
    }
 }
 
@@ -272,10 +285,14 @@ const disabledPlanAprendizaje = computed(()=>{
 })
 
 
+
 </script>
 
 <template>
   <div class="w-full px-2 pb-20">
+    <h1 class="font-medium text-xl text-center my-4">
+      Tramo {{ props.nroTramo  }}
+    </h1>
     <div class="flex gap-2">
       <USelectMenu :model-value="form.espacio" :options="espacios" option-attribute="id" class="flex-1"
         @change="onChangeEspacio">
@@ -312,7 +329,9 @@ const disabledPlanAprendizaje = computed(()=>{
       </USelectMenu>
     </div>
 
-    <div class="w-full flex flex-col gap-2 mt-2">
+    <UProgress size="xl" v-if="loadingMoreData" class="mt-2" />
+
+    <div class="w-full flex flex-col gap-2 mt-2" v-else>
 
       <div class="flex gap-2">
         <UCard class="w-2/5 flex flex-col">

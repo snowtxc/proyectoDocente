@@ -199,6 +199,7 @@ defineExpose({
       descriptionButtonAddStep="Extender un nuevo tramo a la planificación"
       :currentStep="currentStep"
       :steps="steps"
+      :linear="true"
       :disabled="true"/>
 
       <UDivider class="w-full"></UDivider>

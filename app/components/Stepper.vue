@@ -10,7 +10,8 @@ interface Props {
     steps: { step: number, title: string , description, icon: string } []
     currentStep: number;
     disabled?: boolean;
-    orientation : "vertical" | "horizontal"
+    orientation : "vertical" | "horizontal",
+    linear?: boolean;
 }
 
 const props = withDefaults(defineProps<Props>() , {});
@@ -31,6 +32,14 @@ watch(()=> props.currentStep, ()=> {
   currentStep.value = props.currentStep;
 })
 
+const changeStep = (step:number) => {
+  currentStep.value = step;
+}
+
+defineExpose({
+  changeStep
+})
+
 </script>
 
 <template>
@@ -42,6 +51,7 @@ watch(()=> props.currentStep, ()=> {
       'flex-row': props.orientation == 'horizontal',
       'flex-col' : props.orientation == 'vertical'
     }"
+    :linear="props.linear"
     v-model="currentStep"
   >
   
@@ -66,7 +76,7 @@ watch(()=> props.currentStep, ()=> {
       </StepperTrigger>
 
       <StepperSeparator
-      v-if="item.step == 1  || (item.step !== props.steps.length &&  !props.showButtonAddStep)"
+      v-if="item.step == 1  || (item.step !== props.steps.length )"
       class="rounded-full shrink-0 text-center"
       :class="{
         'bg-primary': item.step <= currentStep, 
@@ -99,8 +109,8 @@ watch(()=> props.currentStep, ()=> {
           <StepperIndicator>
             <Icon
               icon="tabler:circle-dashed-plus"
-              
-              class="w-5 h-5"
+              class="w-5 h-5 hover:cursor-pointer"
+              @click="emit('on:add-step')"
             />
           </StepperIndicator>
         </StepperTrigger>

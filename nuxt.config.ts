@@ -91,7 +91,8 @@ export default defineNuxtConfig({
     }
   },
   experimental: {
-    payloadExtraction: true
+    payloadExtraction: true,
+    watcher: 'chokidar'
   }
   
 } as any)

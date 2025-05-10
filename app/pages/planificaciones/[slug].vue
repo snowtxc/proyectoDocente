@@ -33,6 +33,8 @@ const competenciasGenerales = ref<CompetenciaGeneral[]>(response.value.competenc
 const planificacionFechaSelected = ref<PlanificacionFecha>();
 const tramoSelected = ref<Tramo>(null);
 
+const tramosStepper = ref(null);
+
 const ordenarFechasPlanificacion = () : SimplePlanificacionFecha[] =>{
     const fechas : SimplePlanificacionFecha[] =  [...planificacion.value.fechas];
     return fechas.sort((a, b) =>{
@@ -127,6 +129,7 @@ const onCreateTramo = async()=>{
    const tramo = await $apiRest(apiTramosRoutes.create, HttpMethodEnum.POST, newTramo);
 
    planificacionFechaSelected.value.tramos.push(tramo);
+   tramoSelected.value = tramo;
 
    toast.add({
       title: "Nuevo Tramo",
@@ -227,8 +230,11 @@ const loadPlanificacionFecha = async(fecha: string)  : Promise<void> =>{
 
 const onChangeTramo = (currentStep) =>{
   const idx = currentStep - 1;
-  const tramo = tramos.value[idx];
-  tramoSelected.value = { ... tramo };
+
+  if(currentStep < tramos.value.length){
+    const tramo = tramos.value[idx];
+    tramoSelected.value = { ... tramo };
+  }
 }
 
 const onSavePlanificacionFecha = async()=>{
@@ -236,6 +242,7 @@ const onSavePlanificacionFecha = async()=>{
       return;
 
     isSaving.value = true;
+
     try{
 
       const response = await $apiRest<PlanificacionFecha>(apiPlanificacionesFechaRoutes.guardar(planificacionFechaSelected.value.id), HttpMethodEnum.POST, planificacionFechaSelected.value);
@@ -257,6 +264,11 @@ watch(()=> tramoSelected.value, ()=>{
       tramos.value[idx] = { ...tramoSelected.value};
     }  
 })
+
+const onCancelNuevoTramo = ()=>{
+  showModalAddTramo.value = false;
+  tramosStepper.value.changeStep(currentStepTramo.value);
+}
 
 
 
@@ -291,6 +303,8 @@ watch(()=> tramoSelected.value, ()=>{
         :currentStep="currentStepTramo"  
         :steps="stepsTramos"
         @on:add-step="showModalAddTramo = true"
+        :linear="false"
+        ref="tramosStepper"
         @on:change-step="onChangeTramo"/>
         
       </div>
@@ -389,7 +403,8 @@ watch(()=> tramoSelected.value, ()=>{
           :espacios="espacios" 
           :gradosIds="grupo.grados.map(g => g.id)"
           :ciclosGradosIds="ciclosGradosIds"
-          :competenciasGenerales="competenciasGenerales"></TramosTramoForm>
+          :competenciasGenerales="competenciasGenerales"
+          :nroTramo="currentStepTramo"></TramosTramoForm>
       </div>
 
       <div v-else class="flex flex-col justify-center items-center h-screen">
@@ -436,7 +451,7 @@ watch(()=> tramoSelected.value, ()=>{
     <UButton
         color="white"
         label="Cancelar"
-        @click="showModalAddTramo = false"
+        @click="onCancelNuevoTramo"
       />
   </template>
 </UDashboardModal>

@@ -263,7 +263,6 @@ onMounted(()=>{
             // Verifica si el nodo seleccionado es un video de youtube embebido.
             const { from, to } = editor.state.selection;
             const node = editor.state.doc.nodeAt(from);
-            console.log(node);
             return node && node.type.name === 'youtube' && node.attrs.src; // Se muestra solo si es un video de youtube
           }
         }),
@@ -293,7 +292,7 @@ onMounted(()=>{
     })
 
     if(props.defaultContent){
-      editor.value.commands.setContent(props.defaultContent?.contentJson);
+      editor.value.commands.setContent(props.defaultContent?.contentJson == null ? null : (props.defaultContent?.contentJson && typeof props.defaultContent.contentJson == 'string')  ?  JSON.parse(props.defaultContent?.contentJson) : (props.defaultContent.contentJson && typeof props.defaultContent.contentJson == 'object') ? props.defaultContent.contentJson : null);
     }
   }
 });

@@ -14,6 +14,7 @@
         paramsBot: any,
         promptCategories: PromptCategory[]
     }
+    
     const props = withDefaults(defineProps<Props>(), {
         modelValue: null,
     })
