@@ -1,12 +1,8 @@
 <script setup lang="ts">
 
-import { useRoute } from '#app'
-import GlobalSpinner from './components/GlobalSpinner/GlobalSpinner.vue';
-import { useLoadingStore } from './services/loadingService/loadingService';
-
-let timeout: any = 0;
 const colorMode = useColorMode()
 const color = computed(() => colorMode.value === 'dark' ? '#111827' : 'white')
+
 
 useHead({
   meta: [

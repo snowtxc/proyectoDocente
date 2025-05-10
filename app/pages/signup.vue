@@ -8,6 +8,14 @@ import { HttpMethodEnum } from '~/utils/enums/HttpMethodEnum';
 
 import type { CreateUserDTO } from '~/types/user';
 
+import {
+  useCodeClient,
+  type ImplicitFlowSuccessResponse,
+  type ImplicitFlowErrorResponse,
+  type ImplicitFlowOptions
+} from "vue3-google-signin";
+
+
 definePageMeta({
   layout: 'auth'
 })
@@ -46,21 +54,57 @@ const fields = [{
 }]
 
 const validate = (state: any) => {
+
+  const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+
   const errors = []
   if (!state.email) errors.push({ path: 'email', message: 'El email es requerido' })
   if (!state.password) errors.push({ path: 'password', message: 'La contraseña es requerida' })
+  if(state.password  && !passwordRegex.test(state.password)) errors.push({ path: 'password', message: 'La contraseña no es válida. Debe contener al menos una letra mayúscula, una minúscula, un número y un carácter especial.' })
   if (!state.name) errors.push({ path: 'name', message: 'El nombre el requerido' })
 
   return errors
 }
+
+
+
+const googleSignInOptions: ImplicitFlowOptions = {
+  scope: googleScopes,
+  onSuccess: async(response: ImplicitFlowSuccessResponse) => {
+    try{
+      const { code } = response;
+      const responseGoogle =  await $apiRest(apiAuthRoutes.loginWithGoogleCallback, HttpMethodEnum.POST, { code });
+      if(responseGoogle){
+        const { user, token } = responseGoogle;
+        authStore.setToken(token);
+        authStore.setUser(user);
+        navigateTo({ path: '/home' });
+      }
+    }catch(e){
+      // ToDo
+    }
+   
+  },
+  onError: (errorResponse: ImplicitFlowErrorResponse) => {
+    toast.add({
+      title: "Error",
+      description: errorResponse.error_description,
+      color: "red"
+    });
+  }
+};
+
+const { isReady, login: loginWithGoogle } = useCodeClient(googleSignInOptions);
+
 
 const providers = [{
   label: 'Continuar con Google',
   icon: 'i-simple-icons-google',
   color: 'white' as const,
   click: () => {
-    console.log('Redirect to GitHub login')
-  }
+     // Se abré el login en base a nuestro client-id generado
+     loginWithGoogle();
+   }
 }]
 
 async function onSubmit(data: any) {
@@ -84,7 +128,7 @@ async function onSubmit(data: any) {
     toast.add({
       title: "Cuenta Creada",
       description: "Se ha creado correctamente su cuenta",
-      color: "red"
+      color: "green"
     });
 
   }catch(message){
@@ -102,6 +146,7 @@ async function onSubmit(data: any) {
 <!-- eslint-disable vue/singleline-html-element-content-newline -->
 <template>
   <UCard class="max-w-sm w-full bg-white/75 dark:bg-white/5 backdrop-blur">
+    
     <UAuthForm
       :fields="fields"
       :validate="validate"

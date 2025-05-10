@@ -10,6 +10,7 @@ export default defineNuxtConfig({
     '@nuxt/ui',
     '@vueuse/nuxt',
     '@pinia/nuxt',
+    'reka-ui/nuxt',
     'pinia-plugin-persistedstate/nuxt',
     'nuxt-vue3-google-signin',
     '@nuxtjs/i18n',
@@ -28,7 +29,7 @@ export default defineNuxtConfig({
   },
   
   googleSignIn: {
-    clientId: process.env.NUXT_GOOGLE_CLIENT_ID
+    clientId: process.env.NUXT_GOOGLE_CLIENT_ID,
   },
   runtimeConfig: {
     public: {
@@ -45,7 +46,7 @@ export default defineNuxtConfig({
     disableTransition: true
   },
 
-  ssr: false,
+  ssr: true,
   routeRules: {
     // Temporary workaround for prerender regression. see https://github.com/nuxt/nuxt/issues/27490
     '/': { prerender: true }
@@ -54,7 +55,7 @@ export default defineNuxtConfig({
     middleware: 'userAuth',
   },
   devtools: {
-    enabled: true
+    enabled: false
   },
 
   typescript: {
@@ -71,8 +72,27 @@ export default defineNuxtConfig({
         commaDangle: 'never',
         braceStyle: '1tbs'
       }
+    },
+    vite: {
+      optimizeDeps: {
+        include: ['@vueuse/core', '@pinia/nuxt', 'v-calendar']
+      }
     }
   },
 
-  compatibilityDate: '2024-07-11'
+  compatibilityDate: '2024-07-11',
+
+  vite: {
+    server: {
+      watch: {
+        usePolling: false,
+        interval: 100
+      }
+    }
+  },
+  experimental: {
+    payloadExtraction: true,
+    watcher: 'chokidar'
+  }
+  
 } as any)

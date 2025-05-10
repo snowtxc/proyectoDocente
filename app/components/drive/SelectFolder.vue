@@ -4,8 +4,44 @@ import type { DriveFolderList, DriveFolder, ListFoldersDTO } from '~/types/googl
 import { apiGoogleDriveRoutes } from "~/utils/apiRoutes";
 import { HttpMethodEnum } from '~/utils/enums/HttpMethodEnum';
 import { DriveListModeEnum } from '~/utils/enums/DriveListModeEnum';
+import {
+  useCodeClient,
+  type ImplicitFlowSuccessResponse,
+  type ImplicitFlowErrorResponse,
+  type ImplicitFlowOptions
+} from "vue3-google-signin";
 
 const {  $apiRest  } = useNuxtApp();
+const toast = useToast()
+
+const googleSignInOptions: ImplicitFlowOptions = {
+  scope: googleScopes,
+  onSuccess: async(responseGoogle: ImplicitFlowSuccessResponse) => {
+    try{
+      const { code } = responseGoogle;
+      const response =  await $apiRest(apiAuthRoutes.linkOrUpdateGoogleAccount, HttpMethodEnum.POST, { code });
+      isOpen.value = true;
+      listFolders(null, DriveListModeEnum.ROOT);
+    }catch(message){
+      toast.add({
+        title: "Error",
+        description: message,
+        color: "red"
+      });
+    }
+   
+  },
+  onError: (errorResponse: ImplicitFlowErrorResponse) => {
+    toast.add({
+      title: "Error",
+      description: errorResponse.error_description,
+      color: "red"
+    })
+  }
+};
+
+const { isReady, login: loginWithGoogle } = useCodeClient(googleSignInOptions);
+
 
 const loading = ref<boolean>(false);
 const folders = ref<DriveFolder[]>([]);
@@ -15,8 +51,8 @@ const isRootDirectory = ref(false);
 const isOpen = ref(false);
 
 const props = defineProps({
-  defaultFolderId : {
-    type:  String,
+  defaultFolder : {
+    type:  Object,
     required: false
   }
 });
@@ -25,23 +61,51 @@ const emit = defineEmits(['on:select']);
 
 const openModal = async () => {
   isOpen.value = true;
-  listFolders(props.defaultFolderId || null, DriveListModeEnum.ROOT);
+  listFolders(props.defaultFolder ? props.defaultFolder.id: null, DriveListModeEnum.ROOT);
 }
 
-const folderIdSelected = ref<string>(props.defaultFolderId || null);
+const folderIdSelected = ref<string>(props.defaultFolder ? props.defaultFolder.id : null);
+
+const lastFolderConsulted = ref<{id: string, listMode: DriveListModeEnum}>(props.defaultFolder ? {
+  id: props.defaultFolder.id,
+  listMode : DriveListModeEnum.BACK
+}: null);
 
 const folderIsSelected = computed(()=>{
   return folderIdSelected.value !== null;
 })
 
 
+const openPopupGoogle = ()=>{
+  loginWithGoogle();
+}
+
 const listFolders = async(folderId?:string, listMode? : DriveListModeEnum) => {
-  loading.value = true;
-  const requestFolder: ListFoldersDTO  = { folderId, listMode };
-  const data : DriveFolderList = await $apiRest(apiGoogleDriveRoutes.listFolders, HttpMethodEnum.POST, requestFolder);
-  folders.value = data.folders;
-  isRootDirectory.value = data.isRoot;
-  loading.value = false;
+  try{
+    loading.value = true;
+    const requestFolder: ListFoldersDTO  = { folderId, listMode };
+    const data : DriveFolderList  = await $apiRest(apiGoogleDriveRoutes.listFolders, HttpMethodEnum.POST, requestFolder);
+    
+    const { status ,relogin} = data;
+    if(!status && relogin){
+      openPopupGoogle();
+      isOpen.value = false;
+      return;
+    }
+
+    folders.value = data.folders;
+    isRootDirectory.value = data.isRoot;
+    loading.value = false;
+  }catch(message){
+    loading.value = false;
+    toast.add({
+      title: "Error",
+      description: message,
+      color: "red"
+    });
+    isOpen.value = false;
+  }
+  
 }
 
 const foldersFiltered = computed(() => {
@@ -68,6 +132,7 @@ const emptyFolders = computed(()=>{
 const viewFolder = (folder: DriveFolder): void =>{
   const { id } = folder;
   listFolders(id, DriveListModeEnum.NESTED);
+  lastFolderConsulted.value =  { listMode: DriveListModeEnum.ROOT, id };
 }
 
 const  onChangeFolder =  (folder: DriveFolder) : void =>{
@@ -84,13 +149,24 @@ const onSelectFolder = () : void =>{
 }
 
 
+const goBack = async() =>{
+  if(!lastFolderConsulted.value)
+    return;
+
+  const { id, listMode } = lastFolderConsulted.value;
+  await listFolders(id, listMode);
+
+  lastFolderConsulted.value = { id : folders.value[0].id, listMode: isRootDirectory.value ? DriveListModeEnum.ROOT: DriveListModeEnum.BACK } 
+}
+
 </script>
 
 <template>
   <UModal v-model="isOpen">
     <UCard :ui="{ header: { padding: 'p-4 sm:px-6' }, body: { padding: '' } }" class="min-w-0 min-h-[75vh]">
       <template #header>
-        <div class="flex gap-2 items-center">
+        <div class="flex gap-2 items-center mt-2">
+          <UButton icon="tabler:chevron-left" color="gray" variant="ghost" :disabled="isRootDirectory" @click="goBack"/>
           <UInput v-model="q" icon="i-heroicons-magnifying-glass" placeholder="Buscar Carpeta" autofocus class="flex-1" />
           <UButton
           icon="tabler:x"
@@ -102,7 +178,6 @@ const onSelectFolder = () : void =>{
           @click="isOpen = false;"
           />
         </div>
-        
       </template>
 
       <UProgress animation="carousel" v-if="loading" />
@@ -115,7 +190,7 @@ const onSelectFolder = () : void =>{
           </span>
         </div>
         <ul v-else role="list" class="divide-y divide-gray-200 dark:divide-gray-800 overflow-y-auto">
-          <li v-for="(folder, index) in foldersFiltered" :key="index"
+          <li v-for="(folder, index) in foldersFiltered" :key="folder.id"
             class="flex items-center justify-between gap-3 py-3 px-4 sm:px-6">
             <div class="flex items-center gap-3 w-full hover:cursor-pointer" @click="onChangeFolder(folder)">
 

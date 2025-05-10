@@ -8,9 +8,8 @@ const props = defineProps({
     editor : Object
 });
 
-const imageSelected = ref<boolean>(false);
-const showImage = ref<boolean>(false);
-
+const imageSelected = ref<boolean>(props.node.attrs.src ? true : false);
+const showImage = ref<boolean>(props.node.attrs.src ? true : false);
 
 const handleImageSelected = (imageB64)=>{
     showImage.value = true;
@@ -19,6 +18,8 @@ const handleImageSelected = (imageB64)=>{
     })
 }
 
+const isEditable = computed(() => props.editor?.isEditable)
+
 </script>
 
 <template>
@@ -26,12 +27,13 @@ const handleImageSelected = (imageB64)=>{
          <ImagePicker @onSelectImage="handleImageSelected" v-if="!showImage"></ImagePicker>
           
           <div class="flex" :class="[props.node.attrs.align]">
-            <img  :src="props.node.attrs.src"
+            <img  
+            :src="props.node.attrs.src"
             :alt="props.node.attrs.alt || ''"
             @click="imageSelected = !imageSelected"
             :class="[
                     'hover:cursor-pointer', 
-                    imageSelected ? 'border-4 border-primary-500' : '',
+                    (isEditable && imageSelected) ? 'border-4 border-primary-500' : '',
                     ]" 
             :style="{ width: props.node.attrs.width + '%' }">
           </div>

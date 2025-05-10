@@ -32,11 +32,23 @@ const fileRef = ref<HTMLInputElement>()
 
 const logoB64 = ref(null);
 
-onBeforeMount(()=>{
+const grados = ref<Grado[]>([]);
+const loadingGrados = ref<boolean>(true);
+
+onBeforeMount(async()=>{
+  grados.value = await loadGrados();
+   
   if(props.mode == ModeEnum.UPDATE && props.grupoSelected){
     loadForm(props.grupoSelected);
   }
 });
+
+const loadGrados = async()=>{
+  loadingGrados.value = true;
+  const grados = await $apiRest(apiGradoRoutes.listAll, HttpMethodEnum.GET);
+  loadingGrados.value = false;
+  return grados;
+}
 
 const form = reactive<CreateOrUpdateGrupoDTO>({
   nombre: "",
@@ -175,7 +187,7 @@ function onFileClick() {
       @change="handleChangeMultiGrado" />
 
     <UFormGroup :label="form.esMultiGrado ? 'Grados': 'Grado'" name="grados">
-      <SelectGrado v-model="form.grados" :multiple="form.esMultiGrado" class="mt-2"></SelectGrado>
+      <SelectGrado v-model="form.grados" :multiple="form.esMultiGrado" class="mt-2" :grados="grados" :loading="loadingGrados"></SelectGrado>
     </UFormGroup>
     
     <div class="flex justify-end gap-3">

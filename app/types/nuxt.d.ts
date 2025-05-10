@@ -18,5 +18,7 @@ declare module '#app' {
       data?: any
       error?: string
     }>,
+
+    $apiRest<T = any>(endpoint: string, method: HttpMethodEnum, body?: any, options: Record<string, any> = {}) : Promise<T>;
   }
 }

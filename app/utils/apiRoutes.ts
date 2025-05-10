@@ -7,8 +7,15 @@ export const apiAuthRoutes = {
     getLoggedUser : '/user',
     register: '/register',
     loginWithGoogleCallback: '/login/google/callback',
-    linkOrUpdateGoogleAccount : 'auth/linkOrUpdateGoogleAccount',
-    updateProfile: '/auth/updateProfile'
+    linkOrUpdateGoogleAccount : '/auth/linkOrUpdateGoogleAccount',
+    updateProfile: '/auth/updateProfile',
+    logout: '/logout',
+    user: '/user',
+    checkIfUserLogged: '/checkIfUserLogged',
+    forgotPassword : '/forgot-password',
+    verifyTokenResetPassword: (token:string) => `/verify-token-reset-password/${token}`,
+    resetPassword: '/reset-password',
+
 }
 
 export const apiUserConfigRoutes = {
@@ -17,6 +24,7 @@ export const apiUserConfigRoutes = {
 }
 
 export const apiGrupoRoutes = {
+    listAll: '/grupos',
     list: '/grupos/paged',
     getPaginate: '/grupos/paged',
     create: '/grupos',
@@ -25,4 +33,51 @@ export const apiGrupoRoutes = {
 
 export const apiGradoRoutes = {
     listAll: '/grados',
+}
+
+export const apiPlanificacionesRoutes = {
+    getPaginate: '/planificaciones/paged',
+    create: "/planificaciones",
+    update: (id:number) => `/planificaciones/${id}`,
+    getBySlug : (slug: string) => `/planificaciones/${slug}`,
+    verificarFecha:  '/planificaciones/verificar-fecha'
+}
+
+export const apiPlanificacionesFechaRoutes = {
+    create: "/planificaciones-fecha",
+    find : (id: number) => `/planificaciones-fecha/${id}`,
+    cambiarFecha : '/planificaciones-fecha/cambiar-fecha',
+    guardar: (id:number)=> `/planificaciones-fecha/${id}/guardar`
+}
+
+export const apiTramosRoutes = {
+    create: "/tramos",
+}
+
+export const apiEspaciosRoutes = {
+    listAll: "/espacios",
+}
+
+export const apiContenidosRoutes = {
+    getPaginate: "/contenidos/paged",
+}
+
+export const apiCriteriosDeLogrosRoutes = {
+    getPaginate: "/criterios-de-logros/paged",
+}
+
+export const apiCompetenciasEspecificasRoutes = {
+    getPaginate: "/competencias-especificas/paged",
+}
+
+export const apiCompetenciasGeneralesRoutes = {
+    listAll: '/competencias-generales'
+}
+
+export const apiPromptsRoutes = {
+    getPaginate : '/prompts/paged',
+}
+
+export const apiFlopiBot = {
+    sendPromptMessage : "/flopi-bot/send-prompt-message"
 }

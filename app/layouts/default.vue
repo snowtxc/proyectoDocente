@@ -1,5 +1,22 @@
 <script setup lang="ts">
 
+import { useAuthStore } from '~/utils/authStore';
+import { HttpMethodEnum } from '~/utils/enums/HttpMethodEnum';
+import { apiAuthRoutes } from "~/utils/apiRoutes";
+
+import FlopiBot from '~/components/flopi-bot/FlopiBot.vue';
+import { PromptCategory } from '~/utils/enums/PromptCategory.enum';
+
+const { $apiRest } = useNuxtApp();
+
+const authStore = useAuthStore();
+
+const user = await $apiRest(apiAuthRoutes.user,HttpMethodEnum.GET);
+
+authStore.setUser(user);
+
+const flopiBotRef = ref(null);
+
 const links = [{
   id: 'home',
   label: 'Inicio',
@@ -32,13 +49,16 @@ const links = [{
   }
 },
 {
-  id: 'secuencias',
-  label: 'Secuencias',
-  icon: 'i-heroicons-home',
-  to: '/secuencias',
+  id: 'flopi-bot',
+  label: 'Flopi Bot',
+  icon: 'tabler:robot',
+  click: ()=>{
+    flopiBotRef.value.openModal();
+  },
+
   tooltip: {
-    text: 'Secuencias',
-    shortcuts: [],
+    text: 'Flopi Bot',
+    shortcuts: []
   }
 }]
 
@@ -97,5 +117,7 @@ const groups = [{
     <ClientOnly>
       <LazyUDashboardSearch :groups="groups" />
     </ClientOnly>
+
+    <FlopiBot :params="{}" ref="flopiBotRef" :hideButton="true" :hideUseResponse="true" :categories="[PromptCategory.OTROS]"></FlopiBot>
   </UDashboardLayout>
 </template>

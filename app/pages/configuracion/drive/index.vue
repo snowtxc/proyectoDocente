@@ -1,23 +1,12 @@
 <script setup lang="ts">
 
 import type { UpdateGoogleDriveInfoDTO } from '~/types/userConfig';
-import { useGoogleDriveService } from '~/services/googleDriveService/googleDriveService';
-import { useErrorStore } from '~/services/errorService/errorService';
 import { useNuxtApp } from "#app";
-
 import { HttpMethodEnum } from '~/utils/enums/HttpMethodEnum';
-
 import type { DriveFolder } from '~/types/google-drive';
-
 import type { UserConfig } from '~/types/userConfig.ts';
 
-import {
-  useTokenClient,
-  type AuthCodeFlowSuccessResponse,
-  type AuthCodeFlowErrorResponse,
-} from "vue3-google-signin";
-
-import { apiAuthRoutes, apiUserConfigRoutes } from "~/utils/apiRoutes";
+import { apiUserConfigRoutes } from "~/utils/apiRoutes";
 
 const { start, finish } = useLoadingIndicator();
 const toast = useToast();
@@ -34,35 +23,7 @@ const form = reactive<UpdateGoogleDriveInfoDTO>({
   drive_secuencias_folder_name
 })
 
-const authService = useAuthStore();
-const errorService = useErrorStore();
-
-const googleDriveService = useGoogleDriveService();
-
-const handleOnSuccess = async (response: AuthCodeFlowSuccessResponse) => {
-  const { access_token } = response;
-  const resp =  await $apiRest(apiAuthRoutes.linkOrUpdateGoogleAccount, HttpMethodEnum.POST, {access_token});
-  getFoldersGoogleDrive();
-}
-
-const handleOnError = (errorResponse: AuthCodeFlowErrorResponse) => {
-  errorService.setError(errorResponse.error_description);
-};
-
-const { isReady, login: loginWithGoogle } = useTokenClient({
-  onSuccess: handleOnSuccess,
-  onError: handleOnError,
-});
-
 const updating = ref(false);
-
-const getFoldersGoogleDrive = async () => {
-  const data: { authenticated_provider: boolean, folders: string[] } = await googleDriveService.listFolders({});
-  if (!data.authenticated_provider) {
-    loginWithGoogle();
-    return;
-  }
-}
 
 const onChangePlanificacionesFolder = async (folder: DriveFolder) => {
   const { id, name } = folder;
@@ -123,12 +84,17 @@ const onSubmit = async () => {
           class="grid grid-cols-2 gap-2 hover:cursor-pointer" :ui="{ container: '' }">
           <div class="flex flex-col md:flex-row items-center gap-2">
             <UInput v-model="form.drive_planificaciones_folder_name" type="text" disabled class="basis-4/5"
-              autocomplete="off" size="md" icon="tabler:brand-google-drive" @click="getFoldersGoogleDrive">
+              autocomplete="off" size="md" icon="tabler:brand-google-drive">
             </UInput>
 
             <!--Planificaciones-->
             <div class="md:flex-none">
-              <DriveSelectFolder @on:select="onChangePlanificacionesFolder"
+              <DriveSelectFolder 
+                @on:select="onChangePlanificacionesFolder"
+                :defaultFolder="{
+                  name: form.drive_planificaciones_folder_name,
+                  id: form.drive_planificaciones_folder_id
+                }"
                 :defaultFolderId="form.drive_planificaciones_folder_id"></DriveSelectFolder>
             </div>
           </div>
@@ -147,7 +113,10 @@ const onSubmit = async () => {
             <div class="md:flex-none">
               <DriveSelectFolder 
                 @on:select="onChangeSecuenciasFolder"
-                :defaultFolderId="form.drive_secuencias_folder_id"></DriveSelectFolder>
+                :defaultFolder="{
+                  name: form.drive_secuencias_folder_name,
+                  id: form.drive_secuencias_folder_id
+                }"></DriveSelectFolder>
             </div>
           </div>
 
