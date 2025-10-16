@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { format,parseISO } from "date-fns";
 import SelectStatus from "~/components/select/SelectStatus.vue";
+import type { Grupo } from "~/types/grupo";
 import type { ListRequest } from "~/types/list-request";
 import type { ListResponse } from "~/types/list-response";
 import type { Planificacion } from "~/types/planificacion";
@@ -10,6 +11,8 @@ import { PlanificacionEstadoEnum } from "~/utils/enums/PlanificacionEstado.enum"
 
 
 let timeoutSearch: any = 0;
+const route = useRoute()
+
 
 const defaultColumns = [
     {
@@ -29,6 +32,10 @@ const defaultColumns = [
         key: "estado",
         label: "Estado",
     },
+    {
+        key: 'actions',
+        label: 'Acciones'
+    }
 ];
 
 const mode =  ref<ModeEnum>(ModeEnum.CREATE);
@@ -38,14 +45,20 @@ const isLoading = ref(false);
 
 const search = ref("");
 
-const today = new Date();
-
 const selectedStatus = ref(PlanificacionEstadoEnum.EN_CURSO);
 
-const filters = ref<{query?: string, estado?: string , search : string }>(
+const defaultGrupoSelected: any = route.query?.grupoId ?  {
+    id: route.query?.grupoId,
+    nombre: route.query.grupoNombre,
+} : null;
+
+const selectedGrupo = ref(defaultGrupoSelected);
+
+const filters = ref<{query?: string, estado?: string , search : string, grupo_id?:number }>(
     { query: undefined, 
      estado: selectedStatus.value, 
-     search : ''
+     search : '',
+     grupo_id : defaultGrupoSelected?.id
     }
 );
 
@@ -84,8 +97,6 @@ const { data: response, error } = await useAsyncData('planificaciones', async() 
      return await  $apiRest<ListResponse<Planificacion[]>>(apiPlanificacionesRoutes.getPaginate, HttpMethodEnum.POST, listReq.value);
 });
 
-console.log(response.value)
-
 planificaciones.value = response.value.list;
 changeTotalRows(response.value.totalCount);
 
@@ -117,11 +128,13 @@ const onFilter = () => {
 watch(
     () => [
         selectedStatus.value,  
-        search.value
+        search.value,
+        selectedGrupo.value 
     ],
     () => {
         filters.value.search = search.value;
         filters.value.estado = selectedStatus.value;
+        filters.value.grupo_id = selectedGrupo.value?.id
 
         clearTimeout(timeoutSearch);
         timeoutSearch = setTimeout(() => {
@@ -143,17 +156,22 @@ function onSelect(row: Planificacion) {
   isSlideoverOpen.value = true;
 }
 
-defineShortcuts({
-    "/": () => {
-        input.value?.input?.focus();
-    },
-});
-
-
 const onCreatePlanificacion = ()=>{
     isSlideoverOpen.value = true;
     mode.value = ModeEnum.CREATE;
     titleModal.value = "Nueva Planificación";
+}
+
+const clearFilters = ()=>{
+    selectedStatus.value = null;
+    selectedGrupo.value = null;
+    onFilter();
+}
+
+const verPlanificacion = async(row: Planificacion)=>{
+    await navigateTo({
+        path: appRoutes.planificacionPage(row.slug)
+    })
 }
 
 </script>
@@ -186,14 +204,22 @@ const onCreatePlanificacion = ()=>{
                             <SelectStatus v-model="selectedStatus" @update:modelValue="() => null" :multiple="false"
                                 class="flex-1 md:w-[200px]" />
                         </div>
-                    </div>
-                </template>
 
-                <template #right>
-                    <USelectMenu v-model="selectedColumns" icon="i-heroicons-adjustments-horizontal-solid"
-                        :options="defaultColumns" multiple class="hidden lg:block">
-                        <template #label> Mostrar columnas </template>
-                    </USelectMenu>
+                        <div class="w-full flex gap-2">
+                            <SelectGrupo v-model="selectedGrupo" 
+                            class="flex-1 md:min-w-[350px]" ></SelectGrupo>
+                        </div>
+                        <UButton
+                            icon="tabler:filter-x"
+                            size="sm"
+                            color="primary"
+                            variant="outline"
+                            @click="clearFilters"
+                            />
+                    </div>
+                    
+
+
                 </template>
             </UDashboardToolbar>
 
@@ -203,13 +229,10 @@ const onCreatePlanificacion = ()=>{
                 label: 'No hay planificaciones creadas',
             }" no-results-text="Test" v-model:sort="sort" :rows="planificaciones" :columns="columns"
                 :loading="isLoading" sort-mode="manual" class="w-full"
-                :ui="{ divide: 'divide-gray-200 dark:divide-gray-800' }"
-                 @select="onSelect">
+                :ui="{ divide: 'divide-gray-200 dark:divide-gray-800' }">
                 <template #nombre-data="{ row }">
-                    <ULink :to="appRoutes.planificacionPage(row.slug)" active-class=""
-                        class="text-green-500 underline dark:text-green-400 hover:text-green-700 dark:hover:text-green-200">
-                        {{ row?.nombre }}
-                    </ULink>
+                                <span class="text-gray-900 dark:text-white font-medium">{{ row.nombre }}</span>
+
                 </template>
 
                 <template #grupo-data="{ row }">
@@ -231,6 +254,26 @@ const onCreatePlanificacion = ()=>{
                         row.estado ?? ''
                     ) as any)" />
                 </template>
+
+                <template #actions-data="{ row }">
+                    <div class="flex flex-wrap items-center gap-2">
+                        <UButton
+                        icon="i-heroicons-pencil-square"
+                        size="sm"
+                        color="primary"
+                        variant="outline"
+                        @click="onSelect(row)"
+                        />
+                        <UButton
+                        icon="tabler:eye"
+                        size="sm"
+                        color="primary"
+                        variant="outline"
+                        @click="verPlanificacion(row)"
+                        />
+                    </div>
+                    
+                    </template>
                 
             </UTable>
             <div class="flex justify-end px-3 py-3.5 border-t border-gray-200 dark:border-gray-700">

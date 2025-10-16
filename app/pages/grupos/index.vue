@@ -26,7 +26,9 @@ const defaultColumns = [
   key: 'year',
   label: 'Año Escolar',
   sortable: true
-
+},{
+  key: 'actions',
+  label: 'Acciones'
 }]
 
 const isSlideoverOpen = ref(false);
@@ -117,6 +119,17 @@ const onSearch = ()=>{
   },400);
 }
 
+
+const verPlanificaciones = async (row: Grupo)=>{
+  await navigateTo({
+    path: '/planificaciones',
+    query: {
+      grupoId: row.id,
+      grupoNombre: row.nombre
+    }
+  })
+}
+
 </script>
 
 <template>
@@ -183,15 +196,11 @@ const onSearch = ()=>{
       </UDashboardToolbar>
 
       <UTable
-        v-model:sort="sort"
         :rows="grupos"
         :columns="columns"
         :loading="isLoading"
-        sort-mode="manual"
         class="w-full"
-        :ui="{ divide: 'divide-gray-200 dark:divide-gray-800' }"
         :empty-state="{icon: 'tabler:butterfly-filled',label: 'No se encontró ningún grupo'}"
-        @select="onSelect"
       >
         <template #nombre-data="{ row }">
           <div class="flex items-center gap-3">
@@ -211,6 +220,26 @@ const onSearch = ()=>{
             :key="grado.id"
             :grado="grado">
           </BadgeGrado>
+          </div>
+          
+        </template>
+
+        <template #actions-data="{ row }">
+          <div class="flex flex-wrap items-center gap-2">
+             <UButton
+              icon="i-heroicons-pencil-square"
+              size="sm"
+              color="primary"
+              variant="outline"
+              @click="onSelect(row)"
+            />
+            <UButton
+              icon="tabler:calendar-event"
+              size="sm"
+              color="primary"
+              variant="outline"
+              @click="verPlanificaciones(row)"
+            />
           </div>
           
         </template>

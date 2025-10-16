@@ -72,7 +72,7 @@ import { FormsCompetenciasGenerales, UPopover } from '#components';
 
   const competenciasEspecificas = ref(getLista());
 
-  const isOpen = ref<boolean>(true);
+  const isOpen = ref<boolean>(false);
 
   const q = ref<string>('');
 

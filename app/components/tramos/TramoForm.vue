@@ -16,6 +16,7 @@ import { EspacioOUnidadOptionEnum } from '~/utils/enums/EspacioOUnidadOption.enu
 import EditorSlideOver from '../plan-de-aprendizaje/EditorSlideOver.vue';
 import TiptapEditor from '../tiptap/TiptapEditor.vue';
 import { PromptCategory } from '~/utils/enums/PromptCategory.enum';
+import type { Documento } from '~/types/documento';
 
 interface Props {
     modelValue: Tramo,
@@ -63,18 +64,22 @@ const optionToChange = ref<EspacioOUnidadOptionEnum>(null);
 
 const loadingMoreData = ref(false);
 
+const metaAprendizajeDocumento = ref<Documento>(null);
+const planAprendizajeDocumento= ref<Documento>(null);
+
 const loadForm = (): void =>{
   const { unidad_curricular, espacio , competencias_especificas, criterios_de_logros,contenido, actividad } = props.modelValue;
 
-  const  {  meta_de_aprendizaje_html , meta_de_aprendizaje_json, plan_de_aprendizaje_html, plan_de_aprendizaje_json} =  actividad;
+  const  {  meta_aprendizaje_documento, plan_aprendizaje_documento, plan_aprendizaje_document_id , meta_aprendizaje_document_id} =  actividad;
 
   form.value.espacio = espacio;
   form.value.unidad_curricular = unidad_curricular;
   form.value.competenciasEspecificas = competencias_especificas;
   form.value.criteriosDeLogros = criterios_de_logros;
   form.value.contenido = contenido;
-  form.value.metaDeAprendizaje =  { contentHtml : meta_de_aprendizaje_html, contentJson : meta_de_aprendizaje_json};
-  form.value.planDeAprendizaje = { contentHtml : plan_de_aprendizaje_html , contentJson: plan_de_aprendizaje_json}
+
+  metaAprendizajeDocumento.value=   meta_aprendizaje_documento;
+  planAprendizajeDocumento.value =  plan_aprendizaje_documento;
 
   if(form.value.unidad_curricular){
     // Si la carga del formulario ya tiene una unidad curricular entonces mandamos a cargar los contenidos y los criterios de logros para ese tramo.
@@ -284,7 +289,13 @@ const disabledPlanAprendizaje = computed(()=>{
           !form.value.contenido;
 })
 
+const handleSavedDocumentPlanAprendizaje = (document: Documento)=>{
+  planAprendizajeDocumento.value = document;
+}
 
+const handleSavedDocumentMetaAprendizaje = (document: Documento)=>{
+  metaAprendizajeDocumento.value = document;
+}
 
 </script>
 
@@ -432,42 +443,61 @@ const disabledPlanAprendizaje = computed(()=>{
       </UCard>
 
       <UCard class="flex-1 flex flex-col">
-        <div class="flex items-center justify-between">
+        <div class="flex flex-col justify-between">
           <span class="font-medium text-xl">Meta de Aprendizaje</span>
 
           <EditorSlideOver 
             :promptCategories="[PromptCategory.META_DE_APRENDIZAJE]"
-            v-model="form.metaDeAprendizaje"  
-            @update:model-value="onChangeModel"
+            :documentId="metaAprendizajeDocumento?.id"
             title="Meta de Aprendizaje" 
             :paramsBot="paramsBotMetaAprendizaje"
-            :disabled="disabledMetaAprendizaje"
+            @on:save="handleSavedDocumentMetaAprendizaje"
             disabledText="Debes seleccionar una unidad curricular ,un contenido, criterios de logros y competencias especificas antes de asignar una meta de aprendizaje"></EditorSlideOver>
         </div>
-
         <div>
-          <TiptapEditor :defaultContent="form.metaDeAprendizaje" :editable="false"></TiptapEditor>
+          <div v-if="metaAprendizajeDocumento?.document_preview_url">
+             <a 
+                :href="metaAprendizajeDocumento.document_preview_url" 
+                  target="_blank"
+                  class="text-primary font-bold px-3 py-1 rounded hover:cursor-pointer transition-colors duration-300">
+                  Haz clic aquí para abrir la meta de aprendizaje
+               </a>
+          </div>
+          <div v-else class="text-center">
+            No se ha asignado una meta de aprendizaje.
+          </div>
         </div>
 
       </UCard>
 
       <UCard class="flex-1 flex flex-col">
-        <div class="flex items-center justify-between">
+        <div class="flex flex-col  justify-between">
           <span class="font-medium text-xl">Plan de Aprendizaje</span>
+           <EditorSlideOver 
+              :promptCategories="[PromptCategory.OTROS]"
+              :documentId="planAprendizajeDocumento?.id"
+              v-model="form.planDeAprendizaje" 
+              @update:model-value="onChangeModel"
+              @on:save="handleSavedDocumentPlanAprendizaje"
+              title="Plan de aprendizaje" 
+              :paramsBot="{}"
+              disabledText="Debes seleccionar una unidad curricular ,un contenido, criterios de logros y competencias especificas antes de asignar un plan de aprendizaje"></EditorSlideOver>
+            
+            <div v-if="planAprendizajeDocumento?.document_preview_url">
+              
+              <a 
+                :href="planAprendizajeDocumento.document_preview_url" 
+                target="_blank"
+                class="text-primary font-bold px-3 py-1 rounded hover:cursor-pointer transition-colors duration-300">
+                Haz clic aquí para abrir el plan de aprendizaje
+              </a>
+            </div>
+            
 
-          <EditorSlideOver 
-          :promptCategories="[PromptCategory.OTROS]"
-          v-model="form.planDeAprendizaje" 
-          @update:model-value="onChangeModel"
-          title="Plan de aprendizaje" 
-          :paramsBot="{}"
-          :disabled="disabledPlanAprendizaje"
-          disabledText="Debes seleccionar una unidad curricular ,un contenido, criterios de logros y competencias especificas antes de asignar un plan de aprendizaje"></EditorSlideOver>
-        </div>
+            <div v-else class="text-center">  No se ha asignado un plan de aprendizaje</div>
 
-        <div>
-          <TiptapEditor :defaultContent="form.planDeAprendizaje" :editable="false"></TiptapEditor>
-        </div>
+          </div>
+         
       </UCard>
     </div>
   </div>

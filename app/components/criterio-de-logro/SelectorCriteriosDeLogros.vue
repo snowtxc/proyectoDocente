@@ -65,7 +65,7 @@ import type { CriterioDeLogro, CriterioDeLogroItemSelector } from '~/types/crite
 
   const criteriosDeLogros = ref<CriterioDeLogroItemSelector[]>(getLista());
 
-  const isOpen = ref<boolean>(true);
+  const isOpen = ref<boolean>(false);
 
   const q = ref<string>('');
 

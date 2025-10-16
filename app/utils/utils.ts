@@ -57,3 +57,18 @@ export const getColorBadgeComponente = (rgbColor: string) : any=>{
 }
 
 
+export function downloadBlob(blob: Blob, nombreArchivo: string) {
+
+    const url = window.URL.createObjectURL(blob);
+
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = nombreArchivo;
+    document.body.appendChild(a);
+
+    a.click();
+
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+}
+

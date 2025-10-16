@@ -20,17 +20,7 @@
 
     const emit = defineEmits(['update:model-value', 'close'])
 
-    const selected = computed({
-        get: () => props.modelValue,
-        set: (value) => {
-            const grupo = grupos.value.find(g => g.id == value.key);
-            emit('update:model-value', grupo)
-            emit('close')
-        }
-    })
-
     const grupos = ref<Grupo[]>([]);
-    
     
     onMounted(async()=>{
         if(!props.disabled){
@@ -70,10 +60,10 @@
         placeholder="Seleccionar grupo">
 
         <template #label>
-            <div v-if="selected" class="flex items-center gap-2">
-                <UAvatar :src="selected.url_image" size="2xs" />
+            <div v-if="props.modelValue" class="flex items-center gap-2">
+                <UAvatar :src="props.modelValue.url_image" size="2xs" />
 
-                 <span>{{ selected.nombre }} </span> 
+                 <span>{{ props.modelValue.nombre }} </span> 
             </div>
 
             <div v-else>

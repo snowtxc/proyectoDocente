@@ -3,13 +3,14 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "nuxt build",
-    "dev": "nuxt dev",
-    "generate": "nuxt generate",
+    "build": "npm run copy-webviewer && nuxt build",
+    "dev": "npm run copy-webviewer && nuxt dev",
+    "generate": "npm run copy-webviewer && nuxt generate",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
     "lint": "eslint .",
-    "typecheck": "nuxt typecheck"
+    "typecheck": "nuxt typecheck",
+    "copy-webviewer": "mkdir -p ./public/lib/webviewer && cp -a ./node_modules/@pdftron/webviewer/public/* ./public/lib/webviewer"
   },
   "dependencies": {
     "@iconify-json/heroicons": "^1.2.0",
@@ -20,6 +21,8 @@
     "@nuxtjs/dotenv": "^1.4.2",
     "@nuxtjs/i18n": "^9.1.1",
     "@nuxtjs/toast": "^3.3.1",
+    "@onlyoffice/document-editor-vue": "^1.6.0",
+    "@pdftron/webviewer": "^11.7.1",
     "@pinia-plugin-persistedstate/nuxt": "^1.2.1",
     "@pinia/nuxt": "^0.11.0",
     "@tiptap/core": "^2.10.4",

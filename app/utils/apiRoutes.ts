@@ -40,7 +40,8 @@ export const apiPlanificacionesRoutes = {
     create: "/planificaciones",
     update: (id:number) => `/planificaciones/${id}`,
     getBySlug : (slug: string) => `/planificaciones/${slug}`,
-    verificarFecha:  '/planificaciones/verificar-fecha'
+    verificarFecha:  '/planificaciones/verificar-fecha',
+    exportar: (id: number) => `/planificaciones/${id}/exportar`
 }
 
 export const apiPlanificacionesFechaRoutes = {
@@ -52,6 +53,8 @@ export const apiPlanificacionesFechaRoutes = {
 
 export const apiTramosRoutes = {
     create: "/tramos",
+    reordenarTramo: '/tramos/reordenarTramo',
+    removerTramo: '/tramos/removerTramo'
 }
 
 export const apiEspaciosRoutes = {
@@ -81,3 +84,9 @@ export const apiPromptsRoutes = {
 export const apiFlopiBot = {
     sendPromptMessage : "/flopi-bot/send-prompt-message"
 }
+
+export const apiDocumentos = {
+    openDocument :  (id:number) => `/documentos/${id}/openDocument`,
+    saveDocument :  (id:number) => `/documentos/${id}/saveDocument`,
+}
+

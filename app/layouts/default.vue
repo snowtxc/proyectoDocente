@@ -20,7 +20,7 @@ const flopiBotRef = ref(null);
 const links = [{
   id: 'home',
   label: 'Inicio',
-  icon: 'i-heroicons-home',
+  icon: 'tabler:home',
   to: '/home',
   tooltip: {
     text: 'Inicio',
@@ -30,7 +30,7 @@ const links = [{
 {
   id: 'grupos',
   label: 'Grupos',
-  icon: 'healthicons:i-groups-perspective-crowd-outline',
+  icon: 'tabler:users-group',
   to: '/grupos',
   tooltip: {
     text: 'Grupos',
@@ -41,7 +41,7 @@ const links = [{
 {
   id: 'planificaciones',
   label: 'Planificaciones',
-  icon: 'i-heroicons-home',
+  icon: 'tabler:calendar-event',
   to: '/planificaciones',
   tooltip: {
     text: 'Planificaciones',

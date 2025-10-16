@@ -19,4 +19,18 @@ export interface Tramo extends BaseModel{
     unidad_curricular_id? : number;
     unidad_curricular?: UnidadCurricular;
     actividad: Actividad;
+    orden: number;
+}
+
+export interface ReordenarTramoDTO {
+    planificacion_id : number;
+    planificacion_fecha_id : number;
+    tramo_id: number;
+    nuevoOrden : number;
+}
+
+export interface RemoverTramoDTO {
+    planificacion_id : number;
+    planificacion_fecha_id : number;
+    tramo_id: number;
 }

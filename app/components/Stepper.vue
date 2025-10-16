@@ -2,6 +2,8 @@
 
 import { Icon } from '@iconify/vue'
 import { StepperDescription, StepperIndicator, StepperItem, StepperRoot, StepperSeparator, StepperTitle, StepperTrigger } from 'reka-ui'
+import { useMouse, useWindowScroll } from '@vueuse/core'
+import { da } from 'date-fns/locale'
 
 interface Props {
     showButtonAddStep? : boolean,
@@ -12,11 +14,13 @@ interface Props {
     disabled?: boolean;
     orientation : "vertical" | "horizontal",
     linear?: boolean;
+    actionsMenu?: { title: string, icon: string , actionName: string}[]
 }
+
 
 const props = withDefaults(defineProps<Props>() , {});
 
-const emit = defineEmits(['on:add-step','on:change-step'])
+const emit = defineEmits(['on:add-step','on:change-step', 'on:action-menu']);
 
 const  currentStep = ref(props.currentStep);
 
@@ -39,6 +43,45 @@ const changeStep = (step:number) => {
 defineExpose({
   changeStep
 })
+
+const { x, y } = useMouse()
+const { y: windowY } = useWindowScroll()
+
+const openMenus = ref({});
+const isOpenContextMenuActionsTramo = ref(false);
+
+const virtualElement = ref({ getBoundingClientRect: () => ({}) })
+const virtualElements = ref({})
+
+function onContextMenu(event, step) {
+
+  virtualElements.value[step] = event.currentTarget
+  openMenus.value[step] = true
+
+  if(props.actionsMenu?.length == 0)
+    return;
+
+  const top = unref(y) - unref(windowY)
+  const left = unref(x)
+
+  virtualElement.value.getBoundingClientRect = () => ({
+    width: 0,
+    height: 0,
+    top,
+    left
+  })
+
+  isOpenContextMenuActionsTramo.value = true
+}
+
+
+  const onClickActionMenu = (actionName:string, step : number) =>{
+
+      emit('on:action-menu', {
+        actionName,
+        step
+      })
+  }
 
 </script>
 
@@ -68,10 +111,20 @@ defineExpose({
     >
       <StepperTrigger class="inline-flex border-2 shadow-sm items-center text-white bg-primary border-primary group-data-[state=inactive]:border-gray-200 group-data-[state=inactive]:bg-white group-data-[state=inactive]:text-stone-700 group-data-[disabled]:opacity-50 group-data-[disabled]:cursor-not-allowed justify-center rounded-full w-10 h-10 shrink-0 focus:shadow-[0_0_0_2px] focus:shadow-black focus:outline-none">
         <StepperIndicator>
-          <Icon
+          <div class="w-full" @contextmenu.prevent="onContextMenu($event,item.step)">
+            <Icon
             :icon="item.icon"
             class="w-5 h-5"
           />
+          <UContextMenu v-model="openMenus[item.step]" :virtual-element="virtualElements[item.step]">
+
+            <div v-for="(action, idx) in props.actionsMenu"  :key="idx" class="p-4 text-black hover:bg-gray-100 flex items-center gap-2" @click="onClickActionMenu(action.actionName, item.step)">
+                <UIcon :name="action.icon" class="w-5 h-5" />
+                <span>  {{ action.title }} </span>
+            </div>
+          </UContextMenu>
+          </div>
+
         </StepperIndicator>
       </StepperTrigger>
 

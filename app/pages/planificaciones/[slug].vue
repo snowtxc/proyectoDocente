@@ -2,10 +2,14 @@
 
 import { HttpMethodEnum } from '~/utils/enums/HttpMethodEnum';
 import type { Planificacion } from '~/types/planificacion';
-import type { Tramo } from '~/types/tramo';
+import type { RemoverTramoDTO, Tramo } from '~/types/tramo';
 import type { PlanificacionFecha, SimplePlanificacionFecha } from '~/types/planificacionFecha';
 import type { Espacio } from '~/types/espacio';
 import type { CompetenciaGeneral } from '~/types/competenciaEspecifica';
+import CambiarOrden from '~/components/tramos/CambiarOrden.vue';
+import { cloneDeep } from 'lodash';
+import { ActionMenuTramo } from '~/utils/enums/actionMenuTramo.enum';
+import ConfirmModal from '~/components/ConfirmModal.vue';
 
 const { $apiRest } = useNuxtApp();
 
@@ -13,8 +17,10 @@ const route = useRoute();
 const toast = useToast();
 const slug = route.params.slug as string;
 
-const pendingSave = ref<boolean>(true);
+const pendingSave = ref<boolean>(false);
 const isSaving = ref<boolean>(true);
+
+const modal = useModal()
 
 const { data: response, error, refresh } = await useAsyncData('planificacionDetalle', async () => {
   const [planificacion,espacios, competenciasGenerales]= await  Promise.all(
@@ -92,6 +98,7 @@ const stepsTramos =  computed(()=>{
     const step = idx + 1;
     return {
       step,
+      tramo,
       title: `Tramo ${step}`,
       description: `Tramo ${step}`,      
       icon: 'tabler:file-text'
@@ -121,7 +128,8 @@ const onCreateTramo = async()=>{
     seDesarrolla: true,
     criterios_de_logros: [],
     competencias_especificas: [],
-    actividad: undefined
+    actividad: undefined,
+    orden: null
   }
 
   try{
@@ -147,7 +155,6 @@ const onCreateTramo = async()=>{
 }
 
 const showPopoverAddFecha = ref<boolean>(false);
-const showPopoverChangeFecha = ref<boolean>(false);
 
 const onAddPlanificacionFechas = async(planificacionFechas: PlanificacionFecha[])=>{
 
@@ -163,7 +170,6 @@ const onAddPlanificacionFechas = async(planificacionFechas: PlanificacionFecha[]
     planificacion.value.fechas = ordenarFechasPlanificacion();
 
     toast.add({ title: 'Se agregaron nuevos días a la planificación correctamente!', color: 'green', icon: 'i-heroicons-check-circle' })
-
 
   }catch(message){
     toast.add({
@@ -219,6 +225,12 @@ const loadPlanificacionFecha = async(fecha: string)  : Promise<void> =>{
     const planificacionFecha = fechas.value.find(planificacionFecha => planificacionFecha.fecha == fecha);
     const response = await $apiRest<PlanificacionFecha>(apiPlanificacionesFechaRoutes.find(planificacionFecha.id), HttpMethodEnum.GET);
     planificacionFechaSelected.value = response;
+
+    if(planificacionFechaSelected.value.tramos.length > 0){
+      // SE CARGA EL PRIMER TRAMO
+      tramoSelected.value = { ... planificacionFechaSelected.value.tramos[0] };
+    }
+
   }catch(message){
     toast.add({
       title: "Error",
@@ -231,7 +243,7 @@ const loadPlanificacionFecha = async(fecha: string)  : Promise<void> =>{
 const onChangeTramo = (currentStep) =>{
   const idx = currentStep - 1;
 
-  if(currentStep < tramos.value.length){
+  if(currentStep <= tramos.value.length){
     const tramo = tramos.value[idx];
     tramoSelected.value = { ... tramo };
   }
@@ -245,8 +257,19 @@ const onSavePlanificacionFecha = async()=>{
 
     try{
 
-      const response = await $apiRest<PlanificacionFecha>(apiPlanificacionesFechaRoutes.guardar(planificacionFechaSelected.value.id), HttpMethodEnum.POST, planificacionFechaSelected.value);
+      const response = await $apiRest<{ status: boolean , message: string}>(apiPlanificacionesFechaRoutes.guardar(planificacionFechaSelected.value.id), HttpMethodEnum.POST, planificacionFechaSelected.value);
       isSaving.value = false;
+
+      if(response && response.status){
+        toast.add({
+              title: "Se ha guardado con exito",
+              description: response.message,
+              color: "green"
+        });
+
+        pendingSave.value = false;
+      }
+        
 
     }catch(message){
       isSaving.value = false;
@@ -263,6 +286,9 @@ watch(()=> tramoSelected.value, ()=>{
     if(idx >= 0){
       tramos.value[idx] = { ...tramoSelected.value};
     }  
+
+    // Se activa el pending save.
+    pendingSave.value = true;
 })
 
 const onCancelNuevoTramo = ()=>{
@@ -270,7 +296,137 @@ const onCancelNuevoTramo = ()=>{
   tramosStepper.value.changeStep(currentStepTramo.value);
 }
 
+const actionsMenuTramo = ref([
+   { 
+    title: 'Cambiar orden',
+    icon: 'tabler:arrows-sort',
+    actionName: ActionMenuTramo.CHANGE_ORDER
+    },
+    {
+    title: 'Eliminar tramo',
+    icon: 'tabler:trash',
+    actionName: ActionMenuTramo.DELETE
+  }
+  ]);
 
+
+
+ const handleOnActionMenuTramo = async( data: { actionName: ActionMenuTramo, step: number })=>{
+  
+  const stepSelected = stepsTramos.value.find(x => x.step == data.step);
+  const tramoSelected = stepSelected.tramo;
+
+  if(!stepSelected)
+    return;
+
+   switch(data.actionName){
+
+    case ActionMenuTramo.CHANGE_ORDER:
+      
+      modal.open(CambiarOrden, { 
+        planificacionId: planificacion.value.id, 
+        planificacionFechaId : planificacionFechaSelected.value.id,
+        tramoSelected : {... tramoSelected } , 
+        tramos :  cloneDeep(tramos.value),
+        "onOn-change-order" : (tramosUpdated)=>{
+          
+          updateOrdersTramos(tramosUpdated);
+          modal.close()
+        }
+      })
+      break;
+
+    case ActionMenuTramo.DELETE:
+      modal.open(ConfirmModal, { 
+        title: `Remover tramo ${tramoSelected.orden}`,
+        description: "AL remover el tramo , es posible que se reordenen todos los tramos de la planificación.",
+        "onOnConfirm" : async(data)=>{
+        
+          try{
+            modal.close();
+
+            const body : RemoverTramoDTO = {
+              planificacion_id : planificacion.value.id,
+              planificacion_fecha_id : planificacionFechaSelected.value.id,
+              tramo_id : tramoSelected.id,
+           }         
+
+           const response = await $apiRest<any>(apiTramosRoutes.removerTramo, HttpMethodEnum.POST,body);
+
+          if(response.status){
+
+            const { tramosUpdated } = response;
+
+            const idx = planificacionFechaSelected.value.tramos.findIndex(tramo => tramo.id == tramoSelected.id);
+
+            if(idx >= 0)
+              planificacionFechaSelected.value.tramos.splice(idx,1);
+
+            updateOrdersTramos(tramosUpdated);
+            
+            toast.add({
+                title: "Tramo ordenado con exito",
+                description: "Tramo ordenado",
+                color: "green"
+            })
+          }
+          }catch(message){
+            toast.add({
+                title: "Error",
+                description: message ? message : 'Error al intentar eliminar el tramo',
+                color: "red"
+            })
+          }
+
+        }
+      })
+      break;
+   }
+ }    
+
+ // Actualizar el orden de tramos
+ // Dado una lista de tramos actualizados sus ordenes se actualiza los ordenes en el array de tramos general.
+ const updateOrdersTramos = (tramosUpdated: Tramo[])=>{
+
+   tramosUpdated.map(tramoUpdated =>{
+
+    const idx = planificacionFechaSelected.value.tramos.findIndex(x => x.id == tramoUpdated.id);
+
+    if(idx >= 0)
+      planificacionFechaSelected.value.tramos[idx].orden = tramoSelected.value.orden;
+
+    if(tramoSelected.value.id == tramoUpdated.id && tramoSelected.value.orden != tramoUpdated.orden)
+      tramoSelected.value.orden = tramoUpdated.orden;
+   })
+ }
+
+ const onExport = async()=>{
+   
+   if(!planificacion.value)
+    return;
+
+   try{
+
+   const responseFile = await $apiRest(apiPlanificacionesRoutes.exportar(planificacion.value.id), HttpMethodEnum.POST, {responseType: 'blob'});
+
+   if(responseFile){
+     downloadBlob(responseFile, "planificacion.docx");
+
+      toast.add({
+        title: "Planificacion exportada",
+        description: 'Se ha exportado la planificación con exito.',
+        color: "green"
+      })
+   }
+   
+  }catch(message){
+    toast.add({
+      title: "Error",
+      description: message ? message : 'Error al crear un nuevo tramo',
+      color: "red"
+    })
+  }
+ }
 
 </script>
 
@@ -305,8 +461,9 @@ const onCancelNuevoTramo = ()=>{
         @on:add-step="showModalAddTramo = true"
         :linear="false"
         ref="tramosStepper"
-        @on:change-step="onChangeTramo"/>
-        
+        @on:change-step="onChangeTramo"
+        :actionsMenu="actionsMenuTramo"
+        @on:action-menu="handleOnActionMenuTramo"/>
       </div>
 
     </UDashboardPanel>
@@ -369,6 +526,15 @@ const onCancelNuevoTramo = ()=>{
         </UButton>
         </UTooltip>
 
+         <UTooltip text="Exportar a Word">
+          <UButton
+            icon="tabler:file-word"
+            color="gray"
+            variant="ghost"
+            @click="onExport"
+          />
+        </UTooltip>
+
         <UTooltip text="Exportar planificación a Google Drive">
           <UButton
             icon="tabler:brand-google-drive"
@@ -405,6 +571,14 @@ const onCancelNuevoTramo = ()=>{
           :ciclosGradosIds="ciclosGradosIds"
           :competenciasGenerales="competenciasGenerales"
           :nroTramo="currentStepTramo"></TramosTramoForm>
+
+        <div v-else class="flex flex-col justify-center items-center h-screen">
+        <UIcon
+          name="tabler:file-text"
+          size="60px"
+        />
+        <h1 class="mt-1"> No tienes ningún tramo creado , prueba agregando uno nuevo </h1>
+        </div>
       </div>
 
       <div v-else class="flex flex-col justify-center items-center h-screen">

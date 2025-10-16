@@ -14,7 +14,7 @@ import { HttpMethodEnum } from '~/utils/enums/HttpMethodEnum';
     const { $apiRest } = useNuxtApp();
     const emit = defineEmits(['on:add']);
     
-    const show = ref<boolean>(true);
+    const show = ref<boolean>(false);
     const showModalConfirm = ref<boolean>(false);
 
     const fecha =  ref(null);

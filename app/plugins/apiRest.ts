@@ -8,25 +8,33 @@ export default defineNuxtPlugin((nuxtApp) => {
     const config = useRuntimeConfig();
     const { start, finish } = useLoadingIndicator();
 
-    // const getCookie = (name) => {
-    //     const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
-    //     if (match) return match[2];
-    // };
+    const getCookie = (name) => {
+        const match = document?.cookie?.match(new RegExp('(^| )' + name + '=([^;]+)')) || null;
+        if (match) 
+            return match[2];
+        else
+            return null;
+    };
 
     // Definir el tipo de la función `apiRest`
     const apiRest = async(endpoint: string, method: HttpMethodEnum, body: any, options: Record<string, any> = {}) => {
         const token = authStore.token;
         
+        let csrfToken = getCookie('XSRF-TOKEN');
+
+        if(!csrfToken){
+            await $fetch(`http://localhost:8000/sanctum/csrf-cookie`, { method : 'GET', credentials: 'include'});
+            csrfToken = getCookie('X-CSRF-TOKEN');
+        }
+
         const headers = token ? {
             Authorization: `Bearer ${token}`,
             Accept: "application/json",
-            // "X-CSRF-TOKEN": csrfToken || "",
-            credentials: 'include',
+            "X-CSRF-TOKEN": csrfToken || "",
             ...options.headers
         } : {
             Accept: "application/json",
-            credentials: 'include',
-            // "X-CSRF-TOKEN": csrfToken || "",
+            "X-CSRF-TOKEN": csrfToken || "",
             ...options.headers
         };
 
@@ -37,7 +45,8 @@ export default defineNuxtPlugin((nuxtApp) => {
                 method,
                 ...options,
                 headers,
-                body
+                body,
+                credentials: 'include'
             });
             finish();
             return response;
