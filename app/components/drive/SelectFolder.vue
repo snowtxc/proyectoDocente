@@ -16,6 +16,7 @@ const toast = useToast()
 
 const googleSignInOptions: ImplicitFlowOptions = {
   scope: googleScopes,
+  redirect_uri: 'http://localhost:8000/api/login/google/callback/',
   onSuccess: async(responseGoogle: ImplicitFlowSuccessResponse) => {
     try{
       const { code } = responseGoogle;

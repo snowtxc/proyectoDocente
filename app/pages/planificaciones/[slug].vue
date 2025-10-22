@@ -222,6 +222,7 @@ const onChangePlanificacionFecha = async(planificacionFechaUpdated: Planificacio
 
 const loadPlanificacionFecha = async(fecha: string)  : Promise<void> =>{
   try{
+
     const planificacionFecha = fechas.value.find(planificacionFecha => planificacionFecha.fecha == fecha);
     const response = await $apiRest<PlanificacionFecha>(apiPlanificacionesFechaRoutes.find(planificacionFecha.id), HttpMethodEnum.GET);
     planificacionFechaSelected.value = response;
@@ -229,6 +230,8 @@ const loadPlanificacionFecha = async(fecha: string)  : Promise<void> =>{
     if(planificacionFechaSelected.value.tramos.length > 0){
       // SE CARGA EL PRIMER TRAMO
       tramoSelected.value = { ... planificacionFechaSelected.value.tramos[0] };
+    }else{
+      tramoSelected.value = null;
     }
 
   }catch(message){
@@ -241,12 +244,16 @@ const loadPlanificacionFecha = async(fecha: string)  : Promise<void> =>{
 }
 
 const onChangeTramo = (currentStep) =>{
-  const idx = currentStep - 1;
 
-  if(currentStep <= tramos.value.length){
-    const tramo = tramos.value[idx];
-    tramoSelected.value = { ... tramo };
+  if(currentStep > 0){
+    const idx = currentStep - 1;
+
+    if(currentStep <= tramos.value.length){
+      const tramo = tramos.value[idx];
+      tramoSelected.value = { ... tramo };
+    }
   }
+ 
 }
 
 const onSavePlanificacionFecha = async()=>{
@@ -282,7 +289,9 @@ const onSavePlanificacionFecha = async()=>{
 }
 
 watch(()=> tramoSelected.value, ()=>{
+
     const idx = tramos.value.findIndex(t => t.id == tramoSelected.value.id);
+
     if(idx >= 0){
       tramos.value[idx] = { ...tramoSelected.value};
     }  
@@ -573,12 +582,12 @@ const actionsMenuTramo = ref([
           :nroTramo="currentStepTramo"></TramosTramoForm>
 
         <div v-else class="flex flex-col justify-center items-center h-screen">
-        <UIcon
-          name="tabler:file-text"
-          size="60px"
-        />
-        <h1 class="mt-1"> No tienes ningún tramo creado , prueba agregando uno nuevo </h1>
-        </div>
+          <UIcon
+            name="tabler:file-text"
+            size="60px"
+          />
+          <h1 class="mt-1"> No tienes ningún tramo creado , prueba agregando uno nuevo </h1>
+          </div>
       </div>
 
       <div v-else class="flex flex-col justify-center items-center h-screen">

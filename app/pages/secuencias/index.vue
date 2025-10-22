@@ -1,15 +1,13 @@
 <script setup lang="ts">
-import SelectStatus from "~/components/select/SelectStatus.vue";
+import SecuenciaForm from "~/components/secuencias/SecuenciaForm.vue";
 import type { ListRequest } from "~/types/list-request";
 import type { ListResponse } from "~/types/list-response";
-import type { Planificacion } from "~/types/planificacion";
+import type { Secuencia } from "~/types/secuencia";
 import { HttpMethodEnum } from "~/utils/enums/HttpMethodEnum"
 import { ModeEnum } from "~/utils/enums/ModeEnum";
-import { PlanificacionEstadoEnum } from "~/utils/enums/PlanificacionEstado.enum";
 
 let timeoutSearch: any = 0;
 const route = useRoute()
-
 
 const defaultColumns = [
     {
@@ -18,16 +16,12 @@ const defaultColumns = [
         sortable: true,
     },
     {
-        key: "grupo",
-        label: "Grupo",
+      key: 'unidad_curricular',
+      label: 'Unidad curricular'
     },
     {
-        key: "grados",
-        label: "Grados",
-    },
-    {
-        key: "estado",
-        label: "Estado",
+      key: 'contenido',
+      label: 'Contenido'
     },
     {
         key: 'actions',
@@ -36,26 +30,19 @@ const defaultColumns = [
 ];
 
 const mode =  ref<ModeEnum>(ModeEnum.CREATE);
-const planificacionSelected = ref<Planificacion>(null);
+const secuenciaSelected = ref<Secuencia>(null);
 
 const isLoading = ref(false);
 
 const search = ref("");
 
-const selectedStatus = ref(PlanificacionEstadoEnum.EN_CURSO);
 
-const defaultGrupoSelected: any = route.query?.grupoId ?  {
-    id: route.query?.grupoId,
-    nombre: route.query.grupoNombre,
-} : null;
-
-const selectedGrupo = ref(defaultGrupoSelected);
-
-const filters = ref<{query?: string, estado?: string , search : string, grupo_id?:number }>(
-    { query: undefined, 
-     estado: selectedStatus.value, 
-     search : '',
-     grupo_id : defaultGrupoSelected?.id
+const filters = ref<{ search: string,espacio_id?: number, unidad_curricular_id? : number , contenido_id?: number }>(
+    { 
+    search : '',  
+    espacio_id: null, 
+    unidad_curricular_id: null,
+    contenido_id : null
     }
 );
 
@@ -64,10 +51,9 @@ const selectedColumns = ref(defaultColumns);
 
 const { $apiRest } = useNuxtApp();
 
-const sort = ref({ column: "id", direction: "asc" as const });
 const input = ref<{ input: HTMLInputElement }>();
 
-const planificaciones = ref<Planificacion[]>([]);
+const secuencias = ref<Secuencia[]>([]);
 
 const columns = computed(() =>
     defaultColumns.filter((column) => selectedColumns.value.includes(column))
@@ -76,7 +62,6 @@ const columns = computed(() =>
 const titleModal = ref<string>('');
 
 const { page, rowsPerPage, totalRows, changePage, changeTotalRows } = usePagination();
-
 
 const isSlideoverOpen = ref(false);
 
@@ -90,20 +75,19 @@ const listReq = ref<ListRequest>({
     filters: filters.value
 });
 
-const { data: response, error } = await useAsyncData('planificaciones', async() => { 
-     return await  $apiRest<ListResponse<Planificacion[]>>(apiPlanificacionesRoutes.getPaginate, HttpMethodEnum.POST, listReq.value);
+const { data: response, error } = await useAsyncData('secuencias', async() => { 
+     return await  $apiRest<ListResponse<Secuencia[]>>(apiSecuenciasRoutes.getPaginate, HttpMethodEnum.POST, listReq.value);
 });
 
-planificaciones.value = response.value.list;
+secuencias.value = response.value.list;
 changeTotalRows(response.value.totalCount);
 
-
-const loadPlanificaciones = async () => {
+const loadSecuencias = async () => {
     isLoading.value = true;
     try{
-        const response = await $apiRest<ListResponse<Planificacion[]>>(apiPlanificacionesRoutes.getPaginate, HttpMethodEnum.POST , listReq.value);
+        const response = await $apiRest<ListResponse<Secuencia[]>>(apiSecuenciasRoutes.getPaginate, HttpMethodEnum.POST , listReq.value);
         changeTotalRows(response.totalCount);
-        planificaciones.value = response.list;  
+        secuencias.value = response.list;  
         isLoading.value = false;
 
     }catch(message){
@@ -118,21 +102,16 @@ const loadPlanificaciones = async () => {
 
 const onFilter = () => {
     changePage(1);
-    loadPlanificaciones();
+    loadSecuencias();
 };
 
 
 watch(
     () => [
-        selectedStatus.value,  
         search.value,
-        selectedGrupo.value 
     ],
     () => {
         filters.value.search = search.value;
-        filters.value.estado = selectedStatus.value;
-        filters.value.grupo_id = selectedGrupo.value?.id
-
         clearTimeout(timeoutSearch);
         timeoutSearch = setTimeout(() => {
             onFilter();
@@ -143,31 +122,31 @@ watch(
 
 watch(()=> page.value, ()=>{
   listReq.value.page = page.value;
-  loadPlanificaciones();
+  loadSecuencias();
 });
 
-function onSelect(row: Planificacion) {
-  titleModal.value = "Editar Planificación";
+function onSelect(row: Secuencia) {
+  titleModal.value = "Editar Secuencia";
   mode.value = ModeEnum.UPDATE;
-  planificacionSelected.value =  row;
+  secuenciaSelected.value =  row;
   isSlideoverOpen.value = true;
 }
 
-const onCreatePlanificacion = ()=>{
+const onCreateSecuencia = ()=>{
     isSlideoverOpen.value = true;
     mode.value = ModeEnum.CREATE;
-    titleModal.value = "Nueva Planificación";
+    titleModal.value = "Nueva Secuencia";
 }
 
 const clearFilters = ()=>{
-    selectedStatus.value = null;
-    selectedGrupo.value = null;
+    // selectedStatus.value = null;
+    // selectedGrupo.value = null;
     onFilter();
 }
 
-const verPlanificacion = async(row: Planificacion)=>{
+const verSecuencia = async(row: Secuencia)=>{
     await navigateTo({
-        path: appRoutes.planificacionPage(row.slug)
+        path: appRoutes.secuenciaPage(row.slug)
     })
 }
 
@@ -176,7 +155,7 @@ const verPlanificacion = async(row: Planificacion)=>{
 <template>
     <UDashboardPage>
         <UDashboardPanel grow>
-            <UDashboardNavbar title="Planificaciones" :badge="planificaciones.length">
+            <UDashboardNavbar title="Secuencias" :badge="secuencias.length">
                 <template #right>
                     <UInput 
                         ref="input" 
@@ -189,15 +168,15 @@ const verPlanificacion = async(row: Planificacion)=>{
                         </template>
                     </UInput>
 
-                    <UButton label="Crear planificación" trailing-icon="i-heroicons-plus" color="gray"
-                        @click="onCreatePlanificacion" />
+                    <UButton label="Crear secuencia" trailing-icon="i-heroicons-plus" color="gray"
+                        @click="onCreateSecuencia" />
                 </template>
             </UDashboardNavbar>
 
             <UDashboardToolbar>
                 <template #default>
                     <div class="w-auto flex md:flex-row flex-col items-center justify-start gap-4">
-                        <div class="w-full flex gap-2">
+                        <!-- <div class="w-full flex gap-2">
                             <SelectStatus v-model="selectedStatus" @update:modelValue="() => null" :multiple="false"
                                 class="flex-1 md:w-[200px]" />
                         </div>
@@ -205,7 +184,7 @@ const verPlanificacion = async(row: Planificacion)=>{
                         <div class="w-full flex gap-2">
                             <SelectGrupo v-model="selectedGrupo" 
                             class="flex-1 md:min-w-[350px]" ></SelectGrupo>
-                        </div>
+                        </div> -->
                         <UButton
                             icon="tabler:filter-x"
                             size="sm"
@@ -214,42 +193,31 @@ const verPlanificacion = async(row: Planificacion)=>{
                             @click="clearFilters"
                             />
                     </div>
-                    
-
-
                 </template>
             </UDashboardToolbar>
 
     
             <UTable :empty-state="{
                 icon: 'i-heroicons-circle-stack-20-solid',
-                label: 'No hay planificaciones creadas',
-            }" no-results-text="Test" v-model:sort="sort" :rows="planificaciones" :columns="columns"
+                label: 'No hay secuencias creadas',
+            }" no-results-text="Test" :rows="secuencias" :columns="columns"
                 :loading="isLoading" sort-mode="manual" class="w-full"
                 :ui="{ divide: 'divide-gray-200 dark:divide-gray-800' }">
                 <template #nombre-data="{ row }">
-                                <span class="text-gray-900 dark:text-white font-medium">{{ row.nombre }}</span>
-
+                      <span class="text-gray-900 dark:text-white font-medium">{{ row.nombre }}</span>
                 </template>
 
-                <template #grupo-data="{ row }">
+                <template #unidad-curricular-data="{ row }">
                     <div class="flex items-center gap-2">
-                        <UAvatar :src="formattedImageUrlGrupo(row.grupo?.url_image)" size="2xs" />
-                        <span>{{ row.grupo?.nombre }}</span>
+                        <span>Probandoo..</span>
                     </div>
                 </template>
 
-                <template #grados-data="{ row }">
+                <template #contenido-data="{ row }">
                     <div class="flex items-center gap-2">
-                        <BadgeGrado v-for="(grado,idx) in row.grupo.grados" :key="idx" :grado="grado"></BadgeGrado>
-                        
+                      Probandooo
+                        <!-- <BadgeGrado v-for="(grado,idx) in row.grupo.grados" :key="idx" :grado="grado"></BadgeGrado> -->
                     </div>
-                </template>
-
-                <template #estado-data="{ row }">
-                    <UBadge :label="row.estado" :variant="'outline'" :color="(getColorsEstado(
-                        row.estado ?? ''
-                    ) as any)" />
                 </template>
 
                 <template #actions-data="{ row }">
@@ -266,7 +234,7 @@ const verPlanificacion = async(row: Planificacion)=>{
                         size="sm"
                         color="primary"
                         variant="outline"
-                        @click="verPlanificacion(row)"
+                        @click="verSecuencia(row)"
                         />
                     </div>
                     
@@ -282,7 +250,8 @@ const verPlanificacion = async(row: Planificacion)=>{
             <template #title>
                {{ titleModal }}
             </template>
-            <PlanificacionesForm @close="isSlideoverOpen = false" :mode="mode" :planificacionSelected="planificacionSelected" @on:update="loadPlanificaciones"/>
+                <SecuenciaForm @close="isSlideoverOpen = false" :mode="mode"  @on:update="loadSecuencias"/>
+          
           </UDashboardSlideover>
     </UDashboardPage>
 </template>

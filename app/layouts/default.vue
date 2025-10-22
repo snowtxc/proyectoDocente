@@ -49,6 +49,16 @@ const links = [{
   }
 },
 {
+  id: 'secuencias',
+  label: 'Secuencias',
+  icon: 'tabler:list-letters',
+  to: '/secuencias',
+  tooltip: {
+    text: 'Secuencias',
+    shortcuts: []
+  }
+},
+{
   id: 'flopi-bot',
   label: 'Flopi Bot',
   icon: 'tabler:robot',

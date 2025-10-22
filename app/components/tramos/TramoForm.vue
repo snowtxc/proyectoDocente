@@ -20,6 +20,7 @@ import type { Documento } from '~/types/documento';
 
 interface Props {
     modelValue: Tramo,
+    tramo: Tramo
     gradosIds: number[]
     ciclosGradosIds: number[],
     espacios: Espacio[],
@@ -44,8 +45,6 @@ const form = ref({
     contenido: null,
     criteriosDeLogros: [],
     competenciasEspecificas: [],
-    metaDeAprendizaje: { contentHtml: "" ,contentJson: "" },
-    planDeAprendizaje: { contentHtml: "" ,contentJson: "" }
 });
 
 const espacios = ref([...props.espacios]);
@@ -68,9 +67,9 @@ const metaAprendizajeDocumento = ref<Documento>(null);
 const planAprendizajeDocumento= ref<Documento>(null);
 
 const loadForm = (): void =>{
+  
   const { unidad_curricular, espacio , competencias_especificas, criterios_de_logros,contenido, actividad } = props.modelValue;
-
-  const  {  meta_aprendizaje_documento, plan_aprendizaje_documento, plan_aprendizaje_document_id , meta_aprendizaje_document_id} =  actividad;
+  const  {  meta_aprendizaje_documento, plan_aprendizaje_documento } =  actividad;
 
   form.value.espacio = espacio;
   form.value.unidad_curricular = unidad_curricular;
@@ -84,6 +83,16 @@ const loadForm = (): void =>{
   if(form.value.unidad_curricular){
     // Si la carga del formulario ya tiene una unidad curricular entonces mandamos a cargar los contenidos y los criterios de logros para ese tramo.
     loadContenidosCriteriosDeLogrosYCompetencias(form.value.unidad_curricular.id)
+  }
+}
+
+const clearForm = ()=>{
+  form.value = {
+    espacio: null,
+    unidad_curricular: props.modelValue.unidad_curricular || null,
+    contenido: null,
+    criteriosDeLogros: [],
+    competenciasEspecificas: [],
   }
 }
 
@@ -105,12 +114,7 @@ const competenciasGeneralesSelected = computed<CompetenciaGeneral[]>(()=>{
 const getCurrentData = ()=>{
 
   const { actividad } = props.modelValue;
-  const {  unidad_curricular , espacio, contenido, competenciasEspecificas, criteriosDeLogros , metaDeAprendizaje, planDeAprendizaje}  = form.value
-
-  const meta_de_aprendizaje_html = metaDeAprendizaje.contentHtml;
-  const plan_de_aprendizaje_html = planDeAprendizaje.contentHtml;
-  const meta_de_aprendizaje_json = metaDeAprendizaje.contentJson;
-  const plan_de_aprendizaje_json = planDeAprendizaje.contentJson
+  const {  unidad_curricular , espacio, contenido, competenciasEspecificas, criteriosDeLogros }  = form.value
 
   const data  = {
     ...props.modelValue,
@@ -123,7 +127,7 @@ const getCurrentData = ()=>{
       contenido_id: contenido ? contenido.id : null,
       competencias_especificas:  competenciasEspecificas,
       criterios_de_logros: criteriosDeLogros,
-      actividad : { ...actividad, meta_de_aprendizaje_html, meta_de_aprendizaje_json, plan_de_aprendizaje_html, plan_de_aprendizaje_json }
+      actividad : { ...actividad }
     }
   }  
     
@@ -135,6 +139,11 @@ const onChangeModel = ()=>{
 }
 
 watch(()=> props.modelValue ,(newValue: Tramo, oldValue: Tramo)=>{
+  if(!newValue){
+    clearForm();
+    return;
+  }
+
   if(newValue.id != oldValue.id){
     loadForm();
   }
@@ -174,7 +183,7 @@ const onChangeUnidadCurricular = (unidadCurricular: UnidadCurricular)=>{
 
 const loadContenidosCriteriosDeLogrosYCompetencias = async(unidadCurricularId: number)=>{
 
-    loadingMoreData.value = true;
+   loadingMoreData.value = true;
 
    const { gradosIds , ciclosGradosIds} = props;
 
@@ -265,13 +274,12 @@ const onConfirmChangeEspacioOUnidad = ()=>{
 
 const paramsBotMetaAprendizaje = computed(()=>{
 
-const { criteriosDeLogros, competenciasEspecificas, contenido, metaDeAprendizaje  } = form.value;
+const { criteriosDeLogros, competenciasEspecificas, contenido } = form.value;
   return {
     criteriosDeLogros: criteriosDeLogros.map(x => x.descripcion),
     competenciasEspecificas:  competenciasEspecificas.map(x => x.descripcion),
     contenido: contenido?.descripcion,
     grados : [],
-    metaAprendizajeText: metaDeAprendizaje
   }
 })
 
@@ -302,7 +310,7 @@ const handleSavedDocumentMetaAprendizaje = (document: Documento)=>{
 <template>
   <div class="w-full px-2 pb-20">
     <h1 class="font-medium text-xl text-center my-4">
-      Tramo {{ props.nroTramo  }}
+      Tramo {{ props.nroTramo  }} 
     </h1>
     <div class="flex gap-2">
       <USelectMenu :model-value="form.espacio" :options="espacios" option-attribute="id" class="flex-1"
@@ -476,7 +484,6 @@ const handleSavedDocumentMetaAprendizaje = (document: Documento)=>{
            <EditorSlideOver 
               :promptCategories="[PromptCategory.OTROS]"
               :documentId="planAprendizajeDocumento?.id"
-              v-model="form.planDeAprendizaje" 
               @update:model-value="onChangeModel"
               @on:save="handleSavedDocumentPlanAprendizaje"
               title="Plan de aprendizaje" 

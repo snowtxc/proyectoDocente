@@ -1,7 +1,8 @@
 
 export const appRoutes = {
     planificaciones: () => '/planificaciones',
-    planificacionPage: (id) => `/planificaciones/${id}`
+    planificacionPage: (slug:string) => `/planificaciones/${slug}`,
+    secuenciaPage: (slug:string) => `/secuencias/${slug}`
 }
 
 export const appAuthRoutes ={

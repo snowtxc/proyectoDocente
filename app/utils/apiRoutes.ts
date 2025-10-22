@@ -90,3 +90,9 @@ export const apiDocumentos = {
     saveDocument :  (id:number) => `/documentos/${id}/saveDocument`,
 }
 
+export const apiSecuenciasRoutes = {
+    getPaginate: '/secuencias/paged',
+    create: "/secuencias",
+    update: (id:number) => `/secuencias/${id}`,
+    getBySlug : (slug: string) => `/secuencias/${slug}`,
+}
