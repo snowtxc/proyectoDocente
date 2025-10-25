@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import SecuenciaForm from "~/components/secuencias/SecuenciaForm.vue";
+import type { Espacio } from "~/types/espacio";
 import type { ListRequest } from "~/types/list-request";
 import type { ListResponse } from "~/types/list-response";
 import type { Secuencia } from "~/types/secuencia";
+import type { UnidadCurricular } from "~/types/unidadCurricular";
 import { HttpMethodEnum } from "~/utils/enums/HttpMethodEnum"
 import { ModeEnum } from "~/utils/enums/ModeEnum";
 
@@ -16,13 +18,30 @@ const defaultColumns = [
         sortable: true,
     },
     {
-      key: 'unidad_curricular',
+      key: 'grupo',
+      label: 'Grupo'
+    },
+
+    {
+      key: 'grados',
+      label: 'Grados'
+    },
+
+    {
+      key: 'espacio',
+      label: 'Espacio'
+    },
+
+    {
+      key: 'unidad-curricular',
       label: 'Unidad curricular'
     },
+    
     {
       key: 'contenido',
       label: 'Contenido'
     },
+
     {
         key: 'actions',
         label: 'Acciones'
@@ -35,14 +54,19 @@ const secuenciaSelected = ref<Secuencia>(null);
 const isLoading = ref(false);
 
 const search = ref("");
+const selectedGrupo = ref(null);
+const selectedEspacio = ref<Espacio>(null);
+const selectedUnidadCurricular = ref<UnidadCurricular>(null);
 
-
-const filters = ref<{ search: string,espacio_id?: number, unidad_curricular_id? : number , contenido_id?: number }>(
+const unidadesCurriculares = computed<UnidadCurricular[]>(()=>{
+    return selectedEspacio.value?.unidades_curriculares;
+})
+const filters = ref<{ search: string, grupo_id? : number, espacio_id?: number, unidad_curricular_id? : number }>(
     { 
-    search : '',  
-    espacio_id: null, 
-    unidad_curricular_id: null,
-    contenido_id : null
+        search : '',  
+        espacio_id: null,
+        grupo_id: null, 
+        unidad_curricular_id: null,
     }
 );
 
@@ -54,6 +78,7 @@ const { $apiRest } = useNuxtApp();
 const input = ref<{ input: HTMLInputElement }>();
 
 const secuencias = ref<Secuencia[]>([]);
+const espacios = ref<Espacio[]>([]);
 
 const columns = computed(() =>
     defaultColumns.filter((column) => selectedColumns.value.includes(column))
@@ -75,12 +100,19 @@ const listReq = ref<ListRequest>({
     filters: filters.value
 });
 
-const { data: response, error } = await useAsyncData('secuencias', async() => { 
-     return await  $apiRest<ListResponse<Secuencia[]>>(apiSecuenciasRoutes.getPaginate, HttpMethodEnum.POST, listReq.value);
+
+const { data: response, error, refresh } = await useAsyncData('secuencias', async () => {
+  const [ secuencias, espacios ]= await  Promise.all([
+      $apiRest<ListResponse<Secuencia[]>>(apiSecuenciasRoutes.getPaginate, HttpMethodEnum.POST, listReq.value),
+      $apiRest<Espacio[]>(apiEspaciosRoutes.listAll, HttpMethodEnum.GET)
+    ]);
+  return { secuencias,  espacios };
 });
 
-secuencias.value = response.value.list;
-changeTotalRows(response.value.totalCount);
+secuencias.value = response.value.secuencias.list;
+changeTotalRows(response.value.secuencias.totalCount);
+
+espacios.value = response.value.espacios;
 
 const loadSecuencias = async () => {
     isLoading.value = true;
@@ -109,9 +141,16 @@ const onFilter = () => {
 watch(
     () => [
         search.value,
+        selectedGrupo.value,
+        selectedEspacio.value,
+        selectedUnidadCurricular.value
     ],
     () => {
         filters.value.search = search.value;
+        filters.value.grupo_id = selectedGrupo.value?.id
+        filters.value.espacio_id = selectedEspacio.value?.id;
+        filters.value.unidad_curricular_id = selectedUnidadCurricular.value?.id;
+
         clearTimeout(timeoutSearch);
         timeoutSearch = setTimeout(() => {
             onFilter();
@@ -139,8 +178,7 @@ const onCreateSecuencia = ()=>{
 }
 
 const clearFilters = ()=>{
-    // selectedStatus.value = null;
-    // selectedGrupo.value = null;
+    selectedGrupo.value = null;
     onFilter();
 }
 
@@ -148,6 +186,15 @@ const verSecuencia = async(row: Secuencia)=>{
     await navigateTo({
         path: appRoutes.secuenciaPage(row.slug)
     })
+}
+
+const onChangeEspacio = (espacio: Espacio) =>{
+  selectedEspacio.value = espacio;
+  selectedUnidadCurricular.value = null;
+}
+
+const onChangeUnidadCurricular = (unidadCurricular: UnidadCurricular)=>{
+  selectedUnidadCurricular.value = unidadCurricular;
 }
 
 </script>
@@ -176,15 +223,50 @@ const verSecuencia = async(row: Secuencia)=>{
             <UDashboardToolbar>
                 <template #default>
                     <div class="w-auto flex md:flex-row flex-col items-center justify-start gap-4">
-                        <!-- <div class="w-full flex gap-2">
-                            <SelectStatus v-model="selectedStatus" @update:modelValue="() => null" :multiple="false"
-                                class="flex-1 md:w-[200px]" />
+
+                       <div class="w-full flex gap-2">
+                            <SelectGrupo v-model="selectedGrupo" 
+                            class="flex-1 md:min-w-[350px]" ></SelectGrupo>
                         </div>
 
                         <div class="w-full flex gap-2">
-                            <SelectGrupo v-model="selectedGrupo" 
-                            class="flex-1 md:min-w-[350px]" ></SelectGrupo>
-                        </div> -->
+
+                            <USelectMenu  :model-value="selectedEspacio" :options="espacios" option-attribute="id" class="flex-1  min-w-[350px]" @change="onChangeEspacio">
+                                <template #label>
+                                    <span v-if="selectedEspacio" :style="{ backgroundColor: selectedEspacio?.rgbColor }"
+                                        :class="['inline-block h-2 w-2 flex-shrink-0 rounded-full']" aria-hidden="true" />
+
+                                    <span class="truncate" v-if="selectedEspacio">{{ selectedEspacio?.nombre }}</span>
+                                    <span v-else>Selecciona un espacio.</span>
+                                </template>
+
+                                <template #option="{ option: espacio }">
+                                    <span :style="{ backgroundColor: espacio.rgbColor }"
+                                        :class="['inline-block h-2 w-2 flex-shrink-0 rounded-full']" aria-hidden="true" />
+                                    <span class="truncate">{{ espacio.nombre }}</span>
+                                </template>
+                            </USelectMenu>
+
+                       </div>
+                       <div class="w-full flex gap-2">
+                            <USelectMenu :model-value="selectedUnidadCurricular" :options="unidadesCurriculares" option-attribute="id" class="flex-1  min-w-[350px]"
+                        @change="onChangeUnidadCurricular">
+                            <template #label>
+                            <span v-if="selectedUnidadCurricular" :style="{ backgroundColor: selectedEspacio?.rgbColor }"
+                                :class="['inline-block h-2 w-2 flex-shrink-0 rounded-full']" aria-hidden="true" />
+
+                            <span class="truncate" v-if="selectedUnidadCurricular">{{ selectedUnidadCurricular?.nombre }}</span>
+                                <span v-else> Selecciona una unidad curricular.</span>
+                            </template>
+
+                            <template #option="{ option:  unidadCurricular }">
+                            <span :style="{ backgroundColor: selectedEspacio?.rgbColor }"
+                                :class="['inline-block h-2 w-2 flex-shrink-0 rounded-full']" aria-hidden="true" />
+                                <span class="truncate">{{ unidadCurricular?.nombre }}</span>
+                            </template>
+                            </USelectMenu>
+                        </div>
+
                         <UButton
                             icon="tabler:filter-x"
                             size="sm"
@@ -207,17 +289,45 @@ const verSecuencia = async(row: Secuencia)=>{
                       <span class="text-gray-900 dark:text-white font-medium">{{ row.nombre }}</span>
                 </template>
 
-                <template #unidad-curricular-data="{ row }">
+
+                <template #grupo-data="{ row }">
                     <div class="flex items-center gap-2">
-                        <span>Probandoo..</span>
+                        <UAvatar :src="formattedImageUrlGrupo(row.grupo?.url_image)" size="2xs" />
+                        <span>{{ row.grupo?.nombre }}</span>
                     </div>
                 </template>
 
-                <template #contenido-data="{ row }">
+                <template #grados-data="{ row }">
                     <div class="flex items-center gap-2">
-                      Probandooo
-                        <!-- <BadgeGrado v-for="(grado,idx) in row.grupo.grados" :key="idx" :grado="grado"></BadgeGrado> -->
+                        <BadgeGrado v-for="(grado,idx) in row.grupo.grados" :key="idx" :grado="grado"></BadgeGrado>
                     </div>
+                </template>
+
+                <template #espacio-data="{ row }">
+                        <ul 
+                        v-if="row.espacio">
+                            <li><span :style="{ color: row.espacio.rgbColor }" class="mr-2">●</span>{{ row.espacio.nombre }}</li>
+                        </ul>
+
+                        <span v-else> Sin asignar</span>
+                </template>
+
+                <template #unidad-curricular-data="{ row }">
+                     <ul 
+                        v-if="row.unidad_curricular">
+                            <li><span :style="{ color: row.espacio?.rgbColor }" class="mr-2">●</span>{{ row.unidad_curricular.nombre }}</li>
+                    </ul>
+
+                    <span v-else> Sin asignar</span>
+                </template>
+
+                <template #contenido-data="{ row }">
+                    <ul 
+                        v-if="row.contenido">
+                            <li><span class="mr-2">●</span>{{ row.contenido.nombre }}</li>
+                    </ul>
+
+                    <span v-else> Sin asignar</span>
                 </template>
 
                 <template #actions-data="{ row }">
@@ -250,7 +360,7 @@ const verSecuencia = async(row: Secuencia)=>{
             <template #title>
                {{ titleModal }}
             </template>
-                <SecuenciaForm @close="isSlideoverOpen = false" :mode="mode"  @on:update="loadSecuencias"/>
+                <SecuenciaForm  :espacios="espacios" @close="isSlideoverOpen = false" :mode="mode" :secuenciaSelected="secuenciaSelected"  @on:update="loadSecuencias"/>
           
           </UDashboardSlideover>
     </UDashboardPage>

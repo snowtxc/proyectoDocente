@@ -16,10 +16,10 @@ const toast = useToast()
 
 const googleSignInOptions: ImplicitFlowOptions = {
   scope: googleScopes,
-  redirect_uri: 'http://localhost:8000/api/login/google/callback/',
   onSuccess: async(responseGoogle: ImplicitFlowSuccessResponse) => {
     try{
       const { code } = responseGoogle;
+      console.log(responseGoogle)
       const response =  await $apiRest(apiAuthRoutes.linkOrUpdateGoogleAccount, HttpMethodEnum.POST, { code });
       isOpen.value = true;
       listFolders(null, DriveListModeEnum.ROOT);

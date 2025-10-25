@@ -214,9 +214,6 @@ const verPlanificacion = async(row: Planificacion)=>{
                             @click="clearFilters"
                             />
                     </div>
-                    
-
-
                 </template>
             </UDashboardToolbar>
 
@@ -242,7 +239,6 @@ const verPlanificacion = async(row: Planificacion)=>{
                 <template #grados-data="{ row }">
                     <div class="flex items-center gap-2">
                         <BadgeGrado v-for="(grado,idx) in row.grupo.grados" :key="idx" :grado="grado"></BadgeGrado>
-                        
                     </div>
                 </template>
 

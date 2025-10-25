@@ -13,6 +13,7 @@ const props = withDefaults(defineProps<Props>() , {});
 
 <template>
     <UBadge
+        size="xs"
         :label="props.grado.nombre"
         :color="
             props.grado.ciclo_grado_id == CicloGradoEnum.TRAMO_1 ? 'red' : 
