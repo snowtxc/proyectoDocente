@@ -11,6 +11,9 @@ export interface CompetenciaGeneral extends BaseModel{
 
 export type CompetenciaGeneralItemSelector = CompetenciaGeneral & {
     checked: boolean;
+    recomendado: boolean;
+    competenciasEspecificasRelacionadas: CompetenciaEspecifica[];
+    nroRelaciones: number;
 };
 
 export interface CompetenciaEspecifica extends BaseModel{
@@ -32,6 +35,7 @@ export type CompetenciaEspecificaItemSelector = CompetenciaEspecifica & {
     checked: boolean;
     recomendado: boolean;
     contenidoRelacionado? : Contenido;
+    competenciasGeneralesRelacionadas?: CompetenciaGeneral[];
     criteriosDeLogrosRelacionados?: CriterioDeLogro[];
     nroRelaciones: number;
 };

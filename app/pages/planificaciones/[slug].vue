@@ -10,6 +10,9 @@ import CambiarOrden from '~/components/tramos/CambiarOrden.vue';
 import { cloneDeep } from 'lodash';
 import { ActionMenuTramo } from '~/utils/enums/actionMenuTramo.enum';
 import ConfirmModal from '~/components/ConfirmModal.vue';
+import SyncGoogleDrive from '~/components/SyncGoogleDrive.vue';
+import { TypeItemSyncGoogleDrive } from '~/utils/enums/typeItemSyncGoogleDrive';
+import { apiCompetenciasGeneralesRoutes, apiEspaciosRoutes, apiPlanificacionesFechaRoutes, apiPlanificacionesRoutes, apiTramosRoutes, computed, downloadBlob, navigateTo, ref, useAsyncData, useModal,  useRoute, useToast, watch } from '#imports';
 
 const { $apiRest } = useNuxtApp();
 
@@ -19,6 +22,9 @@ const slug = route.params.slug as string;
 
 const pendingSave = ref<boolean>(false);
 const isSaving = ref<boolean>(true);
+const showModalSyncGDrive = ref<boolean>(false);
+const showModalExportConfirm = ref<boolean>(false);
+const showModalDeleteConfirm = ref<boolean>(false);
 
 const modal = useModal()
 
@@ -127,6 +133,7 @@ const onCreateTramo = async()=>{
     planificacion_fecha_id: planificacionFechaSelected.value.id,
     seDesarrolla: true,
     criterios_de_logros: [],
+    competencias_generales: [],
     competencias_especificas: [],
     actividad: undefined,
     orden: null
@@ -256,7 +263,7 @@ const onChangeTramo = (currentStep) =>{
  
 }
 
-const onSavePlanificacionFecha = async()=>{
+const onSavePlanificacionFecha = async(showMessage: boolean = true)=>{
     if(!planificacionFechaSelected.value)
       return;
 
@@ -264,16 +271,19 @@ const onSavePlanificacionFecha = async()=>{
 
     try{
 
+      console.log(planificacionFechaSelected.value);
       const response = await $apiRest<{ status: boolean , message: string}>(apiPlanificacionesFechaRoutes.guardar(planificacionFechaSelected.value.id), HttpMethodEnum.POST, planificacionFechaSelected.value);
       isSaving.value = false;
 
       if(response && response.status){
-        toast.add({
+
+        if(showMessage){
+          toast.add({
               title: "Se ha guardado con exito",
               description: response.message,
               color: "green"
-        });
-
+          });
+        }
         pendingSave.value = false;
       }
         
@@ -374,15 +384,15 @@ const actionsMenuTramo = ref([
             updateOrdersTramos(tramosUpdated);
             
             toast.add({
-                title: "Tramo ordenado con exito",
-                description: "Tramo ordenado",
+                title: "Tramo removido con exito",
+                description: "Tramo removido",
                 color: "green"
             })
           }
           }catch(message){
             toast.add({
                 title: "Error",
-                description: message ? message : 'Error al intentar eliminar el tramo',
+                description: message ? message : 'Error al intentar remover el tramo',
                 color: "red"
             })
           }
@@ -416,10 +426,13 @@ const actionsMenuTramo = ref([
 
    try{
 
-   const responseFile = await $apiRest(apiPlanificacionesRoutes.exportar(planificacion.value.id), HttpMethodEnum.POST, {responseType: 'blob'});
+    showModalExportConfirm.value = false;
 
+   const responseFile = await $apiRest(apiPlanificacionesRoutes.exportar(planificacion.value.id), HttpMethodEnum.POST, {responseType: 'blob'});
+   
    if(responseFile){
-     downloadBlob(responseFile, "planificacion.docx");
+     const fileName = `${planificacion.value.slug}.docx`;
+     downloadBlob(responseFile, fileName);
 
       toast.add({
         title: "Planificacion exportada",
@@ -436,6 +449,54 @@ const actionsMenuTramo = ref([
     })
   }
  }
+ 
+ const syncGoogleDrive = async ()=>{
+
+    showModalSyncGDrive.value = false;
+
+    // Si la planificacion se encuentra pendiente de guardar, se manda a aplicar los cambios.
+    if(pendingSave.value)
+      await onSavePlanificacionFecha(false)
+
+    modal.open(SyncGoogleDrive, 
+    {
+      key: `sync-${Date.now()}`, 
+      id : planificacion.value.id , 
+      type: TypeItemSyncGoogleDrive.PLANIFICACION
+    });
+ }
+
+
+ const onDelete = async() : Promise<void> =>{
+
+   if(!planificacion.value)
+    return;
+
+   showModalDeleteConfirm.value = false;
+
+   try{
+
+   const planificacionDeleted = await $apiRest(apiPlanificacionesRoutes.delete(planificacion.value.id), HttpMethodEnum.DELETE);
+   
+   if(planificacionDeleted){
+    
+      toast.add({
+        title: `Planificación ${planificacionDeleted.nombre} eliminada`,
+        description: `Se ha eliminado la planificación ${planificacionDeleted.nombre} con exito.`,
+        color: "green"
+      });
+      
+      navigateTo('/planificaciones');
+   }
+
+  }catch(message){
+    toast.add({
+      title: "Error",
+      description: message ? message : 'Error al intentar eliminar la planificación.',
+      color: "red"
+    })
+  }
+}
 
 </script>
 
@@ -540,7 +601,7 @@ const actionsMenuTramo = ref([
             icon="tabler:file-word"
             color="gray"
             variant="ghost"
-            @click="onExport"
+            @click="showModalExportConfirm = true"
           />
         </UTooltip>
 
@@ -549,6 +610,7 @@ const actionsMenuTramo = ref([
             icon="tabler:brand-google-drive"
             color="gray"
             variant="ghost"
+            @click="showModalSyncGDrive = true"
           />
         </UTooltip>
 
@@ -557,6 +619,7 @@ const actionsMenuTramo = ref([
             icon="tabler:trash"
             color="gray"
             variant="ghost"
+            @click="showModalDeleteConfirm = true"
           />
         </UTooltip>
 
@@ -639,7 +702,30 @@ const actionsMenuTramo = ref([
   </template>
 </UDashboardModal>
 
+<!--Confirmacion de modal de descargar el archivo de planificacion. -->
+<ConfirmModal 
+  v-show="showModalExportConfirm" 
+  v-model="showModalExportConfirm"
+  title="Descargar planificación" 
+  description="¿Querés descargar la planificación actual como un archivo? Esto guardará una copia en tu computadora." 
+  @onConfirm="onExport"
+/>
 
+<!--Confirmacion de modal de sincronizacion de planificacion a google drive-->
+<ConfirmModal 
+v-if="showModalSyncGDrive" 
+v-model="showModalSyncGDrive"
+title="Sincronizar planificación con Google Drive" 
+description="¿Deseás sincronizar la planificación actual con tu cuenta de Google Drive? Esto guardará una copia actualizada en la nube." 
+@onConfirm="syncGoogleDrive"></ConfirmModal>
+
+
+<ConfirmModal 
+  v-model="showModalDeleteConfirm"
+  title="Eliminar planificación" 
+  description="¿Deseás eliminar la planificación actual? Esta acción no se puede deshacer." 
+  @onConfirm="onDelete">
+</ConfirmModal>
 
 <PlanificacionDia
 v-if="planificacionFechaSelected"

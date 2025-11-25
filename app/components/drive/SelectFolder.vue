@@ -43,7 +43,6 @@ const googleSignInOptions: ImplicitFlowOptions = {
 
 const { isReady, login: loginWithGoogle } = useCodeClient(googleSignInOptions);
 
-
 const loading = ref<boolean>(false);
 const folders = ref<DriveFolder[]>([]);
 const q = ref('');
@@ -54,6 +53,14 @@ const isOpen = ref(false);
 const props = defineProps({
   defaultFolder : {
     type:  Object,
+    required: false
+  },
+  openInstant : {
+    type: Boolean,
+    required: false
+  },
+  hideButton : {
+    type: Boolean,
     required: false
   }
 });
@@ -76,6 +83,12 @@ const folderIsSelected = computed(()=>{
   return folderIdSelected.value !== null;
 })
 
+onBeforeMount(()=>{
+  if(props.openInstant){
+    openModal();
+    return;
+  }
+})
 
 const openPopupGoogle = ()=>{
   loginWithGoogle();
@@ -106,7 +119,6 @@ const listFolders = async(folderId?:string, listMode? : DriveListModeEnum) => {
     });
     isOpen.value = false;
   }
-  
 }
 
 const foldersFiltered = computed(() => {
@@ -168,16 +180,16 @@ const goBack = async() =>{
       <template #header>
         <div class="flex gap-2 items-center mt-2">
           <UButton icon="tabler:chevron-left" color="gray" variant="ghost" :disabled="isRootDirectory" @click="goBack"/>
-          <UInput v-model="q" icon="i-heroicons-magnifying-glass" placeholder="Buscar Carpeta" autofocus class="flex-1" />
-          <UButton
-          icon="tabler:x"
-          size="sm"
-          color="primary"
-          square
-          variant="solid"
-          class="flex-none"
-          @click="isOpen = false;"
-          />
+            <UInput v-model="q" icon="i-heroicons-magnifying-glass" placeholder="Buscar Carpeta" autofocus class="flex-1" />
+            <UButton
+            icon="tabler:x"
+            size="sm"
+            color="primary"
+            square
+            variant="solid"
+            class="flex-none"
+            @click="isOpen = false;"
+            />
         </div>
       </template>
 
@@ -234,6 +246,6 @@ const goBack = async() =>{
     </UCard>
   </UModal>
 
-  <UButton class="w-full" type="button" label="Seleccionar Carpeta" color="black" @click="openModal" />
+  <UButton v-if="!props.hideButton" class="w-full" type="button" label="Seleccionar Carpeta" color="black" @click="openModal" />
 
 </template>

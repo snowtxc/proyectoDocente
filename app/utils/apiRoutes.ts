@@ -41,7 +41,9 @@ export const apiPlanificacionesRoutes = {
     update: (id:number) => `/planificaciones/${id}`,
     getBySlug : (slug: string) => `/planificaciones/${slug}`,
     verificarFecha:  '/planificaciones/verificar-fecha',
-    exportar: (id: number) => `/planificaciones/${id}/exportar`
+    exportar: (id: number) => `/planificaciones/${id}/exportar`,
+    sincronizarGoogleDrive: (id:number) => `/planificaciones/${id}/sincronizarGoogleDrive`,
+    delete: (id: number) =>  `/planificaciones/${id}`
 }
 
 export const apiPlanificacionesFechaRoutes = {
@@ -95,4 +97,14 @@ export const apiSecuenciasRoutes = {
     create: "/secuencias",
     update: (id:number) => `/secuencias/${id}`,
     getBySlug : (slug: string) => `/secuencias/${slug}`,
+    guardar: (id:number)=> `/secuencias/${id}/guardar`,
+    exportar: (id: number) => `/secuencias/${id}/exportar`,
+    sincronizarGoogleDrive: (id:number) => `/secuencias/${id}/sincronizarGoogleDrive`,
+    delete: (id: number) =>  `/secuencias/${id}`
+}
+
+export const apiActividadSecuenciaRoutes = {
+    create: "/actividades-secuencias",
+    reordenarActividad: '/actividades-secuencias/reordenarActividad',
+    removerActividad: '/actividades-secuencias/removerActividad'
 }

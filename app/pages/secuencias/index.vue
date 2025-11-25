@@ -9,7 +9,6 @@ import { HttpMethodEnum } from "~/utils/enums/HttpMethodEnum"
 import { ModeEnum } from "~/utils/enums/ModeEnum";
 
 let timeoutSearch: any = 0;
-const route = useRoute()
 
 const defaultColumns = [
     {
@@ -324,7 +323,7 @@ const onChangeUnidadCurricular = (unidadCurricular: UnidadCurricular)=>{
                 <template #contenido-data="{ row }">
                     <ul 
                         v-if="row.contenido">
-                            <li><span class="mr-2">●</span>{{ row.contenido.nombre }}</li>
+                            <li><span class="mr-2">●</span>{{ row.contenido.descripcion }}</li>
                     </ul>
 
                     <span v-else> Sin asignar</span>

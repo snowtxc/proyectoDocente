@@ -30,7 +30,7 @@ export default defineNuxtConfig({
   
   googleSignIn: {
       clientId: process.env.NUXT_GOOGLE_CLIENT_ID,
-       scope: 'openid email profile https://www.googleapis.com/auth/drive.file',
+       scope: 'openid email profile https://www.googleapis.com/auth/drive https://www.googleapis.com/auth/drive.file',
        prompt: 'consent',
        access_type: 'offline',
   },

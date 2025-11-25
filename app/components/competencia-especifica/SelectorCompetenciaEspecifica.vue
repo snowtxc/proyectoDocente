@@ -7,7 +7,8 @@ import { FormsCompetenciasGenerales, UPopover } from '#components';
   interface Props {
       modelValue: CompetenciaEspecifica[],
       competenciasEspecificas: CompetenciaEspecifica[],
-      competenciasGenerales: CompetenciaGeneral[]
+      competenciasGenerales: CompetenciaGeneral[],
+      competenciasGeneralesSelected?: CompetenciaGeneral[],
       contenidoSelected?: Contenido,
       criteriosDeLogrosSelected?: CriterioDeLogro[]
       color: string
@@ -30,9 +31,25 @@ import { FormsCompetenciasGenerales, UPopover } from '#components';
 
         let recomendado : boolean = false;
         let contenidoRelacionado : Contenido = null;
+        let competenciasGeneralesRelacionadas: CompetenciaGeneral[] = [];
         let criteriosDeLogrosRelacionados: CriterioDeLogro[] = [];
 
         let nroRelaciones: number = 0;
+
+        if(props.competenciasGeneralesSelected && props.competenciasGeneralesSelected.length > 0){
+            
+            console.log(competenciaEspecifica.competencias_generales);
+
+            competenciasGeneralesRelacionadas = competenciaEspecifica.competencias_generales.filter(competenciaGeneral => {
+              const result =  props.competenciasGeneralesSelected.some(cg => cg.id == competenciaGeneral.id);
+              if(result){
+                recomendado = true;
+                nroRelaciones += 1;
+              }
+                
+              return result;
+            })
+        }
 
         if(props.contenidoSelected){
             contenidoRelacionado = competenciaEspecifica.contenidos.find(c => c.id == props.contenidoSelected.id);
@@ -60,6 +77,7 @@ import { FormsCompetenciasGenerales, UPopover } from '#components';
             checked: props.modelValue.findIndex(ce => ce.id == competenciaEspecifica.id) >= 0,
             recomendado ,
             contenidoRelacionado,
+            competenciasGeneralesRelacionadas,
             criteriosDeLogrosRelacionados,
             nroRelaciones
         }
@@ -130,7 +148,8 @@ import { FormsCompetenciasGenerales, UPopover } from '#components';
     () => props.modelValue, 
     () => props.competenciasEspecificas,
     () => props.contenidoSelected,
-    () => props.criteriosDeLogrosSelected] ,()=>{
+    () => props.criteriosDeLogrosSelected,
+    () => props.competenciasGeneralesSelected] ,()=>{
     competenciasEspecificas.value = getLista()
   })
 
@@ -237,12 +256,26 @@ import { FormsCompetenciasGenerales, UPopover } from '#components';
                                     <li> {{ competenciaEspecifica.contenidoRelacionado?.descripcion }}</li>
                                 </ul>
                             </div>
+                            
+                            <USeparator color="primary" type="solid" />
+
+                            <div v-if="competenciaEspecifica.competenciasGeneralesRelacionadas?.length > 0">
+                                <span class="font-medium"> Se relaciona a las siguientes competencias generales: </span>
+                                <ul class="list-disc">
+                                  <li v-for="cg in competenciaEspecifica.competenciasGeneralesRelacionadas" :key="cg.id">
+                                    {{ cg.nombre }}
+                                  </li>
+                                </ul>
+                            </div>
+
                             <USeparator color="primary" type="solid" />
 
                             <div v-if="competenciaEspecifica.criteriosDeLogrosRelacionados?.length > 0">
                                 <span class="font-medium"> Se relaciona a los criterios de logros seleccionados: </span>
                                 <ul class="list-disc">
-                                    <li v-for="(criterioDeLogro,idx) in competenciaEspecifica.criteriosDeLogrosRelacionados" :key="idx"> {{ criterioDeLogro.descripcion }}</li>
+                                    <li v-for="cdl in competenciaEspecifica.criteriosDeLogrosRelacionados" :key="cdl.id">
+                                        {{ cdl.descripcion }}
+                                    </li>
                                 </ul>
                             </div>
 

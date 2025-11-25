@@ -58,6 +58,18 @@ const links = [{
     shortcuts: []
   }
 },
+
+{
+  id: '',
+  label: 'Asistentes virtuales',
+  icon: 'tabler:message-chatbot',
+  to: '/asistentes-virtuales',
+  tooltip: {
+    text: 'Asistentes virtuales',
+    shortcuts: []
+  }
+},
+
 {
   id: 'flopi-bot',
   label: 'Flopi Bot',

@@ -14,7 +14,6 @@ const model = defineModel({
 const props = withDefaults(defineProps<Props>(),{});
 
 const loading = ref(false)
-
 </script>
 
 <template>

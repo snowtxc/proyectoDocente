@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { type CompetenciaEspecifica, type CompetenciaEspecificaFilter, type CompetenciaGeneral } from '~/types/competenciaEspecifica';
+import { type CompetenciaEspecifica, type CompetenciaEspecificaFilter, type CompetenciaGeneral, type CompetenciaGeneralItemSelector } from '~/types/competenciaEspecifica';
 import type { Contenido, ContenidoFilter } from '~/types/contenido';
 import type { CriterioDeLogro, CriterioDeLogroFilter } from '~/types/criterioDeLogro';
 import type { Espacio } from '~/types/espacio';
@@ -11,10 +11,10 @@ import { HttpMethodEnum } from '~/utils/enums/HttpMethodEnum';
 import SelectorContenido from '../contenido/SelectorContenido.vue';
 import SelectorCriteriosDeLogros from '../criterio-de-logro/SelectorCriteriosDeLogros.vue';
 import SelectorCompetenciaEspecifica from '../competencia-especifica/SelectorCompetenciaEspecifica.vue';
+import SelectorCompetenciaGeneral from "../competencia-general/SelectorCompetenciaGeneral.vue";
 import { EspacioOUnidadOptionEnum } from '~/utils/enums/EspacioOUnidadOption.enum';
 
 import EditorSlideOver from '../plan-de-aprendizaje/EditorSlideOver.vue';
-import TiptapEditor from '../tiptap/TiptapEditor.vue';
 import { PromptCategory } from '~/utils/enums/PromptCategory.enum';
 import type { Documento } from '~/types/documento';
 
@@ -44,6 +44,7 @@ const form = ref({
     unidad_curricular: props.modelValue.unidad_curricular || null,
     contenido: null,
     criteriosDeLogros: [],
+    competenciasGenerales : [],
     competenciasEspecificas: [],
 });
 
@@ -68,11 +69,12 @@ const planAprendizajeDocumento= ref<Documento>(null);
 
 const loadForm = (): void =>{
   
-  const { unidad_curricular, espacio , competencias_especificas, criterios_de_logros,contenido, actividad } = props.modelValue;
+  const { unidad_curricular, espacio ,competencias_generales , competencias_especificas, criterios_de_logros,contenido, actividad, } = props.modelValue;
   const  {  meta_aprendizaje_documento, plan_aprendizaje_documento } =  actividad;
 
   form.value.espacio = espacio;
   form.value.unidad_curricular = unidad_curricular;
+  form.value.competenciasGenerales = competencias_generales;
   form.value.competenciasEspecificas = competencias_especificas;
   form.value.criteriosDeLogros = criterios_de_logros;
   form.value.contenido = contenido;
@@ -92,6 +94,7 @@ const clearForm = ()=>{
     unidad_curricular: props.modelValue.unidad_curricular || null,
     contenido: null,
     criteriosDeLogros: [],
+    competenciasGenerales : [],
     competenciasEspecificas: [],
   }
 }
@@ -105,16 +108,35 @@ const unidadesCurriculares = computed<UnidadCurricular[]>(()=>{
     return form.value.espacio?.unidades_curriculares;
 })
 
-const competenciasGeneralesSelected = computed<CompetenciaGeneral[]>(()=>{
-  return props.competenciasGenerales.filter(cg =>{
-     return form.value.competenciasEspecificas.some((ce:CompetenciaEspecifica) => ce.competencias_generales.some(x => x.id == cg.id))
+const competenciasGeneralesSelected = computed<CompetenciaGeneralItemSelector[]>(()=>{
+
+  return form.value.competenciasGenerales.map(cg => {
+      
+      if(form.value.competenciasEspecificas.length == 0){
+         cg.recomendado = true;
+         return cg;
+      }
+
+      // Marcar como competencia general recomendado si alguna 
+      // competencia especifica del tramo seleccionada pertenece a esa competencia general
+      const recomendado  = form.value.competenciasEspecificas.some(ce => {
+          const exists = ce.competencias_generales.some(cgItem => cgItem.id == cg.id);
+          return exists;
+      });
+
+      cg.recomendado = recomendado;
+
+      // Asignar las competencias especificas relacionadas a esa competencia general
+      cg.competenciasEspecificasRelacionadas =  competenciasEspecificas.value.filter(x => x.competencias_generales.some(cgItem => cgItem.id == cg.id));
+      
+      return cg;
   })
 })
 
 const getCurrentData = ()=>{
 
   const { actividad } = props.modelValue;
-  const {  unidad_curricular , espacio, contenido, competenciasEspecificas, criteriosDeLogros }  = form.value
+  const {  unidad_curricular , espacio, contenido, competenciasEspecificas, competenciasGenerales, criteriosDeLogros }  = form.value
 
   const data  = {
     ...props.modelValue,
@@ -123,8 +145,9 @@ const getCurrentData = ()=>{
       unidad_curricular_id: unidad_curricular ? unidad_curricular.id : null,
       espacio,
       espacio_id : espacio ? espacio.id : null,
-      contenido,
+      contenido, 
       contenido_id: contenido ? contenido.id : null,
+      competencias_generales :  competenciasGenerales,
       competencias_especificas:  competenciasEspecificas,
       criterios_de_logros: criteriosDeLogros,
       actividad : { ...actividad }
@@ -310,7 +333,7 @@ const handleSavedDocumentMetaAprendizaje = (document: Documento)=>{
 <template>
   <div class="w-full px-2 pb-20">
     <h1 class="font-medium text-xl text-center my-4">
-      Tramo {{ props.nroTramo  }} 
+      Tramo  {{ props.tramo.orden  }} 
     </h1>
     <div class="flex gap-2">
       <USelectMenu :model-value="form.espacio" :options="espacios" option-attribute="id" class="flex-1"
@@ -352,16 +375,73 @@ const handleSavedDocumentMetaAprendizaje = (document: Documento)=>{
 
     <div class="w-full flex flex-col gap-2 mt-2" v-else>
 
+       <UCard class="flex-1 flex flex-col mt-2">
+        <div class="flex items-center justify-between">
+          <span class="font-medium text-xl">Contenido</span>
+
+          <SelectorContenido 
+            v-model="form.contenido" 
+            @update:model-value="onChangeModel" 
+            :contenidos="contenidos"
+            :color="form.espacio?.rgbColor" :competenciasEspecificasSelected="form.competenciasEspecificas"
+            :criteriosDeLogrosSelected="form.criteriosDeLogros" :disabled="form.unidad_curricular == null">
+          </SelectorContenido>
+        </div>
+        <div class="flex justify-between gap-2 items-center">
+          <div>
+            <ul class="list-disc" v-if="form.contenido">
+              <li>{{ form.contenido.descripcion }}</li>
+            </ul>
+            <span v-else>
+              No se ha seleccionado ningún contenido.
+            </span>
+          </div>
+        </div>
+
+      </UCard>
+      
       <div class="flex gap-2">
         <UCard class="w-2/5 flex flex-col">
           <div class="flex items-center justify-between">
             <span class="font-medium text-xl">Competencias Generales</span>
+             <SelectorCompetenciaGeneral  
+              v-model:model-value="form.competenciasGenerales" 
+              @update:model-value="onChangeModel" 
+              :competenciasGenerales="competenciasGenerales"
+              :competenciasEspecificasSelected="form.competenciasEspecificas"
+               :color="form.espacio?.rgbColor"></SelectorCompetenciaGeneral>
           </div>
 
-          <div class="flex flex-col justify-between gap-2 items-center">
-            <div class="grid grid-cols-2 gap-2" v-if="competenciasGeneralesSelected.length > 0">
+          <div class="flex flex-col justify-between gap-2 items-center mt-2">
+            <div class="grid grid-cols-2 gap-2" v-if="form.competenciasGenerales.length > 0">
               <UCard v-for="competenciaGeneral in competenciasGeneralesSelected" :key="competenciaGeneral.id">
                 <div class="w-full flex flex-col h-full items-center justify-center">
+                  <div class="w-full flex justify-end relative mb-2"> 
+                  <UPopover mode="hover" v-if="!competenciaGeneral.recomendado">
+                    <template #default={open}>
+                      <UTooltip
+                      :prevent="open"
+                      >
+                          <UButton icon="tabler:alert-square-rounded" size="2xs" color="red" variant="outline" />
+                      </UTooltip>
+                    </template>
+  
+                    <template #panel="{ close }">
+                        <div class="p-2 m-4 flex flex-col gap-y-4 max-w-128">
+                              <span class="font-medium"> Competencias especificas relacionadas: </span>  
+                              <div class="flex flex-col gap-y-2">
+                                <div v-for="competenciaEspecifica in competenciaGeneral.competenciasEspecificasRelacionadas" :key="competenciaEspecifica.id" class="flex gap-2">
+                                  <div>
+                                    <div>
+                                      <span class="font-medium">{{ competenciaEspecifica.codificacion }}</span> {{ competenciaEspecifica.descripcion }}
+                                    </div>
+                                  </div>
+                                </div>     
+                          </div>                      
+                        </div>
+                    </template>
+                  </UPopover>
+                  </div>
                   <div class="text-sm text-center">{{ competenciaGeneral.nombre }}</div>
                   <UAvatar :src="competenciaGeneral.url_image" size="xl" class="text-center mt-2" />
                 </div>
@@ -377,10 +457,15 @@ const handleSavedDocumentMetaAprendizaje = (document: Documento)=>{
         <UCard class="w-3/5  flex flex-col">
           <div class="flex items-center justify-between">
             <span class="font-medium text-xl">Competencias Especificas</span>
-            <SelectorCompetenciaEspecifica v-model="form.competenciasEspecificas" @update:model-value="onChangeModel"
-              :competenciasEspecificas="competenciasEspecificas" :color="form.espacio?.rgbColor"
-              :disabled="form.unidad_curricular == null" :contenidoSelected="form.contenido"
-              :criteriosDeLogrosSelected="form.criteriosDeLogros" :competenciasGenerales="props.competenciasGenerales">
+            <SelectorCompetenciaEspecifica v-model="form.competenciasEspecificas" 
+              :competenciasEspecificas="competenciasEspecificas" 
+              :color="form.espacio?.rgbColor"
+              :disabled="form.unidad_curricular == null" 
+              :contenidoSelected="form.contenido"
+              :criteriosDeLogrosSelected="form.criteriosDeLogros" 
+              :competenciasGenerales="props.competenciasGenerales"
+              :competenciasGeneralesSelected="form.competenciasGenerales"
+              @update:model-value="onChangeModel">
             </SelectorCompetenciaEspecifica>
           </div>
 

@@ -16,7 +16,11 @@ const emit = defineEmits(['update:model-value','close']);
 const competenciasGenerales = ref<CompetenciaGeneralItemSelector[]>(props.competenciasGenerales.map(cg => {
     return {
         ...cg,
-        checked: props.modelValue.some(x => x.id == cg.id) 
+        checked: props.modelValue.some(x => x.id == cg.id),
+        nroRelaciones: 0,
+        recomendado: false,
+        competenciasEspecificasRelacionadas: [],
+        contenidoRelacionado: null
     }
 }));
 
