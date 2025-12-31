@@ -13,6 +13,7 @@ import ConfirmModal from '~/components/ConfirmModal.vue';
 import SyncGoogleDrive from '~/components/SyncGoogleDrive.vue';
 import { TypeItemSyncGoogleDrive } from '~/utils/enums/typeItemSyncGoogleDrive';
 import { apiCompetenciasGeneralesRoutes, apiEspaciosRoutes, apiPlanificacionesFechaRoutes, apiPlanificacionesRoutes, apiTramosRoutes, computed, downloadBlob, navigateTo, ref, useAsyncData, useModal,  useRoute, useToast, watch } from '#imports';
+import ModalTramoDesdeSecuencia from '~/components/tramos/ModalTramoDesdeSecuencia.vue';
 
 const { $apiRest } = useNuxtApp();
 
@@ -26,7 +27,7 @@ const showModalSyncGDrive = ref<boolean>(false);
 const showModalExportConfirm = ref<boolean>(false);
 const showModalDeleteConfirm = ref<boolean>(false);
 
-const modal = useModal()
+const tramoFormRef = ref(null)
 
 const { data: response, error, refresh } = await useAsyncData('planificacionDetalle', async () => {
   const [planificacion,espacios, competenciasGenerales]= await  Promise.all(
@@ -54,6 +55,10 @@ const ordenarFechasPlanificacion = () : SimplePlanificacionFecha[] =>{
         return -1
       return 1;
     })
+}
+
+if(planificacion.value){
+   const accesoRegistrado = $apiRest<boolean>(apiPlanificacionesRoutes.registrarAccesso(planificacion.value.id), HttpMethodEnum.POST)
 }
 
 if(planificacion.value.fechas.length > 0){
@@ -98,6 +103,13 @@ const tramos = computed<Tramo[]>(()=>{
   return planificacionFechaSelected.value.tramos as Tramo[];
 })
 
+const tramoNoSelectedText = computed(()=>{
+  if(tramos.value.length == 0)
+    return 'No tienes ningún tramo creado , prueba agregando uno nuevo';
+  
+  return 'No tienes ningún tramo seleccionado';
+})
+
 
 const stepsTramos =  computed(()=>{
   return tramos.value.map((tramo,idx) =>{
@@ -131,10 +143,11 @@ const onCreateTramo = async()=>{
     created_at: undefined,
     updated_at: undefined,
     planificacion_fecha_id: planificacionFechaSelected.value.id,
-    seDesarrolla: true,
     criterios_de_logros: [],
     competencias_generales: [],
     competencias_especificas: [],
+    noSeDesarrolla : false,
+    motivoNoSeDesarrolla: '',
     actividad: undefined,
     orden: null
   }
@@ -271,7 +284,6 @@ const onSavePlanificacionFecha = async(showMessage: boolean = true)=>{
 
     try{
 
-      console.log(planificacionFechaSelected.value);
       const response = await $apiRest<{ status: boolean , message: string}>(apiPlanificacionesFechaRoutes.guardar(planificacionFechaSelected.value.id), HttpMethodEnum.POST, planificacionFechaSelected.value);
       isSaving.value = false;
 
@@ -300,6 +312,9 @@ const onSavePlanificacionFecha = async(showMessage: boolean = true)=>{
 
 watch(()=> tramoSelected.value, ()=>{
 
+    if(!tramoSelected.value)
+      return;
+
     const idx = tramos.value.findIndex(t => t.id == tramoSelected.value.id);
 
     if(idx >= 0){
@@ -321,6 +336,11 @@ const actionsMenuTramo = ref([
     icon: 'tabler:arrows-sort',
     actionName: ActionMenuTramo.CHANGE_ORDER
     },
+    { 
+      title: 'Desde secuencia',
+      icon: 'tabler:list-letters',
+      actionName: ActionMenuTramo.LOAD_FROM_SECUENCIA
+    },
     {
     title: 'Eliminar tramo',
     icon: 'tabler:trash',
@@ -333,11 +353,12 @@ const actionsMenuTramo = ref([
  const handleOnActionMenuTramo = async( data: { actionName: ActionMenuTramo, step: number })=>{
   
   const stepSelected = stepsTramos.value.find(x => x.step == data.step);
-  const tramoSelected = stepSelected.tramo;
+  const tramo = stepSelected.tramo;
 
   if(!stepSelected)
     return;
 
+  const modal = useModal();
    switch(data.actionName){
 
     case ActionMenuTramo.CHANGE_ORDER:
@@ -345,7 +366,7 @@ const actionsMenuTramo = ref([
       modal.open(CambiarOrden, { 
         planificacionId: planificacion.value.id, 
         planificacionFechaId : planificacionFechaSelected.value.id,
-        tramoSelected : {... tramoSelected } , 
+        tramoSelected : {... tramo } , 
         tramos :  cloneDeep(tramos.value),
         "onOn-change-order" : (tramosUpdated)=>{
           
@@ -357,7 +378,7 @@ const actionsMenuTramo = ref([
 
     case ActionMenuTramo.DELETE:
       modal.open(ConfirmModal, { 
-        title: `Remover tramo ${tramoSelected.orden}`,
+        title: `Remover tramo ${tramo.orden}`,
         description: "AL remover el tramo , es posible que se reordenen todos los tramos de la planificación.",
         "onOnConfirm" : async(data)=>{
         
@@ -367,7 +388,7 @@ const actionsMenuTramo = ref([
             const body : RemoverTramoDTO = {
               planificacion_id : planificacion.value.id,
               planificacion_fecha_id : planificacionFechaSelected.value.id,
-              tramo_id : tramoSelected.id,
+              tramo_id : tramo.id,
            }         
 
            const response = await $apiRest<any>(apiTramosRoutes.removerTramo, HttpMethodEnum.POST,body);
@@ -375,14 +396,15 @@ const actionsMenuTramo = ref([
           if(response.status){
 
             const { tramosUpdated } = response;
-
-            const idx = planificacionFechaSelected.value.tramos.findIndex(tramo => tramo.id == tramoSelected.id);
+            const idx = planificacionFechaSelected.value.tramos.findIndex(t => t.id == tramo.id);
 
             if(idx >= 0)
               planificacionFechaSelected.value.tramos.splice(idx,1);
 
+            tramoSelected.value = null;
+
             updateOrdersTramos(tramosUpdated);
-            
+                        
             toast.add({
                 title: "Tramo removido con exito",
                 description: "Tramo removido",
@@ -397,27 +419,40 @@ const actionsMenuTramo = ref([
             })
           }
 
+        },
+      })
+      break;
+
+    case ActionMenuTramo.LOAD_FROM_SECUENCIA:
+      modal.open(ModalTramoDesdeSecuencia,{
+        grupo : grupo.value,
+        planificacion: planificacion.value,
+        planificacionFecha: planificacionFechaSelected.value,
+        tramo,
+        "onOn:load-tramo" : (tramo:Tramo)=>{
+          onUpdateTramo(tramo)
         }
       })
       break;
    }
  }    
 
- // Actualizar el orden de tramos
- // Dado una lista de tramos actualizados sus ordenes se actualiza los ordenes en el array de tramos general.
- const updateOrdersTramos = (tramosUpdated: Tramo[])=>{
+ /// Actualizar el orden de tramos
+// Dada una lista de tramos actualizados, se actualizan los ordenes en el array de tramos general.
+const updateOrdersTramos = (tramosUpdated: Tramo[]) => {
+    tramosUpdated.forEach(tramoUpdated => {
+        const idx = planificacionFechaSelected.value.tramos.findIndex(x => x.id === tramoUpdated.id);
 
-   tramosUpdated.map(tramoUpdated =>{
+        if (idx >= 0) {
+            planificacionFechaSelected.value.tramos[idx].orden = tramoUpdated.orden;
+        }
 
-    const idx = planificacionFechaSelected.value.tramos.findIndex(x => x.id == tramoUpdated.id);
+        if (tramoSelected.value?.id === tramoUpdated.id && tramoSelected.value?.orden !== tramoUpdated.orden) {
+            tramoSelected.value.orden = tramoUpdated.orden;
+        }
+    });
+};
 
-    if(idx >= 0)
-      planificacionFechaSelected.value.tramos[idx].orden = tramoSelected.value.orden;
-
-    if(tramoSelected.value.id == tramoUpdated.id && tramoSelected.value.orden != tramoUpdated.orden)
-      tramoSelected.value.orden = tramoUpdated.orden;
-   })
- }
 
  const onExport = async()=>{
    
@@ -458,6 +493,7 @@ const actionsMenuTramo = ref([
     if(pendingSave.value)
       await onSavePlanificacionFecha(false)
 
+    const modal = useModal();
     modal.open(SyncGoogleDrive, 
     {
       key: `sync-${Date.now()}`, 
@@ -496,6 +532,50 @@ const actionsMenuTramo = ref([
       color: "red"
     })
   }
+}
+
+const handleOnDeleteFecha = (planificacionFecha)=>{
+  const idx = fechas.value.findIndex(f => f.id == planificacionFecha.id);
+  
+  if(idx < 0)
+    return;
+
+  const firstDate = idx == 0;
+
+  let nextIdx = null;
+  
+  if(fechas.value.length == 1){
+    nextIdx = null;
+  }else if(firstDate){
+    nextIdx = 0;
+  }else if(fechas.value.length > 1){
+    nextIdx = idx - 1;
+  }
+
+  fechas.value.splice(idx,1);
+
+  if(nextIdx == null){
+    planificacionFechaSelected.value = null;
+  }else{
+    loadPlanificacionFecha(fechas.value[nextIdx].fecha);
+  }
+
+}
+
+const onUpdateTramo = (tramo: Tramo)=>{
+
+  const idx = planificacionFechaSelected.value.tramos.findIndex(t => t.id == tramo.id);
+
+  if(idx >= 0){
+
+    tramoSelected.value = { ... tramo};
+    planificacionFechaSelected.value.tramos[idx] = { ... tramo};
+
+    setTimeout(()=>{
+      tramoFormRef.value.loadForm();
+    },600)
+  }
+
 }
 
 </script>
@@ -635,6 +715,7 @@ const actionsMenuTramo = ref([
         v-if="planificacionFechaSelected">
 
         <TramosTramoForm 
+          ref="tramoFormRef" 
           v-if="tramoSelected"  
           v-model="tramoSelected" 
           :tramo="tramoSelected"  
@@ -649,7 +730,7 @@ const actionsMenuTramo = ref([
             name="tabler:file-text"
             size="60px"
           />
-          <h1 class="mt-1"> No tienes ningún tramo creado , prueba agregando uno nuevo </h1>
+            <h1 class="mt-1"> {{  tramoNoSelectedText }} </h1>
           </div>
       </div>
 
@@ -729,10 +810,12 @@ description="¿Deseás sincronizar la planificación actual con tu cuenta de Goo
 
 <PlanificacionDia
 v-if="planificacionFechaSelected"
+:planficacionId="planificacion.id"
 :selectedDay="planificacionFechaSelected"
 :enableDates="planificacion.fechas.map(pf => pf.fecha)"
 @changeDate="changeSelectedFecha"
 @changeDirection="changeFechaDirection"
+@onDelete="handleOnDeleteFecha(planificacionFechaSelected)"
 />
   
 </template>

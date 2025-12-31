@@ -13,6 +13,11 @@ export interface ActividadSecuencia extends BaseModel{
   orden?: number;
 }
 
+export type ActividadSecuenciaItemSelector = ActividadSecuencia & {
+    checked: boolean;
+};
+
+
 export interface ReordenarActividadSecuenciaDTO {
     secuencia_id : number;
     actividad_secuencia_id: number;
@@ -21,5 +26,5 @@ export interface ReordenarActividadSecuenciaDTO {
 
 export interface RemoverActividadSecuenciaDTO {
    secuencia_id : number;
-actividad_secuencia_id: number;
+   actividad_secuencia_id: number;
 }

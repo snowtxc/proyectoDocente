@@ -5,4 +5,5 @@ export interface  UnidadCurricular extends BaseModel{
     nombre: string;
     espacio_id: number;
     espacio : Espacio;
+    bloqueada: boolean;
 }

@@ -17,6 +17,7 @@ import { EspacioOUnidadOptionEnum } from '~/utils/enums/EspacioOUnidadOption.enu
 import EditorSlideOver from '../plan-de-aprendizaje/EditorSlideOver.vue';
 import { PromptCategory } from '~/utils/enums/PromptCategory.enum';
 import type { Documento } from '~/types/documento';
+import { EditorModeEnum } from '~/utils/enums/EditorModeEnum';
 
 interface Props {
     modelValue: Tramo,
@@ -38,7 +39,6 @@ const props = withDefaults(defineProps<Props>(), {
 
 const emit = defineEmits(['update:modelValue']);
 
-
 const form = ref({
     espacio: null,
     unidad_curricular: props.modelValue.unidad_curricular || null,
@@ -46,6 +46,8 @@ const form = ref({
     criteriosDeLogros: [],
     competenciasGenerales : [],
     competenciasEspecificas: [],
+    noSeDesarrolla: false,
+    motivoNoSeDesarrolla: ''
 });
 
 const espacios = ref([...props.espacios]);
@@ -69,7 +71,7 @@ const planAprendizajeDocumento= ref<Documento>(null);
 
 const loadForm = (): void =>{
   
-  const { unidad_curricular, espacio ,competencias_generales , competencias_especificas, criterios_de_logros,contenido, actividad, } = props.modelValue;
+  const { unidad_curricular, espacio ,competencias_generales , competencias_especificas, criterios_de_logros,contenido, actividad , noSeDesarrolla , motivoNoSeDesarrolla} = props.modelValue;
   const  {  meta_aprendizaje_documento, plan_aprendizaje_documento } =  actividad;
 
   form.value.espacio = espacio;
@@ -78,6 +80,8 @@ const loadForm = (): void =>{
   form.value.competenciasEspecificas = competencias_especificas;
   form.value.criteriosDeLogros = criterios_de_logros;
   form.value.contenido = contenido;
+  form.value.noSeDesarrolla = noSeDesarrolla;
+  form.value.motivoNoSeDesarrolla = motivoNoSeDesarrolla;
 
   metaAprendizajeDocumento.value=   meta_aprendizaje_documento;
   planAprendizajeDocumento.value =  plan_aprendizaje_documento;
@@ -88,6 +92,11 @@ const loadForm = (): void =>{
   }
 }
 
+
+defineExpose({
+  loadForm
+})
+
 const clearForm = ()=>{
   form.value = {
     espacio: null,
@@ -96,6 +105,8 @@ const clearForm = ()=>{
     criteriosDeLogros: [],
     competenciasGenerales : [],
     competenciasEspecificas: [],
+    noSeDesarrolla: false,
+    motivoNoSeDesarrolla: ''
   }
 }
 
@@ -136,7 +147,7 @@ const competenciasGeneralesSelected = computed<CompetenciaGeneralItemSelector[]>
 const getCurrentData = ()=>{
 
   const { actividad } = props.modelValue;
-  const {  unidad_curricular , espacio, contenido, competenciasEspecificas, competenciasGenerales, criteriosDeLogros }  = form.value
+  const {  unidad_curricular , espacio, contenido, competenciasEspecificas, competenciasGenerales, criteriosDeLogros, noSeDesarrolla,  motivoNoSeDesarrolla }  = form.value
 
   const data  = {
     ...props.modelValue,
@@ -150,7 +161,9 @@ const getCurrentData = ()=>{
       competencias_generales :  competenciasGenerales,
       competencias_especificas:  competenciasEspecificas,
       criterios_de_logros: criteriosDeLogros,
-      actividad : { ...actividad }
+      actividad : { ...actividad },
+      noSeDesarrolla,
+      motivoNoSeDesarrolla
     }
   }  
     
@@ -169,6 +182,7 @@ watch(()=> props.modelValue ,(newValue: Tramo, oldValue: Tramo)=>{
 
   if(newValue.id != oldValue.id){
     loadForm();
+    return;
   }
 })
 
@@ -195,11 +209,15 @@ const onChangeUnidadCurricular = (unidadCurricular: UnidadCurricular)=>{
     titleChangeEspacioOrUnidadCurricular.value = "Cambiar de unidad curricular."
     descriptionChangeEspacioOrUnidadCurricular.value = "¿Segur@ deseas cambiar de unidad curricular?. En caso de confirmar perderas los datos del tramo(contenido,criterios de logros, competencias especificas), meta de aprendizaje y plan de aprendizaje"
     showModalChangeEspacioOrUnidadCurricular.value = true;
-    return;
   }
 
   form.value.unidad_curricular = unidadCurricular;
-  loadContenidosCriteriosDeLogrosYCompetencias(unidadCurricular.id);
+
+  // solo si la unidad curricular no esta bloqueada mandamos a obtener la data.
+  if(!form.value.unidad_curricular?.bloqueada){
+    loadContenidosCriteriosDeLogrosYCompetencias(unidadCurricular.id);
+  }
+
   onChangeModel();
 }
 
@@ -288,7 +306,7 @@ const onConfirmChangeEspacioOUnidad = ()=>{
     form.value.unidad_curricular = null;
   }
 
-  if(optionToChange.value == EspacioOUnidadOptionEnum.UNIDAD_CURRICULAR && form.value.unidad_curricular){
+  if(optionToChange.value == EspacioOUnidadOptionEnum.UNIDAD_CURRICULAR && form.value.unidad_curricular && !form.value.unidad_curricular?.bloqueada){
     loadContenidosCriteriosDeLogrosYCompetencias(form.value.unidad_curricular?.id)
   }
 
@@ -328,6 +346,26 @@ const handleSavedDocumentMetaAprendizaje = (document: Documento)=>{
   metaAprendizajeDocumento.value = document;
 }
 
+const handleOnRemoveDocumentMetaAprendizaje = ()=>{
+  metaAprendizajeDocumento.value.document_preview_url = null;
+  metaAprendizajeDocumento.value.document_ref = null;
+  metaAprendizajeDocumento.value.editorMode = null;
+
+}
+
+const handleOnRemoveDocumentPlanAprendizaje = ()=>{
+  planAprendizajeDocumento.value.document_preview_url = null;
+  planAprendizajeDocumento.value.document_ref = null;
+  planAprendizajeDocumento.value.editorMode = null;
+}
+
+watch(()=> form.value.noSeDesarrolla, ()=>{
+  if(!form.value.noSeDesarrolla){
+    form.value.motivoNoSeDesarrolla = '';
+    onChangeModel();
+  }
+})
+
 </script>
 
 <template>
@@ -335,7 +373,24 @@ const handleSavedDocumentMetaAprendizaje = (document: Documento)=>{
     <h1 class="font-medium text-xl text-center my-4">
       Tramo  {{ props.tramo.orden  }} 
     </h1>
-    <div class="flex gap-2">
+    
+    <div class="flex items-center gap-2 font-medium justify-end"  v-if="!form.unidad_curricular?.bloqueada">
+          <span>¿No se desarrolla?</span>
+          <UTooltip disabled text="Marca esta opción si la planificación no se desarrolla por una actividad extracurricular u otro motivo." mode="hover">
+            <UToggle size="md" v-model="form.noSeDesarrolla"  @update:model-value="onChangeModel" />
+          </UTooltip>
+    </div>
+    
+    <div v-if="form.noSeDesarrolla">
+      <NotaHoja
+        v-model="form.motivoNoSeDesarrolla"
+        @update:model-value="onChangeModel"
+        placeholder="Indique el motivo (actividad extracurricular, suspensión, acto, etc.)"
+      ></NotaHoja>
+    </div>
+    <div v-else>
+      
+      <div class="flex gap-2 mt-2">
       <USelectMenu :model-value="form.espacio" :options="espacios" option-attribute="id" class="flex-1"
         @change="onChangeEspacio">
         <template #label>
@@ -369,13 +424,16 @@ const handleSavedDocumentMetaAprendizaje = (document: Documento)=>{
           <span class="truncate">{{ unidadCurricular?.nombre }}</span>
         </template>
       </USelectMenu>
-    </div>
+      </div>
 
-    <UProgress size="xl" v-if="loadingMoreData" class="mt-2" />
+      <UProgress size="xl" v-if="loadingMoreData" class="mt-2" />
 
-    <div class="w-full flex flex-col gap-2 mt-2" v-else>
+    <div v-else>
 
-       <UCard class="flex-1 flex flex-col mt-2">
+        <ComingSoon v-if="form.unidad_curricular?.bloqueada"></ComingSoon>
+
+        <div  v-else class="w-full flex flex-col gap-2 mt-2" >
+          <UCard class="flex-1 flex flex-col mt-2">
         <div class="flex items-center justify-between">
           <span class="font-medium text-xl">Contenido</span>
 
@@ -383,8 +441,10 @@ const handleSavedDocumentMetaAprendizaje = (document: Documento)=>{
             v-model="form.contenido" 
             @update:model-value="onChangeModel" 
             :contenidos="contenidos"
-            :color="form.espacio?.rgbColor" :competenciasEspecificasSelected="form.competenciasEspecificas"
-            :criteriosDeLogrosSelected="form.criteriosDeLogros" :disabled="form.unidad_curricular == null">
+            :color="form.espacio?.rgbColor" 
+            :competenciasEspecificasSelected="form.competenciasEspecificas"
+            :criteriosDeLogrosSelected="form.criteriosDeLogros" 
+            :disabled="form.unidad_curricular == null">
           </SelectorContenido>
         </div>
         <div class="flex justify-between gap-2 items-center">
@@ -490,9 +550,14 @@ const handleSavedDocumentMetaAprendizaje = (document: Documento)=>{
       <UCard class="flex-1 flex flex-col">
         <div class="flex items-center justify-between">
           <span class="font-medium text-xl">Criterios de Logros</span>
-          <SelectorCriteriosDeLogros v-model="form.criteriosDeLogros" @update:model-value="onChangeModel"
-            :criteriosDeLogros="criteriosDeLogros" :color="form.espacio?.rgbColor" :contenidoSelected="form.contenido"
-            :competenciasEspecificasSelected="form.competenciasEspecificas" :disabled="form.unidad_curricular == null">
+          <SelectorCriteriosDeLogros 
+           v-model="form.criteriosDeLogros" 
+           @update:model-value="onChangeModel"
+            :criteriosDeLogros="criteriosDeLogros" 
+            :color="form.espacio?.rgbColor"
+             :contenidoSelected="form.contenido"
+            :competenciasEspecificasSelected="form.competenciasEspecificas" 
+            :disabled="form.unidad_curricular == null">
           </SelectorCriteriosDeLogros>
         </div>
         <div class="flex justify-between gap-2 items-center">
@@ -509,42 +574,37 @@ const handleSavedDocumentMetaAprendizaje = (document: Documento)=>{
         </div>
 
       </UCard>
-
-      <UCard class="flex-1 flex flex-col">
-        <div class="flex items-center justify-between">
-          <span class="font-medium text-xl">Contenido</span>
-
-          <SelectorContenido 
-            v-model="form.contenido" 
-            @update:model-value="onChangeModel" 
-            :contenidos="contenidos"
-            :color="form.espacio?.rgbColor" :competenciasEspecificasSelected="form.competenciasEspecificas"
-            :criteriosDeLogrosSelected="form.criteriosDeLogros" :disabled="form.unidad_curricular == null">
-          </SelectorContenido>
-        </div>
-        <div class="flex justify-between gap-2 items-center">
-          <div>
-            <ul class="list-disc" v-if="form.contenido">
-              <li>{{ form.contenido.descripcion }}</li>
-            </ul>
-            <span v-else>
-              No se ha seleccionado ningún contenido.
-            </span>
-          </div>
-        </div>
-
-      </UCard>
-
+      
       <UCard class="flex-1 flex flex-col">
         <div class="flex flex-col justify-between">
-          <span class="font-medium text-xl">Meta de Aprendizaje</span>
+          <div class="flex items-center gap-2">
+            <span class="font-medium text-xl">Meta de Aprendizaje</span>
+
+            <div v-if="metaAprendizajeDocumento?.editorMode">
+               <img
+                src="/localEditor.png"
+                alt="Google drive icono"
+                class="w-6"
+                v-if="metaAprendizajeDocumento?.editorMode == EditorModeEnum.LOCAL"
+              >
+
+              <img
+                src="/google-drive.png"
+                alt="Google drive icono"
+                class="w-6"
+                  v-if="metaAprendizajeDocumento?.editorMode == EditorModeEnum.DRIVE"
+              />
+            </div>
+
+          </div>
 
           <EditorSlideOver 
             :promptCategories="[PromptCategory.META_DE_APRENDIZAJE]"
-            :documentId="metaAprendizajeDocumento?.id"
+            :documento="metaAprendizajeDocumento"
             title="Meta de Aprendizaje" 
             :paramsBot="paramsBotMetaAprendizaje"
             @on:save="handleSavedDocumentMetaAprendizaje"
+            @on:delete="handleOnRemoveDocumentMetaAprendizaje"
             disabledText="Debes seleccionar una unidad curricular ,un contenido, criterios de logros y competencias especificas antes de asignar una meta de aprendizaje"></EditorSlideOver>
         </div>
         <div>
@@ -565,11 +625,31 @@ const handleSavedDocumentMetaAprendizaje = (document: Documento)=>{
 
       <UCard class="flex-1 flex flex-col">
         <div class="flex flex-col  justify-between">
-          <span class="font-medium text-xl">Plan de Aprendizaje</span>
+          <div class="flex items-center gap-2">
+            <span class="font-medium text-xl">Plan de Aprendizaje</span>
+
+            <div v-if="planAprendizajeDocumento?.editorMode">
+               <img
+                src="/localEditor.png"
+                alt="Google drive icono"
+                class="w-6"
+                v-if="planAprendizajeDocumento?.editorMode == EditorModeEnum.LOCAL"
+              >
+
+              <img
+                src="/google-drive.png"
+                alt="Google drive icono"
+                class="w-6"
+                  v-if="planAprendizajeDocumento?.editorMode == EditorModeEnum.DRIVE"
+
+              />
+            </div>
+          </div>
+
            <EditorSlideOver 
               :promptCategories="[PromptCategory.OTROS]"
-              :documentId="planAprendizajeDocumento?.id"
-              @update:model-value="onChangeModel"
+              :documento="planAprendizajeDocumento"
+              @on:delete="handleOnRemoveDocumentPlanAprendizaje"
               @on:save="handleSavedDocumentPlanAprendizaje"
               title="Plan de aprendizaje" 
               :paramsBot="{}"
@@ -584,13 +664,14 @@ const handleSavedDocumentMetaAprendizaje = (document: Documento)=>{
                 Haz clic aquí para abrir el plan de aprendizaje
               </a>
             </div>
-            
-
+          
             <div v-else class="text-center">  No se ha asignado un plan de aprendizaje</div>
 
           </div>
          
       </UCard>
+        </div>
+    </div>
     </div>
   </div>
 

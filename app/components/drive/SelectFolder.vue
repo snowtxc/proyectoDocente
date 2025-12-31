@@ -11,6 +11,7 @@ import {
   type ImplicitFlowOptions
 } from "vue3-google-signin";
 
+
 const {  $apiRest  } = useNuxtApp();
 const toast = useToast()
 

@@ -155,6 +155,13 @@ const actividadesSecuencia = computed<ActividadSecuencia[]>(()=>{
   return secuencia.value.actividades_secuencia;
 })
 
+const actividadNoSelectedText  = computed(()=>{
+ if(actividadesSecuencia.value.length == 0)
+    return 'No tienes ninguna actividad creada , prueba agregano una nueva';
+  
+  return 'No tienes ninguna actividad seleccionada';
+})
+
 const stepsActividades =  computed(()=>{
   return actividadesSecuencia.value.map((actividad,idx) =>{
     const step = idx + 1;
@@ -333,6 +340,21 @@ watch(()=> secuencia.value.detallaEvaluacion, ()=>{
   }
 })
 
+watch(()=> actividadSecuenciaSelected.value, ()=>{
+
+    if(!actividadSecuenciaSelected.value)
+      return;
+
+    const idx = actividadesSecuencia.value.findIndex(t => t.id == actividadSecuenciaSelected.value.id);
+
+    if(idx >= 0){
+      actividadesSecuencia.value[idx] = { ...actividadSecuenciaSelected.value};
+    }  
+
+    // Se activa el pending save.
+    pendingSave.value = true;
+})
+
 const onCancelNuevaActividad = ()=>{
   showModalAddActividad.value = false;
 
@@ -381,7 +403,7 @@ const actionsMenuActividad = ref([
     case ActionMenuActividadSecuencia.DELETE:
       modal.open(ConfirmModal, { 
         title: `Remover actividad ${actividadSecuenciaSelected.value.orden}`,
-        description: "AL remover la actividad , es posible que se reordenen todas las actividades de lasecuencia.",
+        description: "Al remover la actividad , es posible que se reordenen todas las actividades de lasecuencia.",
         "onOnConfirm" : async(data)=>{
         
           try{
@@ -403,6 +425,8 @@ const actionsMenuActividad = ref([
             if(idx >= 0)
               secuencia.value.actividades_secuencia.splice(idx,1);
 
+            actividadSecuenciaSelected.value = null;
+            
             updateOrdersActividades(actividadesSecuenciaUpdated);
             
             toast.add({
@@ -432,7 +456,12 @@ const actionsMenuActividad = ref([
    actividadesUpdated.map(actividadUpdated =>{
     const idx = secuencia.value.actividades_secuencia.findIndex(x => x.id == actividadUpdated.id);
 
-    if(actividadSecuenciaSelected.value.id == actividadUpdated.id && actividadSecuenciaSelected.value.orden != actividadUpdated.orden)
+     if (idx >= 0) {
+         secuencia.value.actividades_secuencia[idx].orden = actividadUpdated.orden;
+      }
+
+
+    if(actividadSecuenciaSelected.value?.id == actividadUpdated?.id && actividadSecuenciaSelected.value?.orden != actividadUpdated.orden)
       actividadSecuenciaSelected.value.orden = actividadUpdated.orden;
    })
  }
@@ -1014,22 +1043,14 @@ const onDelete = async() : Promise<void> =>{
       :competenciasEspecificas="competenciasEspecificas">
 
       </ActividadSecuenciaForm>
-  
-      <div v-else class="flex flex-col justify-center items-center h-screen">
-        <UIcon
-          name="tabler:file-text"
-          size="60px"
-        />
-        <h1 class="mt-1"> No tienes ningún tramo creado , prueba agregando uno nuevo </h1>
-        </div>
     </div>
 
     <div v-else class="flex flex-col justify-center items-center h-screen">
       <UIcon
-        name="tabler:butterfly-filled"
+        name="tabler:file-text"
         size="60px"
       />
-      <h1 class="mt-1"> No tienes ninguna actividad asignada a la secuencia, prueba creando una. </h1>
+     <h1 class="mt-1"> {{  actividadNoSelectedText }} </h1>
 
     </div>
       </UDashboardPanel>

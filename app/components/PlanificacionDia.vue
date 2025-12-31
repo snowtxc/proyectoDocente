@@ -3,14 +3,21 @@
 import { format, parseISO, parse } from "date-fns";
 import { es } from 'date-fns/locale';
 import type { PlanificacionFecha } from "~/types/planificacionFecha";
+import { HttpMethodEnum } from "~/utils/enums/HttpMethodEnum";
 
 
 interface Props {
+    planficacionId: number;  
     selectedDay: PlanificacionFecha,
     enableDates?: string[]
 }
 
+const { $apiRest } = useNuxtApp();
+
 const props =  withDefaults(defineProps<Props>(), { })
+const toast = useToast();
+
+const showModalDeleteConfirm = ref<boolean>(false);
 
 const fechaSelectedFormatted = computed(()=>{
     const fecha = parse(props.selectedDay.fecha, 'yyyy-MM-dd', new Date());
@@ -29,7 +36,7 @@ const enableDates = computed(()=>{
   return dates;
 })
 
-const emit = defineEmits(["changeDate", "changeDirection"]);
+const emit = defineEmits(["changeDate", "changeDirection",'onDelete']);
 
 const changeDate = (direction: "prev" | "next") => {
     emit("changeDirection", direction);
@@ -42,6 +49,35 @@ watch(()=> fechaPickerSelected.value, ()=>{
     emit("changeDate", format(fechaPickerSelected.value,'yyyy-MM-dd'));
   }
 })
+
+const onDelete = async()=>{
+
+  showModalDeleteConfirm.value = false;
+
+  try{
+    const result = await $apiRest(apiPlanificacionesFechaRoutes.remover(props.selectedDay.id), HttpMethodEnum.DELETE , {
+      planificacion_id : props.planficacionId,
+      planificacion_fecha_id : props.selectedDay.id
+     });
+
+     if(result.status == true){
+      toast.add({
+          title: "Fecha de la planificacion eliminada",
+          description: "Se ha eliminado la fecha de la planificacion con exito",
+          color: "green"
+      })
+
+      emit('onDelete');
+     }
+
+  }catch(message){
+    toast.add({
+      title: "Error",
+      description: message ? message : 'Error al crear el grupo',
+      color: "red"
+    })
+  }
+}
 
 </script>
 
@@ -72,8 +108,26 @@ watch(()=> fechaPickerSelected.value, ()=>{
                 </template>
               </UPopover>
             <span class="font-bold text-base">{{ fechaSelectedFormatted  }}</span>
+             <UTooltip
+                    text="Eliminar fecha"
+                  >
+                    <UButton
+                      icon="tabler:trash"
+                      color="white"
+                      variant="ghost"
+                      class="text-white hover:text-primary hover:bg-white"
+                      @click="showModalDeleteConfirm = true"
+                    />
+                  </UTooltip>
         </div>
         <button v-if="props.enableDates[props.enableDates.length - 1] !== props.selectedDay.fecha" :class="['w-8 h-8']" @click="changeDate('next')"><UIcon name="i-heroicons-chevron-left-16-solid" class="w-8 h-8 text-white cursor-pointer rotate-180" /></button>
 
     </div>
+
+    <ConfirmModal 
+      v-model="showModalDeleteConfirm"
+      title="Eliminar fecha" 
+      description="¿Deseás eliminar este dia de la planificacion?." 
+      @onConfirm="onDelete">
+</ConfirmModal>
 </template>

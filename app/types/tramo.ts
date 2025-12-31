@@ -7,7 +7,7 @@ import type { Espacio } from "./espacio";
 import type { UnidadCurricular } from "./unidadCurricular";
 
 export interface Tramo extends BaseModel{
-    seDesarrolla: boolean;
+    noSeDesarrolla: boolean;
     motivoNoSeDesarrolla? : string;
     planificacion_fecha_id: number;
     contenido_id? : number;
@@ -34,4 +34,12 @@ export interface RemoverTramoDTO {
     planificacion_id : number;
     planificacion_fecha_id : number;
     tramo_id: number;
+}
+
+export interface  CargarTramoDesdeActividadSecuencia {
+    secuencia_id :  number;
+    actividad_secuencia_id: number;
+    planificacion_id: number;
+    planificacion_fecha_id : number;
+    tramo_id : number;
 }

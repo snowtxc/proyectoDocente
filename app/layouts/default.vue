@@ -6,6 +6,7 @@ import { apiAuthRoutes } from "~/utils/apiRoutes";
 
 import FlopiBot from '~/components/flopi-bot/FlopiBot.vue';
 import { PromptCategory } from '~/utils/enums/PromptCategory.enum';
+import type { EstadoPlanUsuario } from '~/types/estadoPlanUsuario';
 
 const { $apiRest } = useNuxtApp();
 
@@ -14,6 +15,11 @@ const authStore = useAuthStore();
 const user = await $apiRest(apiAuthRoutes.user,HttpMethodEnum.GET);
 
 authStore.setUser(user);
+
+const { data: response, error, refresh } = await useAsyncData('planUsuarioEstado', async () => {
+  const estadoPlan = await $apiRest<EstadoPlanUsuario>(apiPlanUsuarioRoutes.getEstadoPeriodoPrueba, HttpMethodEnum.GET);
+  return { estadoPlan };
+});
 
 const flopiBotRef = ref(null);
 
@@ -84,12 +90,7 @@ const links = [{
   }
 }]
 
-
-const groups = [{
-  key: 'links',
-  label: 'Ir a',
-  commands: links.map(link => ({ ...link, shortcuts: link.tooltip?.shortcuts }))
-}]
+const estadoPlan = ref<EstadoPlanUsuario>(response.value.estadoPlan);
 
 </script>
 
@@ -129,7 +130,17 @@ const groups = [{
       </UDashboardSidebar>
     </UDashboardPanel>
 
+    
+    <PlanExpiredOverlay
+      v-if="estadoPlan.isExpired"
+      :expiry-date="estadoPlan.vencimiento"
+      :planes="estadoPlan.planes"
+      :plan-name="estadoPlan.planNombre"
+      :wpp-phone="estadoPlan.wppPhone"
+    />
+
     <slot />
+
 
     <!-- ~/components/HelpSlideover.vue -->
     <HelpSlideover />

@@ -14,7 +14,9 @@ interface Props {
     disabled?: boolean;
     orientation : "vertical" | "horizontal",
     linear?: boolean;
-    actionsMenu?: { title: string, icon: string , actionName: string}[]
+    actionsMenu?: { title: string, icon: string , actionName: string}[],
+    blockNextSteps?: boolean | null 
+
 }
 
 
@@ -76,7 +78,6 @@ function onContextMenu(event, step) {
 
 
   const onClickActionMenu = (actionName:string, step : number) =>{
-
       emit('on:action-menu', {
         actionName,
         step
@@ -98,10 +99,11 @@ function onContextMenu(event, step) {
     v-model="currentStep"
   >
   
+  
     <StepperItem
       v-for="item in props.steps"
       :key="item.step"
-      :disabled="props.disabled"
+      :disabled="props.disabled || (props.blockNextSteps && item.step > currentStep)"
       class="w-full flex items-center justify-center gap-2 cursor-pointer group relative my-10"
       :class="{
         'flex-row': props.orientation == 'horizontal',

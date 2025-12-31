@@ -1,5 +1,15 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
+
+   app: {
+    head: {
+      link: [
+        { rel: 'icon', type: 'image/png', href: '/logo.png' }
+        // o con tamaño específico:
+        // { rel: 'icon', type: 'image/png', sizes: '512x512', href: '/logo.png' }
+      ]
+    }
+  },
   extends: ['@nuxt/ui-pro'],
   srcDir: "app",
   plugins: ['~/plugins/apiRest.ts','~/plugins/v-calendar.ts' ],

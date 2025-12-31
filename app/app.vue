@@ -1,8 +1,26 @@
 <script setup lang="ts">
 
+useSeoMeta({
+  ogImage: '/logo.png',
+})
+
+const data =  ref<any>({
+  expiryDate : new Date(),
+  mercadoPagoLink: 'https://mercagopagolink.com',
+  userEmail: 'snowitxc@gmail.com',
+  planDetails : 'si',
+  isPlanExpired : true,
+  loadUserPlan : ''
+});
+
+const loading = ref(true)
+
+onMounted(async () => {
+  loading.value = false
+})
+
 const colorMode = useColorMode()
 const color = computed(() => colorMode.value === 'dark' ? '#111827' : 'white')
-
 
 useHead({
   meta: [

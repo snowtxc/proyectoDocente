@@ -46,7 +46,7 @@ const  formattedResponseText = computed(()=>{
   return responseText.value.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>'); ;
 })
 
-const steps =    [{
+const steps = [{
   step: 1,
   title: `Seleccionar prompt`,
   description: ``,

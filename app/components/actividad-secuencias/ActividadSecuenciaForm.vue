@@ -139,7 +139,7 @@ const handleSavedDocumentMetaAprendizaje = (document: Documento)=>{
 
           <EditorSlideOver 
             :promptCategories="[PromptCategory.META_DE_APRENDIZAJE]"
-            :documentId="metaAprendizajeDocumento?.id"
+            :documento="metaAprendizajeDocumento"
             title="Meta de Aprendizaje" 
             :paramsBot="paramsBotMetaAprendizaje"
             @on:save="handleSavedDocumentMetaAprendizaje"
@@ -166,7 +166,7 @@ const handleSavedDocumentMetaAprendizaje = (document: Documento)=>{
           <span class="font-medium text-xl">Plan de Aprendizaje</span>
            <EditorSlideOver 
               :promptCategories="[PromptCategory.OTROS]"
-              :documentId="planAprendizajeDocumento?.id"
+              :documento="planAprendizajeDocumento"
               @update:model-value="onChangeModel"
               @on:save="handleSavedDocumentPlanAprendizaje"
               title="Plan de aprendizaje" 

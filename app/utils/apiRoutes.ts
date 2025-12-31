@@ -1,3 +1,5 @@
+import { createDocument } from "@tiptap/core"
+
 export const apiGoogleDriveRoutes = {
     listFolders: '/google-drive/listFolders'
 }
@@ -24,6 +26,7 @@ export const apiUserConfigRoutes = {
 }
 
 export const apiGrupoRoutes = {
+    getSecuenciasRelacionadas : (id:number) => `/grupos/${id}/secuencias/relacionadas`,
     listAll: '/grupos',
     list: '/grupos/paged',
     getPaginate: '/grupos/paged',
@@ -43,20 +46,23 @@ export const apiPlanificacionesRoutes = {
     verificarFecha:  '/planificaciones/verificar-fecha',
     exportar: (id: number) => `/planificaciones/${id}/exportar`,
     sincronizarGoogleDrive: (id:number) => `/planificaciones/${id}/sincronizarGoogleDrive`,
-    delete: (id: number) =>  `/planificaciones/${id}`
+    delete: (id: number) =>  `/planificaciones/${id}`,
+    registrarAccesso : (id: number) => `/planificaciones/${id}/access`
 }
 
 export const apiPlanificacionesFechaRoutes = {
     create: "/planificaciones-fecha",
     find : (id: number) => `/planificaciones-fecha/${id}`,
     cambiarFecha : '/planificaciones-fecha/cambiar-fecha',
-    guardar: (id:number)=> `/planificaciones-fecha/${id}/guardar`
+    guardar: (id:number)=> `/planificaciones-fecha/${id}/guardar`,
+    remover: (id: number) =>  `/planificaciones-fecha/${id}`
 }
 
 export const apiTramosRoutes = {
     create: "/tramos",
     reordenarTramo: '/tramos/reordenarTramo',
-    removerTramo: '/tramos/removerTramo'
+    removerTramo: '/tramos/removerTramo',
+    cargarTramoDesdeActividadSecuencia: '/tramos/cargarTramoDesdeActividadSecuencia'
 }
 
 export const apiEspaciosRoutes = {
@@ -88,8 +94,10 @@ export const apiFlopiBot = {
 }
 
 export const apiDocumentos = {
+    createDocument : () => `/createDocument`,
     openDocument :  (id:number) => `/documentos/${id}/openDocument`,
     saveDocument :  (id:number) => `/documentos/${id}/saveDocument`,
+    deleteDocument : (id: number) => `/documentos/${id}`
 }
 
 export const apiSecuenciasRoutes = {
@@ -107,4 +115,12 @@ export const apiActividadSecuenciaRoutes = {
     create: "/actividades-secuencias",
     reordenarActividad: '/actividades-secuencias/reordenarActividad',
     removerActividad: '/actividades-secuencias/removerActividad'
+}
+
+export const apiPlanUsuarioRoutes = {
+    getEstadoPeriodoPrueba : '/planes-usuarios/getEstadoPeriodoPlan'
+}
+
+export const apiDashboardRoutes = {
+    getDashboard : '/dashboard/getDashboard'
 }

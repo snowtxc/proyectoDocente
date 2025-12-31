@@ -31,4 +31,5 @@ export type Planificacion = {
   tramos: number;
   slug: string;
   fechas: SimplePlanificacionFecha[];
+  last_planning_access_at?: Date;
 };

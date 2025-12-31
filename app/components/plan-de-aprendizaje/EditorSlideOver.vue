@@ -7,7 +7,16 @@
     import { HttpMethodEnum } from "~/utils/enums/HttpMethodEnum"
 
     import WebViewer from '../WebViewer.vue';
-import type { Documento } from '~/types/documento';
+    import type { Documento } from '~/types/documento';
+    import { EditorModeEnum } from '~/utils/enums/EditorModeEnum';
+    import ConfirmModal from '../ConfirmModal.vue';
+
+    import {
+      useCodeClient,
+      type ImplicitFlowSuccessResponse,
+      type ImplicitFlowErrorResponse,
+      type ImplicitFlowOptions
+    } from "vue3-google-signin";
 
     const isOpen = ref(false);
     const tiptapRef = ref();
@@ -15,22 +24,24 @@ import type { Documento } from '~/types/documento';
     const isLoading = ref(false);
     const { $apiRest } = useNuxtApp();
 
+    const modal = useModal();
+
     const documentUrl = ref<string>();
 
     interface Props {
-        documentId: number,
+        documento: Documento,
         title: string;
         disabled?: boolean;
         disabledText?: string;
         paramsBot: any,
         promptCategories: PromptCategory[]
-    }
-    
+    }    
     const props = withDefaults(defineProps<Props>(), {})
 
+    const documento = ref<Documento>(props.documento);
     const isClient = ref(false);
 
-    const emit = defineEmits(['update:model-value','on:save']);
+    const emit = defineEmits(['update:model-value','on:save','on:delete']);
     
     onMounted(()=>{
       isClient.value = true;
@@ -40,20 +51,123 @@ import type { Documento } from '~/types/documento';
       tiptapRef.value?.setContentFromHtml(responseTextHtml);
     }
 
-    const openDocument = async()=>{
+    const optionsMenu = computed<{title : string, icon: string, function: any}[]>(()=>{
+      return documento.value?.editorMode ? [
+      {
+        title : 'Abrir',
+        icon : 'tabler:edit',
+        function : ()=>{
+          openDocument()
+        },
+      },
+      {
+        title : 'Eliminar',
+        icon: 'tabler:trash',
+        function : ()=>{
+           deleteDocument();
+        },
+      }
+    ] :
+
+    [
+      {
+        title : 'Usar editor local',
+        icon : 'tabler:file-word',
+        function : ()=>{
+          openDocument(EditorModeEnum.LOCAL)
+        },
+      },
+      {
+        title : 'Usar drive',
+        icon: 'tabler:brand-google-drive',
+        function : ()=>{
+          openDocument(EditorModeEnum.DRIVE);
+        },
+      }
+    ]
+    
+    })
+
+    const googleSignInOptions: ImplicitFlowOptions = {
+      scope: googleScopes,
+      onSuccess: async(responseGoogle: ImplicitFlowSuccessResponse) => {
+        try{
+
+          const { code } = responseGoogle;
+          const response =  await $apiRest(apiAuthRoutes.linkOrUpdateGoogleAccount, HttpMethodEnum.POST, { code });
+
+        if(response && response.id){
+            // Si el login funciona perfectamente se manda a reabrir el documento de drive.
+            openDocument(EditorModeEnum.DRIVE);
+        }else{
+          toast.add({
+            title: "Error",
+            description: "Ha ocurrido un error al sincronizar tu cuenta de google. por favor vuelve a intentarlo.",
+            color: "red"
+          });
+        }
+
+      }catch(message){
+        toast.add({
+          title: "Error",
+          description: message,
+          color: "red"
+        });
+      }
+    
+    },
+    onError: (errorResponse: ImplicitFlowErrorResponse) => {
+      toast.add({
+        title: "Error",
+        description: errorResponse.error_description,
+        color: "red"
+      })
+    }
+    };
+
+    const { isReady, login: loginWithGoogle } = useCodeClient(googleSignInOptions);
+
+    const openDocument = async(editorMode? : EditorModeEnum)=>{
 
       isLoading.value = true;
 
       try{
 
-        const response = await $apiRest<string>(apiDocumentos.openDocument(props.documentId), HttpMethodEnum.POST, {});
+        const response = await $apiRest<{status: boolean, ref: string,editorMode:EditorModeEnum, googleDriveStatus?: any}>(apiDocumentos.openDocument(documento.value.id), HttpMethodEnum.POST, 
+        {
+          editorMode
+        });
+
+        if(response.status){
+
+           switch(response.editorMode){
+            case EditorModeEnum.LOCAL:
+              documentUrl.value = response.ref;
+              isOpen.value = true;
+              break;
+            case EditorModeEnum.DRIVE:
+              window.open(response.ref, '_blank')
+              break;
+          }
+
+          documento.value.editorMode = response.editorMode;
+          documento.value.document_ref = 
+          documento.value.document_preview_url = response.ref;
+
+        }else{
+          // STATUS FALSE
+          switch(response.editorMode){
+            case EditorModeEnum.LOCAL:
+              break;
+            case EditorModeEnum.DRIVE:
+              if(response.googleDriveStatus && response.googleDriveStatus.relogin){
+                loginWithGoogle();
+              }
+              break;
+          }
+        }
+
         isLoading.value = false;
-        
-        // SE SETEA EL URL DEL DOCUMENTO
-        documentUrl.value = response;
-
-        isOpen.value = true;
-
       }catch(message){
           toast.add({
               title: "Error",
@@ -65,6 +179,48 @@ import type { Documento } from '~/types/documento';
       // Llamar a la query open documents de actividad.
     }
 
+    const deleteDocument = async()=>{
+        modal.open(ConfirmModal, { 
+        title: `Remover documento`,
+        description: `
+            Al remover el documento, perderás el acceso al archivo.
+            Si fue cargado desde Google Drive, también se eliminará de tu espacio de Google.
+            Si fue un word local, se eliminará de la plataforma.`
+       ,
+        "onOnConfirm" : async(data)=>{
+         
+          try{
+
+            modal.close();
+
+            const response = await $apiRest<any>(apiDocumentos.deleteDocument(documento.value.id), HttpMethodEnum.DELETE);
+
+            if(response.status){
+                documento.value = response.documento;
+                toast.add({
+                  title: "Exito",
+                  description: 'Se ha removido el documento correctamente.',
+                  color: "green"
+            })
+
+              emit('on:delete');
+            }else{
+              // Posible google drive
+              console.log(response)
+            }
+
+          }catch(message){
+            toast.add({
+                title: "Error",
+                description: message ? message : 'Error al intentar remover el documento',
+                color: "red"
+            })
+          }
+
+        }
+      })
+    }
+
     /* SE MANDA A ACTUALIZAR EL DOCUMENTO */
     const  handleOnSave = async(blob)=>{
 
@@ -73,7 +229,7 @@ import type { Documento } from '~/types/documento';
         formData.append('documento', blob);
 
         isLoading.value = true;
-        const documentSaved = await $apiRest<Documento>(apiDocumentos.saveDocument(props.documentId), HttpMethodEnum.POST, formData);
+        const documentSaved = await $apiRest<Documento>(apiDocumentos.saveDocument(documento.value.id), HttpMethodEnum.POST, formData);
         isLoading.value = false;
         
         // SE SETEA EL URL DEL DOCUMENTO
@@ -97,22 +253,39 @@ import type { Documento } from '~/types/documento';
           isLoading.value = false;
       }
     }
+
+    watch(()=> props.documento, ()=>{
+      documento.value = props.documento;
+    })
 </script>
 
 <template>
     <div class="flex justify-end"> 
 
-      <UTooltip :text="(disabled && disabledText) ? disabledText: 'Editar'">
-            <UButton
-            icon="tabler:pencil"
-            size="sm"
-            color="primary"
-            :loading="isLoading"
-            variant="outline"
-            @click="openDocument"
-            :disabled="props.disabled"
-        />
-      </UTooltip>
+     <UPopover :popper="{ placement: 'bottom-start' }">
+          <template #default="{ open }">
+             <UTooltip :text="(disabled && disabledText) ? disabledText: 'Editar'">
+        
+                <UButton
+                  icon="tabler:pencil"
+                  size="sm"
+                  color="primary"
+                  :loading="isLoading"
+                  variant="outline"
+                  :disabled="props.disabled"
+              />
+            </UTooltip>
+          </template>
+
+          <template #panel="{ close }">
+                <div 
+                v-for="(value, idx) in optionsMenu" :key="idx"
+                class="p-4 text-black hover:bg-gray-100 flex items-center gap-2 hover:cursor-pointer" @click="value.function()">
+                  <UIcon :name="value.icon" class="w-5 h-5" />
+                  <span>  {{ value.title }} </span>
+                </div>
+            </template>
+      </UPopover>
 
 
         <UModal fullscreen title="Modal fullscreen" v-model="isOpen">  
