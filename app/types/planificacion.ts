@@ -1,5 +1,5 @@
 import type { PlanificacionEstadoEnum } from "~/utils/enums/PlanificacionEstado.enum";
-import type { EstadoType } from ".";
+import type { EstadoType } from "../types";
 import type { Grupo } from "./grupo";
 import type { BaseModel } from "./base.model";
 import type { SimplePlanificacionFecha } from "./planificacionFecha";

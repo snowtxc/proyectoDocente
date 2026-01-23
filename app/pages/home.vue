@@ -12,6 +12,12 @@ const { data: dashboardData, error, refresh } = await useAsyncData('dashboardDat
   return await  $apiRest<DashboardData>(apiDashboardRoutes.getDashboard, HttpMethodEnum.GET);
 });
 
+const planificaciones = computed(() => 
+  dashboardData.value?.ultimasPlanificacionesAccedidas ?? []
+)
+
+console.log('Dashboard Data:', dashboardData.value);
+
 </script>
 
 <template>
@@ -21,7 +27,7 @@ const { data: dashboardData, error, refresh } = await useAsyncData('dashboardDat
     
       </UDashboardNavbar>
 
-      <UDashboardPanelContent>
+      <UDashboardPanelContent class="p-10">
         <!-- ~/components/home/HomeChart.vue -->
         <WelcomeSection
         :userName="user.nombre1"
@@ -30,7 +36,7 @@ const { data: dashboardData, error, refresh } = await useAsyncData('dashboardDat
         <LottieAnimation :animationData="flyingBeeAnimation" class="w-1/2 m-auto"></LottieAnimation>
 
         <div class="grid lg:items-start gap-8 mt-8">
-          <HomeSales :planificaciones="dashboardData.ultimasPlanificacionesAccedidas" />
+          <HomeSales :planificaciones="planificaciones" />
         </div>
       </UDashboardPanelContent>
     </UDashboardPanel>

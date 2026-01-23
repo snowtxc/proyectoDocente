@@ -1,16 +1,11 @@
 <script setup lang="ts">
-
-import type { CreatePlanificacionDTO, Planificacion } from '~/types/planificacion';
-
-import { apiPlanificacionesRoutes } from '~/utils/apiRoutes';
-
-import { ModeEnum } from '~/utils/enums/ModeEnum';
-
-import type { FormError, FormSubmitEvent } from '#ui/types'
-import { HttpMethodEnum } from '~/utils/enums/HttpMethodEnum';
-
-import { defineProps, defineEmits, withDefaults, ref, reactive } from 'vue';
-import type { Grupo } from '~/types/grupo';
+import * as v from 'valibot'
+import type { FormSubmitEvent } from '@nuxt/ui'
+import type { CreatePlanificacionDTO, Planificacion } from '~/types/planificacion'
+import type { Grupo } from '~/types/grupo'
+import { apiPlanificacionesRoutes } from '~/utils/apiRoutes'
+import { ModeEnum } from '~/utils/enums/ModeEnum'
+import { HttpMethodEnum } from '~/utils/enums/HttpMethodEnum'
 
 interface Props {
     mode: ModeEnum,
@@ -22,115 +17,160 @@ const { $apiRest } = useNuxtApp();
 const toast = useToast()
 const loading = ref(false);
 
-const props = withDefaults(defineProps<Props>(), {});
-const emit = defineEmits(['on:update', 'close'])
-
-onBeforeMount(()=>{
-  if(props.mode == ModeEnum.UPDATE && props.planificacionSelected){
-    patchForm(props.planificacionSelected);
-  }
-});
-
-const getDefaultRangeDate = () : { start: Date, end: Date } =>{
-    const start = new Date();
-    const end = new Date()
-    end.setDate(end.getDate() + 7);
-
-    return { start, end}
-}
-
-const isEditMode = computed(()=>{
-    if(props.mode == ModeEnum.UPDATE)
-        return true;
-    return false;
+// Esquema de validación con Valibot
+const schema = v.object({
+  name: v.pipe(
+    v.string(),
+    v.minLength(1, 'Debes ingresar al menos un nombre a la planificación')
+  ),
+  grupo: v.custom((value) => {
+    return value !== null && value !== undefined
+  }, 'Por favor ingresa un grupo.')
 })
 
-const form = reactive<{ grupo: Grupo, name: string }>({
-    grupo: null,
-    name: '',
-});
+type Schema = v.InferOutput<typeof schema>
 
-const patchForm = (planificacionSelected: Planificacion) =>{
-  const { nombre,  grupo} = planificacionSelected;
+const props = withDefaults(defineProps<Props>(), {})
+const emit = defineEmits(['on:update', 'close'])
 
-  form.name = nombre;
-  form.grupo =  grupo;
+// Estado reactivo para el formulario
+const state = reactive<Schema>({
+  name: '',
+  grupo: null as Grupo | null
+})
+
+onBeforeMount(() => {
+  if (props.mode === ModeEnum.UPDATE && props.planificacionSelected) {
+    patchForm(props.planificacionSelected)
+  }
+})
+
+const isEditMode = computed(() => {
+  return props.mode === ModeEnum.UPDATE
+})
+
+const patchForm = (planificacionSelected: Planificacion) => {
+  const { nombre, grupo } = planificacionSelected
+  state.name = nombre
+  state.grupo = grupo
 }
 
-const validate = (state: any): FormError[] => {
-    const errors = []
-    if (!form.grupo) errors.push({ path: 'grupo', message: 'Por favor ingresa un grupo.' })
-    if (form.name.trim().length == 0) errors.push({ path: 'name', message: 'Debes ingresar al menos un nombre a la planificación' })
-    
-    return errors
-}
+async function onSubmit(event: FormSubmitEvent<Schema>) {
+  try {
+    v.parse(schema, event.data)
+  } catch (error: any) {
+    toast.error({
+      title: 'Error de validación',
+      message: error.message || 'Por favor verifica los datos del formulario',
+      color: 'red'
+    })
+    return
+  }
 
-async function onSubmit(event: FormSubmitEvent<any>) {
+  const { grupo, name } = event.data
 
-    const { grupo, name } = form;
+  if (!grupo) {
+    toast.error({
+      title: 'Error de validación',
+      message: 'Por favor selecciona un grupo',
+      color: 'red'
+    })
+    return
+  }
 
-    const errors = validate(form); // Obtén los errores de validación
-    if (errors.length > 0)
-        return;
+  try {
+    loading.value = true
+    let planificacionResponse: Planificacion
 
-    try {
-
-        let planificacionResponse: Planificacion;
-        loading.value = true;
-
-        if (props.mode == ModeEnum.UPDATE && props.planificacionSelected) {
-            
-            const planificacionToEdit : Planificacion  = {
-                ...props.planificacionSelected,
-                ...{nombre: name}
-            };
-            planificacionResponse = await $apiRest<Planificacion>(apiPlanificacionesRoutes.update(props.planificacionSelected.id), HttpMethodEnum.POST, planificacionToEdit);
-        } else {
-            const body: CreatePlanificacionDTO = {
-                groupId : grupo.id,
-                name,
-            }   
-            planificacionResponse = await $apiRest<Planificacion>(apiPlanificacionesRoutes.create, HttpMethodEnum.POST, body);
-        }
-
-        loading.value = false;
-        toast.add({
-            title: "Nueva Planificación",
-            description: props.mode == ModeEnum.CREATE ? `Se ha creado la planificación ${planificacionResponse.nombre} correctamente` : `Se ha modificado la planificación ${planificacionResponse.nombre} correctamente`,
-            color: "green"
-        })
-
-        emit('on:update');
-        emit('close');
-
-    } catch (message) {
-        loading.value = false;
-        toast.add({
-            title: "Error",
-            description: message ? message : 'Error al crear la planificación',
-            color: "red"
-        })
+    if (props.mode === ModeEnum.UPDATE && props.planificacionSelected) {
+      const planificacionToEdit: Planificacion = {
+        ...props.planificacionSelected,
+        nombre: name
+      }
+      planificacionResponse = await $apiRest<Planificacion>(
+        apiPlanificacionesRoutes.update(props.planificacionSelected.id),
+        HttpMethodEnum.POST,
+        planificacionToEdit
+      )
+    } else {
+      const body: CreatePlanificacionDTO = {
+        groupId: (grupo as Grupo).id,
+        name
+      }
+      planificacionResponse = await $apiRest<Planificacion>(
+        apiPlanificacionesRoutes.create,
+        HttpMethodEnum.POST,
+        body
+      )
     }
+
+    loading.value = false
+
+    toast.error({
+      title: 'Éxito',
+      message: props.mode === ModeEnum.CREATE
+        ? `Se ha creado la planificación ${planificacionResponse.nombre} correctamente`
+        : `Se ha modificado la planificación ${planificacionResponse.nombre} correctamente`,
+      color: 'green',
+      icon: 'i-heroicons-check-circle',
+      timeout: 3000
+    })
+
+    emit('on:update')
+    emit('close')
+  } catch (error: any) {
+    loading.value = false
+    console.error('Error en la solicitud:', error)
+    toast.error({
+      title: 'Error',
+      message: error?.message || 'Error al procesar la solicitud',
+      color: 'red',
+      icon: 'i-heroicons-exclamation-triangle',
+      timeout: 3000
+    })
+  }
 }
 
 </script>
 
 
 <template>
-    <UForm :validate="validate" :validate-on="['submit']" :state="form" class="space-y-4" @submit="onSubmit">
+    <UForm
+        ref="formRef"
+        :schema="schema"
+        :state="state"
+        class="space-y-4"
+        @submit.prevent="onSubmit"
+    >
+        <UFormField label="Nombre" name="name">
+            <UInput
+                id="name"
+                v-model="state.name"
+                placeholder="Ingresa un nombre"
+                class="w-full"
+                autofocus
+                :ui="{ base: 'w-full' }"
+            />
+        </UFormField>
 
-        <UFormGroup label="Nombre" name="name">
-            <UInput id="name" v-model="form.name"
-                placeholder="Ingresa un nombre" class="w-full" autofocus color="gray" />
-        </UFormGroup>
-
-        <UFormGroup label="Grupo" name="grupo">
-            <SelectGrupo v-model="form.grupo" :disabled="isEditMode"></SelectGrupo>
-        </UFormGroup>
+        <UFormField label="Grupo" name="grupo">
+            <SelectGrupo v-model="state.grupo" :disabled="isEditMode" class="w-full" />
+        </UFormField>
             
-        <div class="flex w-full justify-end gap-3">
-            <UButton label="Cancelar" color="gray" variant="ghost" @click="emit('close')" />
-            <UButton type="submit" @click="onSubmit" label="Guardar" color="black" :loading="loading" />
+        <div class="flex w-full justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+            <UButton
+                label="Cancelar"
+                color="neutral"
+                variant="ghost"
+                @click="emit('close')"
+            />
+            <UButton
+                type="submit"
+                label="Guardar"
+                color="primary"
+                :loading="loading"
+                :disabled="loading"
+            />
         </div>
     </UForm>
 </template>

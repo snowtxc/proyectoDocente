@@ -118,8 +118,9 @@ import type { Contenido } from '~/types/contenido';
       :disabled="props.disabled"
   />
 
-  <UModal v-model="isOpen">
-      <UCard :ui="{ header: { padding: 'p-4 sm:px-6' }, body: { padding: '' } }" class="min-w-0 min-h-[75vh]">
+  <UModal v-model:open="isOpen">
+    <template #content>
+      <UCard class="min-w-0 min-h-[75vh]">
         <template #header>
           <div class="flex gap-2 items-center mt-2">
             <UInput v-model="q" icon="i-heroicons-magnifying-glass" placeholder="Buscar competencia general" autofocus class="flex-1" />
@@ -159,16 +160,13 @@ import type { Contenido } from '~/types/contenido';
               </div>
 
               <div class="flex items-start gap-3">
-                <UPopover :popper="{ placement: 'bottom-start' }" mode="hover" v-if="competenciaGeneral.recomendado">
-                    <template #default="{ open }">
-                      <UTooltip
-                        :prevent="open"
-                      >
-                         <UButton label="Recomendado" icon="tabler:butterfly-filled" :color="getColorBadgeComponente(props.color)" variant="outline"/>
-                      </UTooltip>
-                    </template>
+                <UPopover  mode="hover" v-if="competenciaGeneral.recomendado">
+                    <UTooltip
+                    >
+                        <UButton label="Recomendado" icon="tabler:butterfly-filled" :color="getColorBadgeComponente(props.color)" variant="outline"/>
+                    </UTooltip>
 
-                    <template #panel="{ close }">
+                    <template #content>
                         <div class="p-2 m-4 flex flex-col gap-y-4 max-w-64">
 
                             <div v-if="competenciaGeneral.competenciasEspecificasRelacionadas?.length > 0">
@@ -191,7 +189,7 @@ import type { Contenido } from '~/types/contenido';
           <div class="flex justify-end gap-3">
             <UButton
               label="Cancelar"
-              color="gray"
+              color="neutral"
               variant="ghost"
               @click="isOpen = false"
             />
@@ -199,13 +197,15 @@ import type { Contenido } from '~/types/contenido';
             <UButton
                 type="button"
               label="Guardar"
-              color="black"
+              color="primary"
               @click="onSave"
               />
           </div>
         </template>
 
       </UCard>
+    </template>
+      
   </UModal>
 
 </template>

@@ -76,9 +76,9 @@ import { HttpMethodEnum } from '~/utils/enums/HttpMethodEnum';
             emit('on:add', fechasCreated);
         }
         catch(message){
-            toast.add({ 
+            toast.error({ 
                 title: 'Error',
-                description: message ? message : 'Error al agregar días a la planificación',
+                message: message ? message : 'Error al agregar días a la planificación',
                 color: 'red', 
                 icon: 'i-heroicons-check-circle' 
             })
@@ -91,7 +91,7 @@ import { HttpMethodEnum } from '~/utils/enums/HttpMethodEnum';
     <UPopover v-model:open="show">
         <UButton
             icon="tabler:calendar-plus"
-            color="gray"
+            color="neutral"
             variant="ghost"
             v-if="props.showSmallBtn"
         />
@@ -100,15 +100,16 @@ import { HttpMethodEnum } from '~/utils/enums/HttpMethodEnum';
             Agregar nuevo día
         </UButton>
         
-        <template #panel>
+        <template #content> 
             <div class="flex flex-col items-center gap-4 mb-4 p-4">
                 
                 <UDashboardSection title="Agregar nuevo día" description="Agrega un nuevo día a la planificación y empieza a planificar sobre ese día.">
                 </UDashboardSection>
                 
-                <div class="w-full">
+                <!--ToDo queda pendiente resolver por que no se ve los estilos cuando cambia a multiples dias de seleccion-->
+                <!-- <div class="w-full">
                     <UCheckbox size="xl" v-model="multipleFecha" label="Elegir más de 1 día" />
-                </div>
+                </div> -->
 
                 <DatePicker v-model="fecha"  :disableWeekends="true" :range="multipleFecha" :disabledDates="fechasDisabled"/>
                 
@@ -121,5 +122,10 @@ import { HttpMethodEnum } from '~/utils/enums/HttpMethodEnum';
         </template>
   </UPopover>
 
-  <ConfirmModal v-model="showModalConfirm" title="Confirmar nuevos días" description="¿Seguro deseas generar estos nuevos días a la planificación?" @onConfirm="onSubmit"></ConfirmModal>
+  <ConfirmModal 
+  v-model="showModalConfirm" 
+  title="Confirmar nuevos días" 
+  description="¿Seguro deseas generar estos nuevos días a la planificación?" 
+  @onConfirm="onSubmit"
+  @onClose="showModalConfirm = false"></ConfirmModal>
 </template>

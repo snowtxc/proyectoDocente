@@ -12,7 +12,7 @@ import { ActionMenuTramo } from '~/utils/enums/actionMenuTramo.enum';
 import ConfirmModal from '~/components/ConfirmModal.vue';
 import SyncGoogleDrive from '~/components/SyncGoogleDrive.vue';
 import { TypeItemSyncGoogleDrive } from '~/utils/enums/typeItemSyncGoogleDrive';
-import { apiCompetenciasGeneralesRoutes, apiEspaciosRoutes, apiPlanificacionesFechaRoutes, apiPlanificacionesRoutes, apiTramosRoutes, computed, downloadBlob, navigateTo, ref, useAsyncData, useModal,  useRoute, useToast, watch } from '#imports';
+import { apiCompetenciasGeneralesRoutes, apiEspaciosRoutes, apiPlanificacionesFechaRoutes, apiPlanificacionesRoutes, apiTramosRoutes, computed, downloadBlob, navigateTo, ref, useAsyncData,  useRoute, useToast, watch } from '#imports';
 import ModalTramoDesdeSecuencia from '~/components/tramos/ModalTramoDesdeSecuencia.vue';
 
 const { $apiRest } = useNuxtApp();
@@ -47,6 +47,8 @@ const planificacionFechaSelected = ref<PlanificacionFecha>();
 const tramoSelected = ref<Tramo>(null);
 
 const tramosStepper = ref(null);
+
+const overlay = useOverlay()
 
 const ordenarFechasPlanificacion = () : SimplePlanificacionFecha[] =>{
     const fechas : SimplePlanificacionFecha[] =  [...planificacion.value.fechas];
@@ -159,16 +161,16 @@ const onCreateTramo = async()=>{
    planificacionFechaSelected.value.tramos.push(tramo);
    tramoSelected.value = tramo;
 
-   toast.add({
+   toast.success({
       title: "Nuevo Tramo",
-      description: 'Se ha extendido la planificación a un nuevo tramo.',
+      message: 'Se ha extendido la planificación a un nuevo tramo.',
       color: "green"
     })
 
   }catch(message){
-    toast.add({
+    toast.error({
       title: "Error",
-      description: message ? message : 'Error al crear un nuevo tramo',
+      message: message ? message : 'Error al crear un nuevo tramo',
       color: "red"
     })
   }
@@ -189,12 +191,12 @@ const onAddPlanificacionFechas = async(planificacionFechas: PlanificacionFecha[]
     
     planificacion.value.fechas = ordenarFechasPlanificacion();
 
-    toast.add({ title: 'Se agregaron nuevos días a la planificación correctamente!', color: 'green', icon: 'i-heroicons-check-circle' })
+    toast.success({ title: 'Se agregaron nuevos días a la planificación correctamente!', color: 'green', icon: 'i-heroicons-check-circle' })
 
   }catch(message){
-    toast.add({
+    toast.error({
       title: "Error",
-      description: message ? message : 'Error al obtener el día de la planificacion',
+      message: message ? message : 'Error al obtener el día de la planificacion',
       color: "red"
     })
   }
@@ -255,9 +257,9 @@ const loadPlanificacionFecha = async(fecha: string)  : Promise<void> =>{
     }
 
   }catch(message){
-    toast.add({
+    toast.error({
       title: "Error",
-      description: message ? message : 'Error al obtener el dia de planificacion. Por favor vuelve a intentarlo más tarde.',
+      message: message ? message : 'Error al obtener el dia de planificacion. Por favor vuelve a intentarlo más tarde.',
       color: "red"
     })
   }
@@ -290,9 +292,9 @@ const onSavePlanificacionFecha = async(showMessage: boolean = true)=>{
       if(response && response.status){
 
         if(showMessage){
-          toast.add({
+          toast.success({
               title: "Se ha guardado con exito",
-              description: response.message,
+              message: response.message,
               color: "green"
           });
         }
@@ -302,9 +304,9 @@ const onSavePlanificacionFecha = async(showMessage: boolean = true)=>{
 
     }catch(message){
       isSaving.value = false;
-      toast.add({
+      toast.error({
         title: "Error",
-        description: message ? message : 'Error al obtener el dia de planificacion. Por favor vuelve a intentarlo más tarde.',
+        message: message ? message : 'Error al obtener el dia de planificacion. Por favor vuelve a intentarlo más tarde.',
         color: "red"
       })
     }
@@ -334,16 +336,19 @@ const actionsMenuTramo = ref([
    { 
     title: 'Cambiar orden',
     icon: 'tabler:arrows-sort',
+    color: null,
     actionName: ActionMenuTramo.CHANGE_ORDER
     },
     { 
       title: 'Desde secuencia',
       icon: 'tabler:list-letters',
+      color: null,
       actionName: ActionMenuTramo.LOAD_FROM_SECUENCIA
     },
     {
     title: 'Eliminar tramo',
     icon: 'tabler:trash',
+    color: 'error',
     actionName: ActionMenuTramo.DELETE
   }
   ]);
@@ -355,15 +360,16 @@ const actionsMenuTramo = ref([
   const stepSelected = stepsTramos.value.find(x => x.step == data.step);
   const tramo = stepSelected.tramo;
 
+
   if(!stepSelected)
     return;
+  
+  let modal;
 
-  const modal = useModal();
    switch(data.actionName){
-
     case ActionMenuTramo.CHANGE_ORDER:
-      
-      modal.open(CambiarOrden, { 
+      modal = overlay.create(CambiarOrden);
+      modal.open({ 
         planificacionId: planificacion.value.id, 
         planificacionFechaId : planificacionFechaSelected.value.id,
         tramoSelected : {... tramo } , 
@@ -377,7 +383,9 @@ const actionsMenuTramo = ref([
       break;
 
     case ActionMenuTramo.DELETE:
-      modal.open(ConfirmModal, { 
+
+      modal = overlay.create(ConfirmModal);
+      modal.open({ 
         title: `Remover tramo ${tramo.orden}`,
         description: "AL remover el tramo , es posible que se reordenen todos los tramos de la planificación.",
         "onOnConfirm" : async(data)=>{
@@ -405,16 +413,16 @@ const actionsMenuTramo = ref([
 
             updateOrdersTramos(tramosUpdated);
                         
-            toast.add({
+            toast.success({
                 title: "Tramo removido con exito",
-                description: "Tramo removido",
+                message: "Tramo removido",
                 color: "green"
             })
           }
           }catch(message){
-            toast.add({
+            toast.error({
                 title: "Error",
-                description: message ? message : 'Error al intentar remover el tramo',
+                message: message ? message : 'Error al intentar remover el tramo',
                 color: "red"
             })
           }
@@ -424,13 +432,21 @@ const actionsMenuTramo = ref([
       break;
 
     case ActionMenuTramo.LOAD_FROM_SECUENCIA:
-      modal.open(ModalTramoDesdeSecuencia,{
+
+      modal = overlay.create(ModalTramoDesdeSecuencia);
+
+      modal.open({
         grupo : grupo.value,
         planificacion: planificacion.value,
         planificacionFecha: planificacionFechaSelected.value,
         tramo,
-        "onOn:load-tramo" : (tramo:Tramo)=>{
+        "loadTramo" : (tramo:Tramo)=>{
+          modal.close();
           onUpdateTramo(tramo)
+        },
+
+        "on:OnClose" : ()=>{
+          modal.close();
         }
       })
       break;
@@ -469,17 +485,17 @@ const updateOrdersTramos = (tramosUpdated: Tramo[]) => {
      const fileName = `${planificacion.value.slug}.docx`;
      downloadBlob(responseFile, fileName);
 
-      toast.add({
+      toast.success({
         title: "Planificacion exportada",
-        description: 'Se ha exportado la planificación con exito.',
+        message: 'Se ha exportado la planificación con exito.',
         color: "green"
       })
    }
    
   }catch(message){
-    toast.add({
+    toast.error({
       title: "Error",
-      description: message ? message : 'Error al crear un nuevo tramo',
+      message: message ? message : 'Error al crear un nuevo tramo',
       color: "red"
     })
   }
@@ -493,8 +509,8 @@ const updateOrdersTramos = (tramosUpdated: Tramo[]) => {
     if(pendingSave.value)
       await onSavePlanificacionFecha(false)
 
-    const modal = useModal();
-    modal.open(SyncGoogleDrive, 
+    const modal = overlay.create(SyncGoogleDrive);
+    modal.open( 
     {
       key: `sync-${Date.now()}`, 
       id : planificacion.value.id , 
@@ -516,9 +532,9 @@ const updateOrdersTramos = (tramosUpdated: Tramo[]) => {
    
    if(planificacionDeleted){
     
-      toast.add({
+      toast.success({
         title: `Planificación ${planificacionDeleted.nombre} eliminada`,
-        description: `Se ha eliminado la planificación ${planificacionDeleted.nombre} con exito.`,
+        message: `Se ha eliminado la planificación ${planificacionDeleted.nombre} con exito.`,
         color: "green"
       });
       
@@ -526,9 +542,9 @@ const updateOrdersTramos = (tramosUpdated: Tramo[]) => {
    }
 
   }catch(message){
-    toast.add({
+    toast.error({
       title: "Error",
-      description: message ? message : 'Error al intentar eliminar la planificación.',
+      message: message ? message : 'Error al intentar eliminar la planificación.',
       color: "red"
     })
   }
@@ -581,191 +597,191 @@ const onUpdateTramo = (tramo: Tramo)=>{
 </script>
 
 <template>
-  <UDashboardPage>
-    <UDashboardPanel
-      id="grupo"
-      :width="200"
-    >
-      <UDashboardNavbar
-        :title="grupo.nombre"
-      >
-        <template #right>
-          <BadgeGrado
-          v-for="grado in planificacion.grupo.grados"
-          :key="grado.id"
-          :grado="grado">
-        </BadgeGrado>
-      
-        </template>
-      </UDashboardNavbar>
-
-      <!-- Tramos -->
-      <div class="overflow-y-auto mb-8 min-h-full" v-if="planificacionFechaSelected">
-        <Stepper 
-        :showButtonAddStep="true"
-        titleButtonAddStep="Agregar nuevo tramo"
-        orientation="vertical"
-        descriptionButtonAddStep="Extender un nuevo tramo a la planificación"
-        :currentStep="currentStepTramo"  
-        :steps="stepsTramos"
-        @on:add-step="showModalAddTramo = true"
-        :linear="false"
-        ref="tramosStepper"
-        @on:change-step="onChangeTramo"
-        :actionsMenu="actionsMenuTramo"
-        @on:action-menu="handleOnActionMenuTramo"/>
-      </div>
-
-    </UDashboardPanel>
-
-    <UDashboardPanel
-      collapsible
-      grow
-      side="right"
-    >
-    <UDashboardNavbar>
-      <template #toggle>
-        <UDashboardNavbarToggle icon="i-heroicons-x-mark" />
-
-        <UDivider
-          orientation="vertical"
-          class="mx-1.5 lg:hidden"
-        />
-      </template>
-
-      <template #left>
-
-        <div class="flex items-center">
-          <UDashboardNavbar
-          :title="planificacion.nombre"
-            >
-            </UDashboardNavbar>
-  
-          <PlanificacionesPopoverAddPlanificacionFecha 
-          :planificacionId="planificacion.id"
-          @on:add="onAddPlanificacionFechas"
-          :showSmallBtn="true"
-          :fechasDisabled="planificacion.fechas.map(pf => pf.fecha)"></PlanificacionesPopoverAddPlanificacionFecha>
-
-          <PlanificacionesPopoverChangePlanificacionFecha 
-          :planificacionId="planificacion.id"
-          :planificacionFecha="planificacionFechaSelected"
-          :fechasYaPlanificadas="planificacion.fechas.map(pf => pf.fecha)"
-          @on:change="onChangePlanificacionFecha"></PlanificacionesPopoverChangePlanificacionFecha>
-        </div>
-       
-      </template>
-
-      <template #right>
-
-        <UTooltip text="Guardar planificación">
-          <UButton
-            icon="tabler:device-floppy"
-            color="gray"
-            variant="ghost"
-            @click="onSavePlanificacionFecha()"
-          >
-          <template #leading="{ modelValue, ui }">
-                        
-            <div class="flex flex-col">
-                <div class="w-2 h-2 rounded-full bg-primary  absolute float-right" v-if="pendingSave"> </div>
-                <UIcon name="tabler:device-floppy" class="size-5" />
-            </div>
-        
+    <UPage>
+          <template #left>
+            <UDashboardPanel
+                id="grupo"
+                side="left"
+              
+              >
+                  <template #header>
+                    <UDashboardNavbar
+                  :title="grupo.nombre"
+                >
+                  <template #right>
+                    <BadgeGrado
+                    v-for="grado in planificacion.grupo.grados"
+                    :key="grado.id"
+                    :grado="grado">
+                  </BadgeGrado>
+                
+                  </template>
+                </UDashboardNavbar>
+                  </template>
+              
+                <template #body>
+                  <!-- Tramos -->
+                <div class="overflow-y-auto mb-8 min-h-full" v-if="planificacionFechaSelected">
+                  <Stepper 
+                  :showButtonAddStep="true"
+                  titleButtonAddStep="Agregar nuevo tramo"
+                  orientation="vertical"
+                  descriptionButtonAddStep="Extender un nuevo tramo a la planificación"
+                  :currentStep="currentStepTramo"  
+                  :steps="stepsTramos"
+                  @on:add-step="showModalAddTramo = true"
+                  :linear="false"
+                  ref="tramosStepper"
+                  @on:change-step="onChangeTramo"
+                  :actionsMenu="actionsMenuTramo"
+                  @on:action-menu="handleOnActionMenuTramo"/>
+                </div>
+                </template>
+                
+              </UDashboardPanel>
           </template>
-        </UButton>
-        </UTooltip>
 
-         <UTooltip text="Exportar a Word">
-          <UButton
-            icon="tabler:file-word"
-            color="gray"
-            variant="ghost"
-            @click="showModalExportConfirm = true"
-          />
-        </UTooltip>
+          <template #default> 
 
-        <UTooltip text="Exportar planificación a Google Drive">
-          <UButton
-            icon="tabler:brand-google-drive"
-            color="gray"
-            variant="ghost"
-            @click="showModalSyncGDrive = true"
-          />
-        </UTooltip>
+            <UDashboardPanel
+            >
+            <UDashboardNavbar>
+              <template #toggle>
+                <UDashboardNavbarToggle icon="i-heroicons-x-mark" />
 
-        <UTooltip text="Eliminar">
-          <UButton
-            icon="tabler:trash"
-            color="gray"
-            variant="ghost"
-            @click="showModalDeleteConfirm = true"
-          />
-        </UTooltip>
+                <UDivider
+                  orientation="vertical"
+                  class="lg:hidden"
+                />
+              </template>
 
-        <UDivider
-          orientation="vertical"
-          class="mx-1.5"
-        />
-      </template>
+              <template #left>
 
-    
-    </UDashboardNavbar>
-      <div class="p-2 overflow-y-auto"
-        v-if="planificacionFechaSelected">
+                <div class="flex items-center">
+                  <UDashboardNavbar
+                  :title="planificacion.nombre"
+                    >
+                    </UDashboardNavbar>
+          
+                  <PlanificacionesPopoverAddPlanificacionFecha 
+                  :planificacionId="planificacion.id"
+                  @on:add="onAddPlanificacionFechas"
+                  :showSmallBtn="true"
+                  :fechasDisabled="planificacion.fechas.map(pf => pf.fecha)"></PlanificacionesPopoverAddPlanificacionFecha>
 
-        <TramosTramoForm 
-          ref="tramoFormRef" 
-          v-if="tramoSelected"  
-          v-model="tramoSelected" 
-          :tramo="tramoSelected"  
-          :espacios="espacios" 
-          :gradosIds="grupo.grados.map(g => g.id)"
-          :ciclosGradosIds="ciclosGradosIds"
-          :competenciasGenerales="competenciasGenerales"
-          :nroTramo="currentStepTramo"></TramosTramoForm>
+                  <PlanificacionesPopoverChangePlanificacionFecha 
+                  :planificacionId="planificacion.id"
+                  :planificacionFecha="planificacionFechaSelected"
+                  :fechasYaPlanificadas="planificacion.fechas.map(pf => pf.fecha)"
+                  @on:change="onChangePlanificacionFecha"></PlanificacionesPopoverChangePlanificacionFecha>
+                </div>
+              
+              </template>
 
-        <div v-else class="flex flex-col justify-center items-center h-screen">
-          <UIcon
-            name="tabler:file-text"
-            size="60px"
-          />
-            <h1 class="mt-1"> {{  tramoNoSelectedText }} </h1>
-          </div>
-      </div>
+              <template #right>
 
-      <div v-else class="flex flex-col justify-center items-center h-screen">
-        <UIcon
-          name="tabler:butterfly-filled"
-          size="60px"
-        />
-        <h1 class="mt-1"> No tienes ningún día planificado aún , prueba creando un nuevo día </h1>
-      
-        <PlanificacionesPopoverAddPlanificacionFecha 
-          :show="showPopoverAddFecha" 
-          :planificacionId="planificacion.id"
-          @on:add="onAddPlanificacionFechas"
-          :fechasDisabled="planificacion.fechas.map(pf => pf.fecha)"></PlanificacionesPopoverAddPlanificacionFecha>
-      </div>
-    </UDashboardPanel>
-  </UDashboardPage>
+                <UTooltip text="Guardar planificación">
+                  <UButton
+                    icon="tabler:device-floppy"
+                    color="neutral"
+                    variant="ghost"
+                    @click="onSavePlanificacionFecha()"
+                  >
+                  <template #leading="{ ui }">
+                                
+                    <div class="flex flex-col">
+                        <div class="w-2 h-2 rounded-full bg-primary  absolute float-right" v-if="pendingSave"> </div>
+                        <UIcon name="tabler:device-floppy" class="size-5" />
+                    </div>
+                
+                  </template>
+                </UButton>
+                </UTooltip>
+
+                <UTooltip text="Exportar a Word">
+                  <UButton
+                    icon="tabler:file-word"
+                    color="neutral"
+                    variant="ghost"
+                    @click="showModalExportConfirm = true"
+                  />
+                </UTooltip>
+
+                <UTooltip text="Exportar planificación a Google Drive">
+                  <UButton
+                    icon="tabler:brand-google-drive"
+                    color="neutral"
+                    variant="ghost"
+                    @click="showModalSyncGDrive = true"
+                  />
+                </UTooltip>
+
+                <UTooltip text="Eliminar">
+                  <UButton
+                    icon="tabler:trash"
+                    color="neutral"
+                    variant="ghost"
+                    @click="showModalDeleteConfirm = true"
+                  />
+                </UTooltip>
+
+                <UDivider
+                  orientation="vertical"
+                  class="mx-1.5"
+                />
+              </template>
+
+            
+            </UDashboardNavbar>
+              <div class="p-2 overflow-y-auto"
+                v-if="planificacionFechaSelected">
+
+                <TramosTramoForm 
+                  ref="tramoFormRef" 
+                  v-if="tramoSelected"  
+                  v-model="tramoSelected" 
+                  :tramo="tramoSelected"  
+                  :espacios="espacios" 
+                  :gradosIds="grupo.grados.map(g => g.id)"
+                  :ciclosGradosIds="ciclosGradosIds"
+                  :competenciasGenerales="competenciasGenerales"
+                  :nroTramo="currentStepTramo"></TramosTramoForm>
+
+                <div v-else class="flex flex-col justify-center items-center h-screen">
+                  <UIcon
+                    name="tabler:file-text"
+                    size="60px"
+                  />
+                    <h1 class="mt-1"> {{  tramoNoSelectedText }} </h1>
+                  </div>
+              </div>
+
+              <div v-else class="flex flex-col justify-center items-center h-screen">
+                <UIcon
+                  name="tabler:butterfly-filled"
+                  size="60px"
+                />
+                <h1 class="mt-1"> No tienes ningún día planificado aún , prueba creando un nuevo día </h1>
+              
+                <PlanificacionesPopoverAddPlanificacionFecha 
+                  :show="showPopoverAddFecha" 
+                  :planificacionId="planificacion.id"
+                  @on:add="onAddPlanificacionFechas"
+                  :fechasDisabled="planificacion.fechas.map(pf => pf.fecha)"></PlanificacionesPopoverAddPlanificacionFecha>
+              </div>
+            </UDashboardPanel>
+          </template>
+   </UPage>
+
 
   <!--Extender tramo-->
-  <UDashboardModal
-  v-model="showModalAddTramo"
+  <UModal
+  v-model:open="showModalAddTramo"
   title="Agregar nuevo Tramo"
   description="¿Estás seguro que deseas agregar un siguiente tramo a la planificación?"
   icon="tabler:butterfly-filled"
   prevent-close
   :close-button="null"
-  :ui="{
-    icon: {
-      base: 'text-primary dark:text-red-400'
-    } as any,
-    footer: {
-      base: 'ml-16'
-    } as any
-  }"
 >
   <template #footer>
     <UButton
@@ -776,12 +792,12 @@ const onUpdateTramo = (tramo: Tramo)=>{
     />
 
     <UButton
-        color="white"
+        color="neutral"
         label="Cancelar"
         @click="onCancelNuevoTramo"
       />
   </template>
-</UDashboardModal>
+</UModal>
 
 <!--Confirmacion de modal de descargar el archivo de planificacion. -->
 <ConfirmModal 
@@ -790,6 +806,7 @@ const onUpdateTramo = (tramo: Tramo)=>{
   title="Descargar planificación" 
   description="¿Querés descargar la planificación actual como un archivo? Esto guardará una copia en tu computadora." 
   @onConfirm="onExport"
+  @onClose="showModalExportConfirm = false"
 />
 
 <!--Confirmacion de modal de sincronizacion de planificacion a google drive-->
@@ -798,14 +815,16 @@ v-if="showModalSyncGDrive"
 v-model="showModalSyncGDrive"
 title="Sincronizar planificación con Google Drive" 
 description="¿Deseás sincronizar la planificación actual con tu cuenta de Google Drive? Esto guardará una copia actualizada en la nube." 
-@onConfirm="syncGoogleDrive"></ConfirmModal>
+@onConfirm="syncGoogleDrive"
+@onClose="showModalSyncGDrive = false"></ConfirmModal>
 
-
+<!--Confirmacion de modal para eliminar la planificacion -->
 <ConfirmModal 
   v-model="showModalDeleteConfirm"
   title="Eliminar planificación" 
   description="¿Deseás eliminar la planificación actual? Esta acción no se puede deshacer." 
-  @onConfirm="onDelete">
+  @onConfirm="onDelete"
+  @onClose="showModalDeleteConfirm = false">
 </ConfirmModal>
 
 <PlanificacionDia

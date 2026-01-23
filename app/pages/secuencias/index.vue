@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import SecuenciaForm from "~/components/secuencias/SecuenciaForm.vue";
+import SelectGrupo from "~/components/select/SelectGrupo.vue";
+import BadgeGrado from "~/components/badge/BadgeGrado.vue";
 import type { Espacio } from "~/types/espacio";
 import type { ListRequest } from "~/types/list-request";
 import type { ListResponse } from "~/types/list-response";
@@ -7,48 +9,73 @@ import type { Secuencia } from "~/types/secuencia";
 import type { UnidadCurricular } from "~/types/unidadCurricular";
 import { HttpMethodEnum } from "~/utils/enums/HttpMethodEnum"
 import { ModeEnum } from "~/utils/enums/ModeEnum";
+import { apiSecuenciasRoutes, apiEspaciosRoutes } from "~/utils/apiRoutes";
+import { appRoutes } from "~/utils/appRoutes";
+import { formattedImageUrlGrupo } from "~/utils/planificacion";
 
 let timeoutSearch: any = 0;
 
 const defaultColumns = [
     {
+
+        id: 'nombre',
+        accessorKey: 'nombre',
+        header: 'Nombre',
         key: "nombre",
         label: "Nombre",
         sortable: true,
     },
     {
-      key: 'grupo',
-      label: 'Grupo'
+        id: 'grupo',
+        accessorKey: 'grupo',
+        header: 'Grupo',
+        key: "grupo",
+        label: "Grupo",
     },
 
     {
-      key: 'grados',
-      label: 'Grados'
+        id: 'grados',
+        accessorKey: 'grados',
+        header: 'Grados',
+        key: "grados",
+        label: "Grados",
     },
 
     {
+      id: 'espacio',
+      accessorKey: 'espacio',
+      header: 'Espacio',
       key: 'espacio',
       label: 'Espacio'
     },
 
     {
+      id: 'unidad-curricular',
+      accessorKey: 'unidad-curricular',
+      header: 'Unidad curricular',
       key: 'unidad-curricular',
       label: 'Unidad curricular'
     },
     
     {
+      id: 'contenido',
+      accessorKey: 'contenido',
+      header: 'Contenido',
       key: 'contenido',
       label: 'Contenido'
     },
 
     {
+        id: 'actions',
+        accessorKey: 'actions',
+        header: 'Acciones',
         key: 'actions',
         label: 'Acciones'
     }
 ];
 
 const mode =  ref<ModeEnum>(ModeEnum.CREATE);
-const secuenciaSelected = ref<Secuencia>(null);
+const secuenciaSelected = ref<Secuencia | null>(null);
 
 const isLoading = ref(false);
 
@@ -74,8 +101,6 @@ const selectedColumns = ref(defaultColumns);
 
 const { $apiRest } = useNuxtApp();
 
-const input = ref<{ input: HTMLInputElement }>();
-
 const secuencias = ref<Secuencia[]>([]);
 const espacios = ref<Espacio[]>([]);
 
@@ -88,10 +113,6 @@ const titleModal = ref<string>('');
 const { page, rowsPerPage, totalRows, changePage, changeTotalRows } = usePagination();
 
 const isSlideoverOpen = ref(false);
-
-const handleUpdateSliderOver = (isOpen)=>{
-   isSlideoverOpen.value = isOpen;
-}
 
 const listReq = ref<ListRequest>({
     page: page.value,
@@ -108,10 +129,15 @@ const { data: response, error, refresh } = await useAsyncData('secuencias', asyn
   return { secuencias,  espacios };
 });
 
-secuencias.value = response.value.secuencias.list;
-changeTotalRows(response.value.secuencias.totalCount);
+if (error.value) {
+    console.error('Error loading secuencias:', error.value);
+}
 
-espacios.value = response.value.espacios;
+if (response.value) {
+    secuencias.value = response.value.secuencias.list;
+    changeTotalRows(response.value.secuencias.totalCount);
+    espacios.value = response.value.espacios;
+}
 
 const loadSecuencias = async () => {
     isLoading.value = true;
@@ -122,9 +148,9 @@ const loadSecuencias = async () => {
         isLoading.value = false;
 
     }catch(message){
-        toast.add({
+        toast.error({
             title: "Error",
-            description: message,
+            message,
             color: "red"
         });
         isLoading.value = false;
@@ -178,6 +204,8 @@ const onCreateSecuencia = ()=>{
 
 const clearFilters = ()=>{
     selectedGrupo.value = null;
+    selectedEspacio.value = null;
+    selectedUnidadCurricular.value = null;
     onFilter();
 }
 
@@ -201,7 +229,10 @@ const onChangeUnidadCurricular = (unidadCurricular: UnidadCurricular)=>{
 <template>
     <UDashboardPage>
         <UDashboardPanel grow>
-            <UDashboardNavbar title="Secuencias" :badge="secuencias.length">
+            <UDashboardNavbar title="Secuencias">
+                <template #trailing>
+                    <UBadge :label="totalRows" variant="subtle" />
+                </template>
                 <template #right>
                     <UInput 
                         ref="input" 
@@ -214,7 +245,7 @@ const onChangeUnidadCurricular = (unidadCurricular: UnidadCurricular)=>{
                         </template>
                     </UInput>
 
-                    <UButton label="Crear secuencia" trailing-icon="i-heroicons-plus" color="gray"
+                    <UButton label="Crear secuencia" trailing-icon="i-heroicons-plus" color="primary"
                         @click="onCreateSecuencia" />
                 </template>
             </UDashboardNavbar>
@@ -230,39 +261,47 @@ const onChangeUnidadCurricular = (unidadCurricular: UnidadCurricular)=>{
 
                         <div class="w-full flex gap-2">
 
-                            <USelectMenu  :model-value="selectedEspacio" :options="espacios" option-attribute="id" class="flex-1  min-w-[350px]" @change="onChangeEspacio">
-                                <template #label>
+                            <USelectMenu  :model-value="selectedEspacio" :items="espacios" option-attribute="id" class="flex-1  min-w-[350px]" @update:model-value="onChangeEspacio">
+                                <template #leading="{ modelValue, ui }">
                                     <span v-if="selectedEspacio" :style="{ backgroundColor: selectedEspacio?.rgbColor }"
-                                        :class="['inline-block h-2 w-2 flex-shrink-0 rounded-full']" aria-hidden="true" />
+                                    :class="['inline-block h-2 w-2 flex-shrink-0 rounded-full mr-2']" aria-hidden="true" />
 
                                     <span class="truncate" v-if="selectedEspacio">{{ selectedEspacio?.nombre }}</span>
                                     <span v-else>Selecciona un espacio.</span>
                                 </template>
 
-                                <template #option="{ option: espacio }">
-                                    <span :style="{ backgroundColor: espacio.rgbColor }"
-                                        :class="['inline-block h-2 w-2 flex-shrink-0 rounded-full']" aria-hidden="true" />
-                                    <span class="truncate">{{ espacio.nombre }}</span>
+                                <template #item-leading="{ item }">
+                                    <div class="flex items-center">
+                                    <span :style="{ backgroundColor: item.rgbColor }"
+                                        :class="['inline-block h-2 w-2 flex-shrink-0 rounded-full mr-2']" aria-hidden="true" />
+                                    <span class="truncate">{{ item.nombre }}</span>
+                                    </div>
                                 </template>
                             </USelectMenu>
 
                        </div>
                        <div class="w-full flex gap-2">
-                            <USelectMenu :model-value="selectedUnidadCurricular" :options="unidadesCurriculares" option-attribute="id" class="flex-1  min-w-[350px]"
-                        @change="onChangeUnidadCurricular">
-                            <template #label>
-                            <span v-if="selectedUnidadCurricular" :style="{ backgroundColor: selectedEspacio?.rgbColor }"
-                                :class="['inline-block h-2 w-2 flex-shrink-0 rounded-full']" aria-hidden="true" />
+                            <USelectMenu 
+                            :model-value="selectedUnidadCurricular" 
+                            :items="unidadesCurriculares" 
+                            option-attribute="id" 
+                            class="flex-1  min-w-[350px]"
+                            @update:model-value="onChangeUnidadCurricular">
+                               <template #leading="{ modelValue, ui }">
+                                    <span v-if="selectedUnidadCurricular" :style="{ backgroundColor: selectedEspacio?.rgbColor }"
+                                    :class="['inline-block h-2 w-2 flex-shrink-0 rounded-full mr-2']" aria-hidden="true" />
 
-                            <span class="truncate" v-if="selectedUnidadCurricular">{{ selectedUnidadCurricular?.nombre }}</span>
-                                <span v-else> Selecciona una unidad curricular.</span>
-                            </template>
+                                    <span class="truncate" v-if="selectedUnidadCurricular">{{ selectedUnidadCurricular?.nombre }}</span>
+                                    <span v-else>Selecciona un espacio.</span>
+                                </template>
 
-                            <template #option="{ option:  unidadCurricular }">
-                            <span :style="{ backgroundColor: selectedEspacio?.rgbColor }"
-                                :class="['inline-block h-2 w-2 flex-shrink-0 rounded-full']" aria-hidden="true" />
-                                <span class="truncate">{{ unidadCurricular?.nombre }}</span>
-                            </template>
+                                <template #item-leading="{ item }">
+                                    <div class="flex items-center">
+                                    <span :style="{ backgroundColor: selectedEspacio?.rgbColor }"
+                                        :class="['inline-block h-2 w-2 flex-shrink-0 rounded-full mr-2']" aria-hidden="true" />
+                                    <span class="truncate">{{ item.nombre }}</span>
+                                    </div>
+                                </template>
                             </USelectMenu>
                         </div>
 
@@ -281,69 +320,71 @@ const onChangeUnidadCurricular = (unidadCurricular: UnidadCurricular)=>{
             <UTable :empty-state="{
                 icon: 'i-heroicons-circle-stack-20-solid',
                 label: 'No hay secuencias creadas',
-            }" no-results-text="Test" :rows="secuencias" :columns="columns"
+            }" no-results-text="Test" 
+                :data="secuencias" 
+                :columns="columns"
                 :loading="isLoading" sort-mode="manual" class="w-full"
-                :ui="{ divide: 'divide-gray-200 dark:divide-gray-800' }">
-                <template #nombre-data="{ row }">
-                      <span class="text-gray-900 dark:text-white font-medium">{{ row.nombre }}</span>
+                 empty="No hay secuencias creadas.">
+                <template #nombre-cell="{ row }">
+                      <span class="text-gray-900 dark:text-white font-medium">{{ row.original.nombre }}</span>
                 </template>
 
 
-                <template #grupo-data="{ row }">
+                <template #grupo-cell="{ row }">
                     <div class="flex items-center gap-2">
-                        <UAvatar :src="formattedImageUrlGrupo(row.grupo?.url_image)" size="2xs" />
-                        <span>{{ row.grupo?.nombre }}</span>
+                        <UAvatar :src="formattedImageUrlGrupo(row.original.grupo?.url_image)" size="2xs" />
+                        <span>{{ row.original.grupo?.nombre }}</span>
                     </div>
                 </template>
 
-                <template #grados-data="{ row }">
+                <template #grados-cell="{ row }">
                     <div class="flex items-center gap-2">
-                        <BadgeGrado v-for="(grado,idx) in row.grupo.grados" :key="idx" :grado="grado"></BadgeGrado>
+                        <BadgeGrado v-for="(grado,idx) in row.original.grupo.grados" :key="idx" :grado="grado"></BadgeGrado>
                     </div>
                 </template>
 
-                <template #espacio-data="{ row }">
+                <template #espacio-cell="{ row }">
                         <ul 
-                        v-if="row.espacio">
-                            <li><span :style="{ color: row.espacio.rgbColor }" class="mr-2">●</span>{{ row.espacio.nombre }}</li>
+                        v-if="row.original.espacio">
+                            <li><span :style="{ color: row.original.espacio.rgbColor }" class="mr-2">●</span>{{ row.original.espacio.nombre }}</li>
                         </ul>
 
                         <span v-else> Sin asignar</span>
                 </template>
 
-                <template #unidad-curricular-data="{ row }">
+                <template #unidad-curricular-cell="{ row }">
                      <ul 
-                        v-if="row.unidad_curricular">
-                            <li><span :style="{ color: row.espacio?.rgbColor }" class="mr-2">●</span>{{ row.unidad_curricular.nombre }}</li>
+                        v-if="row.original.unidad_curricular">
+                            <li><span :style="{ color: row.original.espacio?.rgbColor }" class="mr-2">●</span>{{ row.original.unidad_curricular.nombre }}</li>
                     </ul>
 
                     <span v-else> Sin asignar</span>
                 </template>
 
-                <template #contenido-data="{ row }">
+                <template #contenido-cell="{ row }">
                     <ul 
-                        v-if="row.contenido">
-                            <li><span class="mr-2">●</span>{{ row.contenido.descripcion }}</li>
+                        v-if="row.original.contenido">
+                            <li><span class="mr-2">●</span>{{ row.original.contenido.descripcion }}</li>
                     </ul>
 
                     <span v-else> Sin asignar</span>
                 </template>
 
-                <template #actions-data="{ row }">
+                <template #actions-cell="{ row }">
                     <div class="flex flex-wrap items-center gap-2">
                         <UButton
                         icon="i-heroicons-pencil-square"
                         size="sm"
                         color="primary"
                         variant="outline"
-                        @click="onSelect(row)"
+                        @click="onSelect(row.original)"
                         />
                         <UButton
                         icon="tabler:eye"
                         size="sm"
                         color="primary"
                         variant="outline"
-                        @click="verSecuencia(row)"
+                        @click="verSecuencia(row.original)"
                         />
                     </div>
                     
@@ -351,16 +392,17 @@ const onChangeUnidadCurricular = (unidadCurricular: UnidadCurricular)=>{
                 
             </UTable>
             <div class="flex justify-end px-3 py-3.5 border-t border-gray-200 dark:border-gray-700">
-                <UPagination v-model="page" :page-count="rowsPerPage" :total="totalRows" />
+                <UPagination 
+                v-model:page="page" 
+                :items-per-page="rowsPerPage" 
+                :total="totalRows" />
             </div>
         </UDashboardPanel>
 
-        <UDashboardSlideover v-model="isSlideoverOpen" @update:modelValue="handleUpdateSliderOver">
-            <template #title>
-               {{ titleModal }}
-            </template>
+        <USlideover v-model:open="isSlideoverOpen" :title="titleModal">
+            <template #body>
                 <SecuenciaForm  :espacios="espacios" @close="isSlideoverOpen = false" :mode="mode" :secuenciaSelected="secuenciaSelected"  @on:update="loadSecuencias"/>
-          
-          </UDashboardSlideover>
+            </template>
+        </USlideover>
     </UDashboardPage>
 </template>

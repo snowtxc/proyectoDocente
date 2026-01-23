@@ -28,28 +28,28 @@ export const getColorBadgeComponente = (rgbColor: string) : any=>{
 
     switch(rgbColor){
         case "#d71634":
-            result = "red";
+            result = "error";
             break;
         case "#8bc63e":
-            result = "green"
+            result = "success"
             break;
         case "#e8b809":
-            result = ""
+            result = "warning"
             break;
         case "#ed028c":
-            result = ""
+            result = "error"
             break;
         case "#90268f":
-            result = ""
+            result = "error"
             break;
         case "#f7931d":
-            result = ""
+            result = "warning"
             break;
         case "#015ca3":
-            result = ""
+            result = "info"
             break;
         default:
-            result = "gray"
+            result = "secondary"
             break;
     }
 

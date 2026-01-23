@@ -167,16 +167,16 @@ import { FormsCompetenciasGenerales, UPopover } from '#components';
       :disabled="props.disabled"
   />
 
-  <UModal v-model="isOpen">
-      <UCard :ui="{ header: { padding: 'p-4 sm:px-6' }, body: { padding: '' } }" class="min-w-0 min-h-[75vh]">
+  <UModal v-model:open="isOpen">
+    <template #content>
+       <UCard class="min-w-0 min-h-[75vh]">
         <template #header>
           <div class="flex gap-2 items-center mt-2">
             <UInput v-model="q" icon="i-heroicons-magnifying-glass" placeholder="Buscar competencia especifica" autofocus class="flex-1" />
             
             <UPopover :popper="{ placement: 'bottom-start' }" mode="click">
-                <template #default="{ open }">
+                <template #content>
                   <UTooltip
-                    :prevent="open"
                   >
                   <UButton
                     size="sm"
@@ -184,20 +184,17 @@ import { FormsCompetenciasGenerales, UPopover } from '#components';
                     square
                     variant="outline"
                     class="flex-none"
-                    >
-                    <template #leading="{ modelValue, ui }">
-                        
+                    >                        
                         <div class="flex flex-col">
                             <div class="w-2 h-2 rounded-full bg-green-500  absolute float-right" v-if="filters.competenciasGenerales.length > 0"> </div>
                             <UIcon name="tabler:filter-cog" class="size-5" />
                         </div>
                     
-                      </template>
                     </UButton>
                   </UTooltip>
                 </template>
 
-                <template #panel="{ close }">
+                <template>
                     <div class="p-2 m-4 flex flex-col gap-y-4 max-w-64">
                         <FormsCompetenciasGenerales 
                         v-model="filters.competenciasGenerales" 
@@ -240,15 +237,12 @@ import { FormsCompetenciasGenerales, UPopover } from '#components';
 
               <div class="flex items-start gap-3">
                 <UPopover :popper="{ placement: 'bottom-start' }" mode="hover" v-if="competenciaEspecifica.recomendado">
-                    <template #default="{ open }">
                       <UTooltip
-                        :prevent="open"
                       >
                          <UButton label="Recomendado" icon="tabler:butterfly-filled" :color="getColorBadgeComponente(props.color)" variant="outline"/>
                       </UTooltip>
-                    </template>
 
-                    <template #panel="{ close }">
+                    <template #content>
                         <div class="p-2 m-4 flex flex-col gap-y-4 max-w-64">
                             <div v-if="competenciaEspecifica.contenidoRelacionado">
                                 <span class="font-medium"> Se relaciona al contenido seleccionado: </span>
@@ -292,7 +286,7 @@ import { FormsCompetenciasGenerales, UPopover } from '#components';
           <div class="flex justify-end gap-3">
             <UButton
               label="Cancelar"
-              color="gray"
+              color="secondary"
               variant="ghost"
               @click="isOpen = false"
             />
@@ -300,13 +294,14 @@ import { FormsCompetenciasGenerales, UPopover } from '#components';
             <UButton
                 type="button"
               label="Guardar"
-              color="black"
+              color="primary"
               @click="onSave"
               />
           </div>
         </template>
 
       </UCard>
+    </template>
   </UModal>
 
 </template>

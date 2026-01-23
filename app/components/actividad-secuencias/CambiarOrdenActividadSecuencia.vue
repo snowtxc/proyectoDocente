@@ -1,5 +1,6 @@
 
 <script lang="ts" setup>
+import { ActividadSecuenciasCambiarOrdenActividadSecuencia } from '#components';
 import type { ActividadSecuencia, ReordenarActividadSecuenciaDTO } from '~/types/actividadSecuencia';
 import { HttpMethodEnum } from '~/utils/enums/HttpMethodEnum';
 
@@ -11,14 +12,12 @@ interface Props {
 
 const { $apiRest  } = useNuxtApp();
 
-const emit = defineEmits(['on-change-order']);
+const emit = defineEmits(['on-change-order','onClose']);
 
 enum Direction {
     UP,
     DOWN
 }
-const modal = useModal()
-
 const props = withDefaults(defineProps<Props>() , {});
 
 const loadingReorder = ref(false);
@@ -93,18 +92,18 @@ const reorder = async()=>{
         const { actividadesSecuenciaUpdated } = response;
         emit('on-change-order', actividadesSecuenciaUpdated);
         loadingReorder.value = false;
-        toast.add({
+        toast.success({
             title: "Actividad ordenadoa con exito",
-            description: "Actividad ordenada",
+            message: "Actividad ordenada",
             color: "green"
         })
       }
       
     }catch(message){
         loadingReorder.value = false;
-        toast.add({
+        toast.error({
             title: "Error",
-            description: message ? message : 'Error al intentar reordenar la actividad de la secuencia',
+            message: message ? message : 'Error al intentar reordenar la actividad de la secuencia',
             color: "red"
         })
     }
@@ -114,8 +113,13 @@ const reorder = async()=>{
 </script>
 
 <template>
-  <UModal v-model="isOpen">
-    <UCard :ui="{ header: { padding: 'p-4 sm:px-6' }, body: { padding: '' } }" class="min-w-0 min-h-[75vh]">
+  <UModal 
+    title="Cambiar orden a la actividad"
+    description="Cambiar orden a la actividad"
+    :dismissible="false"
+    :ui="{ footer: 'justify-end' }">
+    <template #content>
+      <UCard  class="min-w-0 min-h-[75vh]">
       <template #header>
         Cambiar orden a la actividad {{ initialOrden }}
       </template>
@@ -145,8 +149,8 @@ const reorder = async()=>{
 
             <div class="flex items-center gap-3" v-if="actividad.id == props.actividadSecuenciaSelected.id">
               <UDropdown position="bottom-end">                
-                <UButton icon="tabler:arrow-up" color="gray" variant="ghost" @click="changeOrder(Direction.UP)" v-if="index > 0"/>
-                <UButton icon="tabler:arrow-down" color="gray" variant="ghost" @click="changeOrder(Direction.DOWN)" v-if="(index + 1) < actividadesSecuencias.length"/>
+                <UButton icon="tabler:arrow-up" color="neutral" variant="ghost" @click="changeOrder(Direction.UP)" v-if="index > 0"/>
+                <UButton icon="tabler:arrow-down" color="neutral" variant="ghost" @click="changeOrder(Direction.DOWN)" v-if="(index + 1) < actividadesSecuencias.length"/>
               </UDropdown>
             </div>
           </li>
@@ -158,16 +162,15 @@ const reorder = async()=>{
           
           <UButton
             label="Gancelar"
-            color="white"
-            type="white"
-            @click="modal.close()"
+            color="neutral"
+            @click="emit('onClose')"
           />
 
           <UButton
             type="submit"
             icon="tabler:arrows-sort"
             label="Reordenar"
-            color="black"
+            color="primary"
             :disabled="disableBtn"
             @click="reorder"
           />
@@ -175,5 +178,7 @@ const reorder = async()=>{
       </template>
 
     </UCard>
+    </template>
+    
   </UModal>
 </template>

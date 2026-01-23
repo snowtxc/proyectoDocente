@@ -1,11 +1,16 @@
 <script setup lang="ts">
 
 interface Props {
+  modelValue: boolean
     title: string;
     description: string;
 }
 
-const emit = defineEmits(['onConfirm']);
+const emit = defineEmits<{
+  (e: 'update:modelValue', value: boolean): void
+  (e: 'onConfirm'): void
+  (e: 'onClose'): void
+}>()
 
 const model = defineModel({
   type: Boolean
@@ -14,24 +19,16 @@ const model = defineModel({
 const props = withDefaults(defineProps<Props>(),{});
 
 const loading = ref(false)
+
 </script>
 
 <template>
-  <UDashboardModal
-    v-model="model"
+  <UModal
+    v-model:open="props.modelValue"
     :title="props.title"
     :description="props.description"
     icon="i-heroicons-exclamation-circle"
-    prevent-close
-    :close-button="null"
-    :ui="{
-      icon: {
-        base: 'text-primary'
-      } as any,
-      footer: {
-        base: 'ml-16'
-      } as any
-    }"
+    :close="{ onClick: () => emit('onClose') }"
   >
     <template #footer>
       <UButton
@@ -41,10 +38,10 @@ const loading = ref(false)
         @click="emit('onConfirm')"
       />
       <UButton
-        color="white"
+        color="neutral"
         label="Cancelar"
-        @click="model = false"
+        @click="emit('onClose')"
       />
     </template>
-  </UDashboardModal>
+  </UModal>
 </template>

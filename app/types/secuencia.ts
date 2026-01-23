@@ -11,6 +11,8 @@ import type { UnidadCurricular } from "./unidadCurricular";
 export interface CreateSecuenciaDTO {
   groupId: any;
   name: string;
+  espacio_id?: number;
+  unidad_curricular_id? : number;
 }
 
 export interface Secuencia  extends BaseModel {

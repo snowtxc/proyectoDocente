@@ -61,9 +61,9 @@ const onDelete = async()=>{
      });
 
      if(result.status == true){
-      toast.add({
+      toast.success({
           title: "Fecha de la planificacion eliminada",
-          description: "Se ha eliminado la fecha de la planificacion con exito",
+          message: "Se ha eliminado la fecha de la planificacion con exito",
           color: "green"
       })
 
@@ -71,9 +71,9 @@ const onDelete = async()=>{
      }
 
   }catch(message){
-    toast.add({
+    toast.error({
       title: "Error",
-      description: message ? message : 'Error al crear el grupo',
+      message: message ? message : 'Error al crear el grupo',
       color: "red"
     })
   }
@@ -85,7 +85,7 @@ const onDelete = async()=>{
 <template>
     <div
         class="absolute transition-all w-fit bottom-4 bg-primary rounded-full left-0 right-0 m-auto px-6 py-4 flex flex-row items-center justify-center">
-
+          
         <button v-if="props.enableDates[0] !== props.selectedDay.fecha" :class="['w-8 h-8']" @click="changeDate('prev')" ><UIcon name="i-heroicons-chevron-left-16-solid" class="w-8 h-8 text-white cursor-pointer" /></button>
         <div class="flex min-w-[80px] transition-all mx-4 text-white font-medium items-center justify-center gap-2">
               <UPopover :popper="{ placement: 'bottom-start' }">
@@ -96,14 +96,14 @@ const onDelete = async()=>{
                   >
                     <UButton
                       icon="i-heroicons-clock"
-                      color="white"
+                      color="neutral"
                       variant="ghost"
                       class="text-white hover:text-primary hover:bg-white"
                     />
                   </UTooltip>
                 </template>
       
-                <template #panel="{ close }">
+                <template #content="{ close }">
                   <DatePicker  v-model="fechaPickerSelected" @close="close"  :enabledDates="enableDates" :disableWeekends="true"/>
                 </template>
               </UPopover>
@@ -113,7 +113,7 @@ const onDelete = async()=>{
                   >
                     <UButton
                       icon="tabler:trash"
-                      color="white"
+                      color="neutral"
                       variant="ghost"
                       class="text-white hover:text-primary hover:bg-white"
                       @click="showModalDeleteConfirm = true"
@@ -128,6 +128,7 @@ const onDelete = async()=>{
       v-model="showModalDeleteConfirm"
       title="Eliminar fecha" 
       description="¿Deseás eliminar este dia de la planificacion?." 
-      @onConfirm="onDelete">
+      @onConfirm="onDelete"
+      @onClose="showModalDeleteConfirm = false">
 </ConfirmModal>
 </template>

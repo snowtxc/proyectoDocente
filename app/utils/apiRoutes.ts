@@ -17,7 +17,7 @@ export const apiAuthRoutes = {
     forgotPassword : '/forgot-password',
     verifyTokenResetPassword: (token:string) => `/verify-token-reset-password/${token}`,
     resetPassword: '/reset-password',
-
+    deactivate: '/auth/deactivate-account'
 }
 
 export const apiUserConfigRoutes = {

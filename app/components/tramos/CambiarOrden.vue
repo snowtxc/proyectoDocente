@@ -12,13 +12,12 @@ interface Props {
 
 const { $apiRest  } = useNuxtApp();
 
-const emit = defineEmits(['on-change-order']);
+const emit = defineEmits(['on-change-order', 'close']);
 
 enum Direction {
     UP,
     DOWN
 }
-const modal = useModal()
 
 const props = withDefaults(defineProps<Props>() , {});
 
@@ -28,7 +27,6 @@ const newOrden = ref(null);
 
 const tramos = ref([...props.tramos]);
 
-const isOpen = true;
 const toast = useToast()
 
 const emptyTramos = computed(()=>{
@@ -93,18 +91,18 @@ const reorder = async()=>{
         const { tramosUpdated } = response;
         emit('on-change-order', tramosUpdated);
         loadingReorder.value = false;
-        toast.add({
+        toast.success({
             title: "Tramo ordenado con exito",
-            description: "Tramo ordenado",
+            message: "Tramo ordenado",
             color: "green"
         })
       }
       
     }catch(message){
         loadingReorder.value = false;
-        toast.add({
+        toast.error({
             title: "Error",
-            description: message ? message : 'Error al intentar reordenar el tramo',
+            message: message ? message : 'Error al intentar reordenar el tramo',
             color: "red"
         })
     }
@@ -114,8 +112,14 @@ const reorder = async()=>{
 </script>
 
 <template>
-  <UModal v-model="isOpen">
-    <UCard :ui="{ header: { padding: 'p-4 sm:px-6' }, body: { padding: '' } }" class="min-w-0 min-h-[75vh]">
+  <UModal
+    title="Cambiar orden al tramo "
+    description="Cambiar orden al tramo "
+    :dismissible="false"
+    :ui="{ footer: 'justify-end' }"
+  >
+      <template #content>
+        <UCard>
       <template #header>
         Cambiar orden al tramo {{ initialOrden }}
       </template>
@@ -142,9 +146,12 @@ const reorder = async()=>{
             </div>
 
             <div class="flex items-center gap-3" v-if="tramo.id == props.tramoSelected.id">
-              <UDropdown position="bottom-end">                
-                <UButton icon="tabler:arrow-up" color="gray" variant="ghost" @click="changeOrder(Direction.UP)" v-if="index > 0"/>
-                <UButton icon="tabler:arrow-down" color="gray" variant="ghost" @click="changeOrder(Direction.DOWN)" v-if="(index + 1) < tramos.length"/>
+              <UDropdown position="bottom-end">     
+                <div class="flex items-center gap-2">
+                     <UButton icon="tabler:arrow-up" color="neutral" variant="ghost" @click="changeOrder(Direction.UP)" v-if="index > 0"/>
+                <UButton icon="tabler:arrow-down" color="neutral" variant="ghost" @click="changeOrder(Direction.DOWN)" v-if="(index + 1) < tramos.length"/>
+                </div>
+             
               </UDropdown>
             </div>
           </li>
@@ -156,22 +163,24 @@ const reorder = async()=>{
           
           <UButton
             label="Gancelar"
-            color="white"
-            type="white"
-            @click="modal.close()"
+            color="neutral"
+            @click="emit('close', true)"
           />
 
           <UButton
             type="submit"
             icon="tabler:arrows-sort"
             label="Reordenar"
-            color="black"
+            color="primary"
             :disabled="disableBtn"
             @click="reorder"
           />
         </div>
       </template>
 
-    </UCard>
+        </UCard>
+      </template>
+  
   </UModal>
+    
 </template>

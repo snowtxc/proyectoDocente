@@ -50,16 +50,16 @@ export default defineNuxtPlugin((nuxtApp) => {
             });
             finish();
             return response;
-        }catch(e){
+        }catch(e: any){
             finish();
-            const statusCode = e.response.status;  // Aquí obtenemos el código de estado
+            const statusCode = e?.response?.status || e?.statusCode || e?.status;
             if(statusCode == 401){
                 authStore.clearToken();
                 authStore.clearUser();
                 navigateTo("/login");
             }
-            const responseError = await e.response._data;
-            const { message } = responseError;
+            const responseError = e?.response?._data || e?.data || e;
+            const message = responseError?.message || responseError || 'An error occurred';
             throw message;
         }        
     };

@@ -275,9 +275,9 @@ const loadContenidosCriteriosDeLogrosYCompetencias = async(unidadCurricularId: n
     loadingMoreData.value = false;
     
    }catch(message){
-    toast.add({
+    toast.error({
       title: "Error",
-      description: message ? message : 'Error al obtener los contenidos ,criterios de logros y competencías especificas para el tramo.',
+      message: message ? message : 'Error al obtener los contenidos ,criterios de logros y competencías especificas para el tramo.',
       color: "red"
     })
     loadingMoreData.value = false;
@@ -374,11 +374,12 @@ watch(()=> form.value.noSeDesarrolla, ()=>{
       Tramo  {{ props.tramo.orden  }} 
     </h1>
     
-    <div class="flex items-center gap-2 font-medium justify-end"  v-if="!form.unidad_curricular?.bloqueada">
+    <div class="flex items-center gap-2 font-medium justify-end my-2"  v-if="!form.unidad_curricular?.bloqueada">
           <span>¿No se desarrolla?</span>
-          <UTooltip disabled text="Marca esta opción si la planificación no se desarrolla por una actividad extracurricular u otro motivo." mode="hover">
-            <UToggle size="md" v-model="form.noSeDesarrolla"  @update:model-value="onChangeModel" />
-          </UTooltip>
+            <USwitch 
+            unchecked-icon="i-lucide-x"
+             checked-icon="i-lucide-check"
+            size="md" v-model="form.noSeDesarrolla"  @update:model-value="onChangeModel"  color="primary"/>
     </div>
     
     <div v-if="form.noSeDesarrolla">
@@ -391,38 +392,53 @@ watch(()=> form.value.noSeDesarrolla, ()=>{
     <div v-else>
       
       <div class="flex gap-2 mt-2">
-      <USelectMenu :model-value="form.espacio" :options="espacios" option-attribute="id" class="flex-1"
-        @change="onChangeEspacio">
-        <template #label>
-          <span v-if="form.espacio" :style="{ backgroundColor: form.espacio?.rgbColor }"
-            :class="['inline-block h-2 w-2 flex-shrink-0 rounded-full']" aria-hidden="true" />
+      <USelectMenu
+         :model-value="form.espacio" 
+         :items="espacios" 
+         option-attribute="id" 
+         class="flex-1"
+        @update:model-value="onChangeEspacio">
 
-          <span class="truncate" v-if="form.espacio">{{ form.espacio?.nombre }}</span>
-          <span v-else>Selecciona un espacio.</span>
+        <template #leading="{ modelValue, ui }">
+            <span v-if="form.espacio" :style="{ backgroundColor: form.espacio?.rgbColor }"
+            :class="['inline-block h-2 w-2 flex-shrink-0 rounded-full mr-2']" aria-hidden="true" />
+
+            <span class="truncate" v-if="form.espacio">{{ form.espacio?.nombre }}</span>
+            <span v-else>Selecciona un espacio.</span>
         </template>
 
-        <template #option="{ option: espacio }">
-          <span :style="{ backgroundColor: espacio.rgbColor }"
-            :class="['inline-block h-2 w-2 flex-shrink-0 rounded-full']" aria-hidden="true" />
-          <span class="truncate">{{ espacio.nombre }}</span>
-        </template>
+      <template #item-leading="{ item }">
+        <div class="flex items-center">
+           <span :style="{ backgroundColor: item.rgbColor }"
+            :class="['inline-block h-2 w-2 flex-shrink-0 rounded-full mr-2']" aria-hidden="true" />
+          <span class="truncate">{{ item.nombre }}</span>
+        </div>
+         
+      </template>
+
       </USelectMenu>
 
-      <USelectMenu :model-value="form.unidad_curricular" :options="unidadesCurriculares" option-attribute="id"
-        class="flex-1" @change="onChangeUnidadCurricular">
-        <template #label>
-          <span v-if="form.unidad_curricular" :style="{ backgroundColor: form.espacio?.rgbColor }"
-            :class="['inline-block h-2 w-2 flex-shrink-0 rounded-full']" aria-hidden="true" />
+      <USelectMenu :model-value="form.unidad_curricular" :items="unidadesCurriculares" option-attribute="id"
+        class="flex-1" @update:model-value="onChangeUnidadCurricular">
+
+        <template #leading="{ modelValue, ui }">
+            <span v-if="form.unidad_curricular" :style="{ backgroundColor: form.espacio?.rgbColor }"
+            :class="['inline-block h-2 w-2 flex-shrink-0 rounded-full mr-2']" aria-hidden="true" />
 
           <span class="truncate" v-if="form.unidad_curricular">{{ form.unidad_curricular?.nombre }}</span>
           <span v-else> Selecciona una unidad curricular.</span>
+
         </template>
 
-        <template #option="{ option:  unidadCurricular }">
-          <span :style="{ backgroundColor: form.espacio?.rgbColor }"
-            :class="['inline-block h-2 w-2 flex-shrink-0 rounded-full']" aria-hidden="true" />
-          <span class="truncate">{{ unidadCurricular?.nombre }}</span>
-        </template>
+        <template #item-leading="{ item }">
+        <div class="flex items-center">
+           <span :style="{ backgroundColor: form.espacio?.rgbColor }"
+            :class="['inline-block h-2 w-2 flex-shrink-0 rounded-full mr-2']" aria-hidden="true" />
+          <span class="truncate">{{ item?.nombre }}</span>
+        </div>
+         
+      </template>
+
       </USelectMenu>
       </div>
 
@@ -446,6 +462,7 @@ watch(()=> form.value.noSeDesarrolla, ()=>{
             :criteriosDeLogrosSelected="form.criteriosDeLogros" 
             :disabled="form.unidad_curricular == null">
           </SelectorContenido>
+          
         </div>
         <div class="flex justify-between gap-2 items-center">
           <div>
@@ -478,15 +495,12 @@ watch(()=> form.value.noSeDesarrolla, ()=>{
                 <div class="w-full flex flex-col h-full items-center justify-center">
                   <div class="w-full flex justify-end relative mb-2"> 
                   <UPopover mode="hover" v-if="!competenciaGeneral.recomendado">
-                    <template #default={open}>
                       <UTooltip
-                      :prevent="open"
                       >
-                          <UButton icon="tabler:alert-square-rounded" size="2xs" color="red" variant="outline" />
+                          <UButton icon="tabler:alert-square-rounded"  color="error" variant="outline" />
                       </UTooltip>
-                    </template>
   
-                    <template #panel="{ close }">
+                    <template #content>
                         <div class="p-2 m-4 flex flex-col gap-y-4 max-w-128">
                               <span class="font-medium"> Competencias especificas relacionadas: </span>  
                               <div class="flex flex-col gap-y-2">

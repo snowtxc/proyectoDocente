@@ -4,15 +4,6 @@ useSeoMeta({
   ogImage: '/logo.png',
 })
 
-const data =  ref<any>({
-  expiryDate : new Date(),
-  mercadoPagoLink: 'https://mercagopagolink.com',
-  userEmail: 'snowitxc@gmail.com',
-  planDetails : 'si',
-  isPlanExpired : true,
-  loadUserPlan : ''
-});
-
 const loading = ref(true)
 
 onMounted(async () => {
@@ -20,6 +11,8 @@ onMounted(async () => {
 })
 
 const colorMode = useColorMode()
+
+colorMode.value == 'light';
 const color = computed(() => colorMode.value === 'dark' ? '#111827' : 'white')
 
 useHead({
@@ -48,16 +41,21 @@ useSeoMeta({
   twitterImage: 'https://dashboard-template.nuxt.dev/social-card.png',
   twitterCard: 'summary_large_image'
 })
+
+
 </script>
 
 <template>
   <div>
     <NuxtLoadingIndicator />
 
-    <NuxtLayout>
-      <NuxtPage />
-    </NuxtLayout>
+      <UApp>
+         <NuxtLayout>
+          <NuxtPage />
+        </NuxtLayout>
 
+      </UApp>
+   
     <UNotifications />
     <UModals />
   </div>

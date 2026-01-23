@@ -3,7 +3,7 @@
 import { HttpMethodEnum } from '~/utils/enums/HttpMethodEnum';
 import type { Espacio } from '~/types/espacio';
 import type { CompetenciaEspecifica, CompetenciaEspecificaFilter, CompetenciaGeneral, CompetenciaGeneralItemSelector } from '~/types/competenciaEspecifica';
-import { cloneDeep } from 'lodash';
+import { cloneDeep, over } from 'lodash';
 import { ActionMenuTramo } from '~/utils/enums/actionMenuTramo.enum';
 import ConfirmModal from '~/components/ConfirmModal.vue';
 import type { Secuencia } from '~/types/secuencia';
@@ -40,7 +40,9 @@ const showModalSyncGDrive = ref<boolean>(false);
 const showModalExportConfirm = ref<boolean>(false);
 const showModalDeleteConfirm = ref<boolean>(false);
 
-const modal = useModal()
+const overlay = useOverlay()
+
+
 const loadingMoreData = ref(false);
 
 const { data: response, error, refresh } = await useAsyncData('secuenciaDetalle', async () => {
@@ -106,9 +108,9 @@ const loadContenidosCriteriosDeLogrosYCompetencias = async(unidadCurricularId: n
     loadingMoreData.value = false;
     
    }catch(message){
-    toast.add({
+    toast.error({
       title: "Error",
-      description: message ? message : 'Error al obtener los contenidos ,criterios de logros y competencías especificas para el tramo.',
+      message: message ? message : 'Error al obtener los contenidos ,criterios de logros y competencías especificas para el tramo.',
       color: "red"
     })
     loadingMoreData.value = false;
@@ -186,38 +188,40 @@ const currentStepActividad  = computed(()=>{
 })
 
 
-const competenciasGeneralesSelected = computed<CompetenciaGeneralItemSelector[]>(()=>{
-
+const competenciasGeneralesSelected = computed<CompetenciaGeneralItemSelector[]>(() => {
   return secuencia.value.competencias_generales.map(cg => {
-      
-      let recomendado = false;
-      let competenciasEspecificasRelacionadas : CompetenciaEspecifica[] = [];
-      if(secuencia.value.competencias_especificas.length == 0){
-          recomendado = true;
-         return cg;
-      }
-
-      // Marcar como competencia general recomendado si alguna 
-      // competencia especifica del tramo seleccionada pertenece a esa competencia general
-      const seRecomienda  = secuencia.value.competencias_especificas.some(ce => {
-          const exists = ce.competencias_generales.some(cgItem => cgItem.id == cg.id);
-          return exists;
-      });
-
-      recomendado = seRecomienda;
-
-      // Asignar las competencias especificas relacionadas a esa competencia general
-      competenciasEspecificasRelacionadas =  competenciasEspecificas.value.filter(x => x.competencias_generales.some(cgItem => cgItem.id == cg.id));
-      
-      return{
+    // Si no hay competencias específicas, marcar todas como recomendadas
+    if (secuencia.value.competencias_especificas.length === 0) {
+      return {
         ...cg,
-        recomendado,
-        competenciasEspecificasRelacionadas,
+        recomendado: true,
+        competenciasEspecificasRelacionadas: [],
         nroRelaciones: 0,
         checked: false
-      }
-  }) as any;
-})
+      };
+    }
+
+    // Marcar como recomendado si alguna competencia específica pertenece a esta competencia general
+    const recomendado = secuencia.value.competencias_especificas.some(ce => 
+      ce.competencias_generales.some(cgItem => cgItem.id === cg.id)
+    );
+
+    // Obtener competencias específicas relacionadas con esta competencia general
+    const competenciasEspecificasRelacionadas = competenciasEspecificas.value.filter(x => 
+      x.competencias_generales.some(cgItem => cgItem.id === cg.id)
+    );
+
+    return {
+      ...cg,
+      recomendado,
+      competenciasEspecificasRelacionadas,
+      nroRelaciones: competenciasEspecificasRelacionadas.length,
+      checked: false
+    };
+  });
+});
+
+
 
 onBeforeMount(()=>{
   if(secuencia.value.unidad_curricular){
@@ -245,16 +249,16 @@ const onCreateActividad = async()=>{
 
    actividadSecuenciaSelected.value = actividadSecuencia;
 
-   toast.add({
+   toast.success({
       title: "Nueva actividad",
-      description: 'Se ha extendido la secuencia a una nueva actividad.',
+      message: 'Se ha extendido la secuencia a una nueva actividad.',
       color: "green"
     })
 
   }catch(message){
-    toast.add({
+    toast.error({
       title: "Error",
-      description: message ? message : 'Error al crear una nueva actividad a la secuencia.',
+      message: message ? message : 'Error al crear una nueva actividad a la secuencia.',
       color: "red"
     })
   }
@@ -285,9 +289,9 @@ const onSaveSecuencia = async(showMessage: boolean = true)=>{
       if(response && response.status){
 
         if(showMessage){
-          toast.add({
+          toast.success({
               title: "Se ha guardado con exito",
-              description: response.message,
+              message: response.message,
               color: "green"
           });
         }
@@ -296,9 +300,9 @@ const onSaveSecuencia = async(showMessage: boolean = true)=>{
       
     }catch(message){
       isSaving.value = false;
-      toast.add({
+      toast.error({
         title: "Error",
-        description: message ? message : 'Error al guardar la secuencia. Por favor vuelve a intentarlo más tarde.',
+        message: message ? message : 'Error al guardar la secuencia. Por favor vuelve a intentarlo más tarde.',
         color: "red"
       })
     }
@@ -369,7 +373,7 @@ const actionsMenuActividad = ref([
     actionName: ActionMenuTramo.CHANGE_ORDER
     },
     {
-    title: 'Eliminar tramo',
+    title: 'Eliminar actividad',
     icon: 'tabler:trash',
     actionName: ActionMenuTramo.DELETE
   }
@@ -385,23 +389,30 @@ const actionsMenuActividad = ref([
   if(!stepSelected)
     return;
 
+   let modal;
    switch(data.actionName){
 
     case ActionMenuActividadSecuencia.CHANGE_ORDER:
-      
-      modal.open(CambiarOrdenActividadSecuencia, { 
+      modal = overlay.create(CambiarOrdenActividadSecuencia);
+      modal.open({ 
         secuenciaId: secuencia.value.id,
         actividadSecuenciaSelected : {... actividadSelected } , 
         actividadesSecuencias : cloneDeep(actividadesSecuencia.value),
         "onOn-change-order" : (actividadesSecuencias)=>{
           updateOrdersActividades(actividadesSecuencias);
           modal.close()
+        },
+
+        "onOnClose" : ()=>{
+          modal.close();
         }
+        
       })
       break;
 
     case ActionMenuActividadSecuencia.DELETE:
-      modal.open(ConfirmModal, { 
+      modal = overlay.create(ConfirmModal)
+      modal.open({ 
         title: `Remover actividad ${actividadSecuenciaSelected.value.orden}`,
         description: "Al remover la actividad , es posible que se reordenen todas las actividades de lasecuencia.",
         "onOnConfirm" : async(data)=>{
@@ -429,20 +440,24 @@ const actionsMenuActividad = ref([
             
             updateOrdersActividades(actividadesSecuenciaUpdated);
             
-            toast.add({
+            toast.success({
                 title: "Actividad removida con exito",
-                description: "Actividad removida",
+                message: "Actividad removida",
                 color: "green"
             })
           }
           }catch(message){
-            toast.add({
+            toast.error({
                 title: "Error",
-                description: message ? message : 'Error al intentar remover la actividad',
+                message: message ? message : 'Error al intentar remover la actividad',
                 color: "red"
             })
           }
 
+        },
+
+        "onOnClose" : ()=>{
+          modal.close();
         }
       })
       break;
@@ -482,17 +497,17 @@ const actionsMenuActividad = ref([
      const fileName = `${secuencia.value.slug}.docx`;
      downloadBlob(responseFile, fileName);
 
-      toast.add({
+      toast.success({
         title: "Secuencia exportada",
-        description: 'Se ha exportado la secuencia con exito.',
+        message: 'Se ha exportado la secuencia con exito.',
         color: "green"
       })
    }
    
   }catch(message){
-    toast.add({
+    toast.error({
       title: "Error",
-      description: message ? message : 'Error al crear un nuevo tramo',
+      message: message ? message : 'Error al crear un nuevo tramo',
       color: "red"
     })
   }
@@ -506,7 +521,8 @@ const actionsMenuActividad = ref([
     if(pendingSave.value)
       await onSaveSecuencia(false)
 
-    modal.open(SyncGoogleDrive, {
+    const modal = overlay.create(SyncGoogleDrive);
+    modal.open({
       // Key para evitar cache del componente,esto fuerza a Vue (y a Nuxt UI) a 
       // destruir el componente anterior y crear uno nuevo.
       key: `sync-${Date.now()}`, 
@@ -597,9 +613,9 @@ const onDelete = async() : Promise<void> =>{
    
    if(secuenciaDeleted){
     
-      toast.add({
+      toast.success({
         title: `Secuencia ${secuenciaDeleted.nombre} eliminada`,
-        description: `Se ha eliminado la secuencia ${secuenciaDeleted.nombre} con exito.`,
+        message: `Se ha eliminado la secuencia ${secuenciaDeleted.nombre} con exito.`,
         color: "green"
       })
 
@@ -607,9 +623,9 @@ const onDelete = async() : Promise<void> =>{
    }
 
   }catch(message){
-    toast.add({
+    toast.error({
       title: "Error",
-      description: message ? message : 'Error al intentar eliminar la secuencia.',
+      message: message ? message : 'Error al intentar eliminar la secuencia.',
       color: "red"
     })
   }
@@ -619,58 +635,38 @@ const onDelete = async() : Promise<void> =>{
 
 <template>
   <div class="w-full flex flex-col overflow-y-auto">
-    <div>
-      <UDashboardPage>
-   
-
     <UDashboardPanel
       collapsible
       grow
-      side="right"
     >
     <UDashboardNavbar>
-      <template #toggle>
-        <UDashboardNavbarToggle icon="i-heroicons-x-mark" />
-
-        <UDivider
-          orientation="vertical"
-          class="mx-1.5 lg:hidden"
-        />
-      </template>
-
-      <template #left>
-
-          <UDashboardNavbar
-          :title="secuencia.nombre"
-            >
-          </UDashboardNavbar> 
-      </template>
->
 
       <template #right>
 
         <UTooltip text="Guardar secuencia">
           <UButton
             icon="tabler:device-floppy"
-            color="gray"
+            color="neutral"
             variant="ghost"
-            @click="onSaveSecuencia()"
-          >
-          <template #leading="{ modelValue, ui }">
+            @click="onSaveSecuencia()">
                         
-            <div class="flex flex-col">
-                <div class="w-2 h-2 rounded-full bg-primary  absolute float-right" v-if="pendingSave"> </div>
-                <UIcon name="tabler:device-floppy" class="size-5" />
-            </div>
+            
+            <template #leading="{ ui }">
+                                
+                <div class="flex flex-col">
+                    <div class="w-2 h-2 rounded-full bg-primary  absolute float-right" v-if="pendingSave"> </div>
+                    <UIcon name="tabler:device-floppy" class="size-5" />
+                </div>
+            
+              </template>
         
-          </template>
         </UButton>
         </UTooltip>
 
-         <UTooltip text="Exportar a Word">
+        <UTooltip text="Exportar a Word">
           <UButton
             icon="tabler:file-word"
-            color="gray"
+            color="neutral"
             variant="ghost"
             @click="showModalExportConfirm = true"
           />
@@ -679,7 +675,7 @@ const onDelete = async() : Promise<void> =>{
         <UTooltip text="Exportar secuencia a Google Drive">
           <UButton
             icon="tabler:brand-google-drive"
-            color="gray"
+            color="neutral"
             variant="ghost"
             @click="showModalSyncGDrive = true"
           />
@@ -688,16 +684,11 @@ const onDelete = async() : Promise<void> =>{
         <UTooltip text="Eliminar">
           <UButton
             icon="tabler:trash"
-            color="gray"
+            color="neutral"
             variant="ghost"
             @click="showModalDeleteConfirm = true"
           />
         </UTooltip>
-
-        <UDivider
-          orientation="vertical"
-          class="mx-1.5"
-        />
       </template>
 
     
@@ -705,41 +696,56 @@ const onDelete = async() : Promise<void> =>{
 
     <div class="w-full flex flex-col gap-2 justify-center border-b border-b-4 border-b-100 p-2">
         <div class="flex md:flex-row gap-2 ">
-          <USelectMenu :model-value="secuencia.espacio" :options="espacios" option-attribute="id" class="flex-1"
-          @change="onChangeEspacio">
-          <template #label>
-            <span v-if="secuencia.espacio" :style="{ backgroundColor: secuencia.espacio?.rgbColor }"
-              :class="['inline-block h-2 w-2 flex-shrink-0 rounded-full']" aria-hidden="true" />
+          <USelectMenu :model-value="secuencia.espacio" :items="espacios" option-attribute="id" class="flex-1"
+          @update:model-value="onChangeEspacio">
+            <template #leading="{ modelValue, ui }">
+              <div class="flex items-center"  v-if="secuencia.espacio">
+                <span :style="{ backgroundColor: secuencia.espacio?.rgbColor }"
+                :class="['inline-block h-2 w-2 flex-shrink-0 rounded-full mr-2']" aria-hidden="true" />
 
-            <span class="truncate" v-if="secuencia.espacio">{{ secuencia.espacio?.nombre }}</span>
-            <span v-else>Selecciona un espacio.</span>
-          </template>
+                <span class="truncate" v-if="secuencia.espacio">{{ secuencia.espacio?.nombre }}</span>
+              </div>
+            
+              <span v-else>Selecciona un espacio.</span>
+            </template>
 
-          <template #option="{ option: espacio }">
-            <span :style="{ backgroundColor: espacio.rgbColor }"
-              :class="['inline-block h-2 w-2 flex-shrink-0 rounded-full']" aria-hidden="true" />
-            <span class="truncate">{{ espacio.nombre }}</span>
+          <template #item-leading="{ item }">
+            <div class="flex items-center">
+                <span :style="{ backgroundColor: item.rgbColor }"
+                :class="['inline-block h-2 w-2 flex-shrink-0 rounded-full mr-2']" aria-hidden="true" />
+                <span class="truncate">{{ item.nombre }}</span>
+            </div>
+        
         </template>
         </USelectMenu>
 
-         <USelectMenu :model-value="secuencia.unidad_curricular" :options="unidadesCurriculares" option-attribute="id" class="flex-1  min-w-[350px]"
-          @change="onChangeUnidadCurricular">
-              <template #label>
-              <span v-if="secuencia.unidad_curricular" :style="{ backgroundColor: secuencia.espacio?.rgbColor }"
-                  :class="['inline-block h-2 w-2 flex-shrink-0 rounded-full']" aria-hidden="true" />
+        <USelectMenu 
+          :model-value="secuencia.unidad_curricular" 
+          :items="unidadesCurriculares" 
+          option-attribute="id" 
+          class="flex-1  min-w-[350px]"
+          @update:model-value="onChangeUnidadCurricular">
+              <template #leading="{ modelValue, ui }">
+                <div class="flex items-center"  v-if="secuencia.unidad_curricular">
+                  <span :style="{ backgroundColor: secuencia.espacio?.rgbColor }"
+                  :class="['inline-block h-2 w-2 flex-shrink-0 rounded-full mr-2']" aria-hidden="true" />
 
-              <span class="truncate" v-if="secuencia.unidad_curricular">{{ secuencia.unidad_curricular?.nombre }}</span>
+                  <span class="truncate" v-if="secuencia.unidad_curricular">{{ secuencia.unidad_curricular?.nombre }}</span>
+                </div>
+              
                   <span v-else> Selecciona una unidad curricular.</span>
               </template>
 
-              <template #option="{ option:  unidadCurricular }">
-              <span :style="{ backgroundColor: secuencia.espacio?.rgbColor }"
-                  :class="['inline-block h-2 w-2 flex-shrink-0 rounded-full']" aria-hidden="true" />
-                  <span class="truncate">{{ unidadCurricular?.nombre }}</span>
+              <template #item-leading="{ item }">
+                <div class="flex items-center">
+                  <span :style="{ backgroundColor: secuencia.espacio?.rgbColor }"
+                  :class="['inline-block h-2 w-2 flex-shrink-0 rounded-full mr-2']" aria-hidden="true" />
+                  <span class="truncate">{{ item?.nombre }}</span>
+                </div>
               </template>
-         </USelectMenu>
+        </USelectMenu>
         </div>
-     
+    
         <UCard class="flex-1 flex flex-col">
         <div class="flex items-center justify-between">
           <span class="font-medium text-xl">Contenido</span>
@@ -760,13 +766,13 @@ const onDelete = async() : Promise<void> =>{
           </div>
         </div>
 
-       </UCard>
+      </UCard>
 
         <div class="flex gap-2">
-         <UCard class="w-2/5 flex flex-col">
+        <UCard class="w-2/5 flex flex-col">
           <div class="flex items-center justify-between">
             <span class="font-medium text-xl">Competencias Generales</span>
-             <SelectorCompetenciaGeneral  
+            <SelectorCompetenciaGeneral  
               v-model:model-value="secuencia.competencias_generales" 
               :competenciasGenerales="competenciasGenerales"
               :competenciasEspecificasSelected="secuencia.competencias_especificas"
@@ -779,15 +785,12 @@ const onDelete = async() : Promise<void> =>{
                 <div class="w-full flex flex-col h-full items-center justify-center">
                   <div class="w-full flex justify-end relative mb-2"> 
                   <UPopover mode="hover" v-if="!competenciaGeneral.recomendado">
-                    <template #default={open}>
-                      <UTooltip
-                      :prevent="open"
+                    <UTooltip
                       >
-                          <UButton icon="tabler:alert-square-rounded" size="2xs" color="red" variant="outline" />
+                          <UButton icon="tabler:alert-square-rounded"  color="error" variant="outline" />
                       </UTooltip>
-                    </template>
   
-                    <template #panel="{ close }">
+                    <template #content>
                         <div class="p-2 m-4 flex flex-col gap-y-4 max-w-128">
                               <span class="font-medium"> Competencias especificas relacionadas: </span>  
                               <div class="flex flex-col gap-y-2">
@@ -818,7 +821,7 @@ const onDelete = async() : Promise<void> =>{
           <div class="flex items-center justify-between">
             <span class="font-medium text-xl">Competencias Especificas</span>
             <SelectorCompetenciaEspecifica
-               v-model="secuencia.competencias_especificas" 
+              v-model="secuencia.competencias_especificas" 
               :competenciasEspecificas="competenciasEspecificas" 
               :color="secuencia.espacio?.rgbColor"
               :disabled="secuencia.unidad_curricular == null" 
@@ -892,10 +895,10 @@ const onDelete = async() : Promise<void> =>{
       </UCard>
 
       <UCard>
-         <BaseSwitch 
-       v-model="secuencia.detallaRecursos" 
-       title="Detallar recursos" 
-       description="Activa esta opción si deseas agregar más información sobre los recursos utilizados."></BaseSwitch>
+        <BaseSwitch 
+      v-model="secuencia.detallaRecursos" 
+      title="Detallar recursos" 
+      description="Activa esta opción si deseas agregar más información sobre los recursos utilizados."></BaseSwitch>
     
       <UCard class="flex-1 flex flex-col mt-2" v-if="secuencia.detallaRecursos">
         <div class="flex items-center justify-between">
@@ -914,7 +917,7 @@ const onDelete = async() : Promise<void> =>{
         </div>
       </UCard>
 
-       <UDivider class="my-2" />
+      <USeparator class="my-2" />
 
       <BaseSwitch
       v-model="secuencia.detallaMetodologia"
@@ -939,7 +942,8 @@ const onDelete = async() : Promise<void> =>{
         </div>
       </UCard>
 
-       <UDivider class="my-2" />
+      <USeparator class="my-2" />
+      
       <BaseSwitch
         v-model="secuencia.detallaDuracion"
         title="Detallar duración"
@@ -963,7 +967,7 @@ const onDelete = async() : Promise<void> =>{
         </div>
       </UCard>
 
-       <UDivider class="my-2" />
+      <USeparator class="my-2" />
 
         <BaseSwitch
         v-model="secuencia.detallaEvaluacion"
@@ -992,91 +996,83 @@ const onDelete = async() : Promise<void> =>{
     </div>
 
     <UProgress size="xl" v-if="loadingMoreData" class="mt-2" />
-  </UDashboardPanel>
-    </UDashboardPage>
-    </div>
+    </UDashboardPanel>
 
-    <div class="w-full max-h-[100vh]">
-       <UDashboardPage>
-      <UDashboardPanel 
-      side="left"
-      :width="200">
+    <UPage>
+      <template #left>
+        
+          <UDashboardPanel 
+            side="left"
+            :width="200">
 
-       <div class="overflow-y-auto mb- max-h-[100vh]">
-          <Stepper 
-          :showButtonAddStep="true"
-          buttonAddStep="Agregar nueva actividad"
-          orientation="vertical"
-          descriptionButtonAddStep="Extender una nueva actividad a la secuencia"
-          :currentStep="currentStepActividad"  
-          :steps="stepsActividades"
-          @on:add-step="showModalAddActividad = true"
-          :linear="false"
-          ref="actividadesStepper"
-          @on:change-step="onChangeActividad"
-          :actionsMenu="actionsMenuActividad"
-          @on:action-menu="handleOnActionMenuActividad"/>
+        <div class="overflow-y-auto mb- max-h-[100vh]">
+            <Stepper 
+            :showButtonAddStep="true"
+            buttonAddStep="Agregar nueva actividad"
+            orientation="vertical"
+            descriptionButtonAddStep="Extender una nueva actividad a la secuencia"
+            :currentStep="currentStepActividad"  
+            :steps="stepsActividades"
+            @on:add-step="showModalAddActividad = true"
+            :linear="false"
+            ref="actividadesStepper"
+            @on:change-step="onChangeActividad"
+            :actionsMenu="actionsMenuActividad"
+            @on:action-menu="handleOnActionMenuActividad"/>
           </div>
 
-      </UDashboardPanel>
-      
-      <UDashboardPanel 
-      collapsible
-      side="right"
-      grow>
-    
-    <div class="p-2 overflow-y-auto"  v-if="actividadSecuenciaSelected">
-    
-      <ActividadSecuenciaForm
-      v-model="actividadSecuenciaSelected"
-      v-if="actividadSecuenciaSelected"
-      :actividadSecuencia="actividadSecuenciaSelected"
-      :espacios="espacios"
-      :espacio="secuencia.espacio"
-      :unidadCurricular="secuencia.unidad_curricular"
-      :contenido="secuencia.contenido"
-      :gradosIds="grupo.grados.map(g => g.id)"
-      :competenciasGenerales="competenciasGenerales"
-      :nroActividadSecuencia="currentStepActividad"
-      :ciclosGradosIds="ciclosGradosIds"
-      :criteriosDeLogros="criteriosDeLogros"
-      :competenciasEspecificas="competenciasEspecificas">
+          </UDashboardPanel>
+      </template>
 
-      </ActividadSecuenciaForm>
-    </div>
+      <template #default>
+        <UDashboardPanel 
+          collapsible
+          side="right"
+          grow>
+    
+        <div class="p-2 overflow-y-auto"  v-if="actividadSecuenciaSelected">
+      
+        <ActividadSecuenciaForm
+        v-model="actividadSecuenciaSelected"
+        v-if="actividadSecuenciaSelected"
+        :actividadSecuencia="actividadSecuenciaSelected"
+        :espacios="espacios"
+        :espacio="secuencia.espacio"
+        :unidadCurricular="secuencia.unidad_curricular"
+        :contenido="secuencia.contenido"
+        :gradosIds="grupo.grados.map(g => g.id)"
+        :competenciasGenerales="competenciasGenerales"
+        :nroActividadSecuencia="currentStepActividad"
+        :ciclosGradosIds="ciclosGradosIds"
+        :criteriosDeLogros="criteriosDeLogros"
+        :competenciasEspecificas="competenciasEspecificas">
+
+            </ActividadSecuenciaForm>
+        </div>
 
     <div v-else class="flex flex-col justify-center items-center h-screen">
       <UIcon
         name="tabler:file-text"
         size="60px"
       />
-     <h1 class="mt-1"> {{  actividadNoSelectedText }} </h1>
+    <h1 class="mt-1"> {{  actividadNoSelectedText }} </h1>
 
     </div>
-      </UDashboardPanel>
-    </UDashboardPage>
-    </div>
-   
+        </UDashboardPanel>
+      </template>
+    </UPage>
   </div>
   
   <!--Extender tramo-->
-  <UDashboardModal
-  v-model="showModalAddActividad"
+  <UModal
+  v-model:open="showModalAddActividad"
   title="Agregar nueva actividad de secuencia"
   description="¿Estás seguro que deseas agregar una siguiente actividad la secuencia?"
   icon="tabler:butterfly-filled"
   prevent-close
   :close-button="null"
-  :ui="{
-    icon: {
-      base: 'text-primary dark:text-red-400'
-    } as any,
-    footer: {
-      base: 'ml-16'
-    } as any
-  }"
 >
-  <template #footer>
+  <template #footer> 
     <UButton
       color="primary"
       label="Confirmar"
@@ -1085,12 +1081,12 @@ const onDelete = async() : Promise<void> =>{
     />
 
     <UButton
-        color="white"
+        color="neutral"
         label="Cancelar"
         @click="onCancelNuevaActividad"
       />
   </template>
-</UDashboardModal>
+</UModal>
 
 <!--Confirmacion de modal de descargar el archivo de secuencia. -->
 <ConfirmModal 
@@ -1099,6 +1095,7 @@ const onDelete = async() : Promise<void> =>{
   title="Descargar secuencia" 
   description="¿Querés descargar la secuencia actual como un archivo? Esto guardará una copia en tu computadora." 
   @onConfirm="onExport"
+  @onClose="showModalExportConfirm = false"
 />
 
 <!--Confirmacion de modal de sincronizacion de planificacion a google drive-->
@@ -1107,14 +1104,16 @@ v-if="showModalSyncGDrive"
 v-model="showModalSyncGDrive"
 title="Sincronizar secuencia con Google Drive" 
 description="¿Deseás sincronizar la secuencia actual con tu cuenta de Google Drive? Esto guardará una copia actualizada en la nube." 
-@onConfirm="syncGoogleDrive"></ConfirmModal>
+@onConfirm="syncGoogleDrive"
+@onClose="showModalSyncGDrive = false"></ConfirmModal>
 
 
 <ConfirmModal 
   v-model="showModalDeleteConfirm"
   title="Eliminar secuencia" 
   description="¿Deseás eliminar la secuencia actual? Esta acción no se puede deshacer." 
-  @onConfirm="onDelete">
+  @onConfirm="onDelete"
+  @onClose="showModalDeleteConfirm = false">
 </ConfirmModal>
 
 <ConfirmModal v-model="showModalChangeEspacioOrUnidadCurricular" :title="titleChangeEspacioOrUnidadCurricular"

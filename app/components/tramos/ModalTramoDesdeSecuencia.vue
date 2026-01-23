@@ -9,6 +9,9 @@ import type { CargarTramoDesdeActividadSecuencia, Tramo } from '~/types/tramo';
 import type { Planificacion } from '~/types/planificacion';
 import type { PlanificacionFecha } from '~/types/planificacionFecha';
 
+import SecuenciaDetailModal from '../secuencias/SecuenciaDetailModal.vue';
+import ActividadSecuenciaDetailModal from '../actividad-secuencias/ActividadSecuenciaDetailModal.vue';
+
 interface Props {
     grupo: Grupo;
     tramo: Tramo;
@@ -18,13 +21,10 @@ interface Props {
 
 const { $apiRest  } = useNuxtApp();
 
-const modal = useModal();
-
-const emit = defineEmits(['cerrar','on:load-tramo']);
+const emit = defineEmits(['onClose','loadTramo']);
 
 const props = withDefaults(defineProps<Props>() , {});
 const toast = useToast();
-const isOpen = ref<boolean>(true);
 const currentStep = ref<number>(1);
 
 const isLoading = ref<boolean>(true);
@@ -65,9 +65,9 @@ const loadSecuenciasRelacionadas = async()=>{
      isLoading.value = false;
 
   }catch(message){
-    toast.add({
+    toast.error({
       title: "Error",
-      description: message ? message : 'Error al crear el grupo',
+      message: message ? message : 'Error al crear el grupo',
       color: "red"
     })
     isLoading.value = false;
@@ -130,21 +130,21 @@ const cargarActividadAlTramo = async()=>{
       const response =  await $apiRest(apiTramosRoutes.cargarTramoDesdeActividadSecuencia, HttpMethodEnum.POST, body);
 
       if(response.status){
-         toast.add({
+         toast.success({
             title: "Tramo cargado desde secuencia",
-            description: response.message,
+            message: response.message,
             color: "green"
         })
 
         const tramo : Tramo = response.tramo as Tramo;
 
-        emit('on:load-tramo', tramo);
+        emit('loadTramo', tramo);
       }
 
     }catch(message){
-      toast.add({
+      toast.error({
           title: "Error",
-          description: message ? message : 'Error al intentar cargar la actividad de la secuencia al tramo.',
+          message: message ? message : 'Error al intentar cargar la actividad de la secuencia al tramo.',
           color: "red"
         })
     } 
@@ -156,11 +156,18 @@ const cargarActividadAlTramo = async()=>{
 </script>
 
 <template>
-  <UModal v-model="isOpen" class="w-full">
-    <UCard :ui="{ header: { padding: 'p-4 sm:px-6' }, body: { padding: '' } }" class="min-w-0 min-h-[75vh]">
+  <UModal
+    title="Cargar tramo desde actividad de secuencia."
+    description="Cargar tramo desde actividad de secuencia."
+    :dismissible="false"
+    :ui="{ footer: 'justify-end' }"
+  >
+  <template #content>
+    <UCard class="min-w-0 min-h-[75vh]">
       <template #header>
-        Cargar tramo desde actividad de secuencia.
+        Cargar tramo desde actividad de secuencia
       </template>
+
 
       <div class="w-full overflow-y-auto max-h-full h-[75vh]">
         <Stepper 
@@ -172,7 +179,7 @@ const cargarActividadAlTramo = async()=>{
             @on:change-step="handleChangeStep"
             :blockNextSteps="true"/>
 
-         <UDivider
+         <USeparator
             orientation="horizontal"
             class="mx-1.5 lg:hidden"
             />
@@ -180,66 +187,108 @@ const cargarActividadAlTramo = async()=>{
 
 
         <div class="w-full flex flex-col p-2" v-if="!isLoading">
-
           <div v-if="currentStep == 1">
-              <UDivider label="Secuencias del grupo" class="my-2" />
-          <div class="w-full">
-             <ul  role="list" class="divide-y divide-gray-200 dark:divide-gray-800 overflow-y-auto">
-              <li v-for="(secuencia ) in secuenciasRelacionadas.secuenciasDelGrupo" :key="secuencia.id"
-                class="flex items-center justify-between gap-3 py-3 px-4 sm:px-6">
-                <div class="flex items-center gap-3 w-full hover:cursor-pointer">
+            <USeparator label="Secuencias del grupo" class="my-2" />
 
-                  <div class="text-sm min-w-0 flex gap-2">
-                    <UIcon name="tabler:file-text" class="w-5 h-5"/>
-                    <p class="truncate">
-                      Secuencia : {{ secuencia.nombre }}
-                    </p>
-                  </div>
-                </div>
+<div class="w-full">
+  <ul
+    v-if="secuenciasRelacionadas.secuenciasDelGrupo?.length"
+    role="list"
+    class="divide-y divide-gray-200 dark:divide-gray-800 overflow-y-auto"
+  >
+    <li
+      v-for="secuencia in secuenciasRelacionadas.secuenciasDelGrupo"
+      :key="secuencia.id"
+      class="flex items-center justify-between gap-3 py-3 px-4 sm:px-6"
+    >
+      <div class="flex items-center gap-3 w-full hover:cursor-pointer">
+        <div class="text-sm min-w-0 flex gap-2">
+          <UIcon name="tabler:file-text" class="w-5 h-5" />
+          <p class="truncate">
+            Secuencia : {{ secuencia.nombre }}
+          </p>
+        </div>
+      </div>
 
-                <div class="flex items-center gap-3">
-                  <UDropdown position="bottom-end">       
-                    <SecuenciasSecuenciaDetailModal 
-                    :secuencia="secuencia"
-                    @on:close=""></SecuenciasSecuenciaDetailModal>
-                    <UButton icon="tabler:chevron-right" color="gray" variant="ghost" @click="selectSecuencia(secuencia)"/>
-                  </UDropdown>
-                </div>
-              </li>
-            </ul>
+      <div class="flex items-center gap-3">
+        <UDropdown position="bottom-end">
+          <div class="flex items-center gap-3">
+            <SecuenciaDetailModal
+            :secuencia="secuencia"
+            @onClose="emit('onClose')"
+          />
+          <UButton
+            icon="tabler:chevron-right"
+            color="neutral"
+            variant="ghost"
+            @click="selectSecuencia(secuencia)"
+          />
           </div>
-          <UDivider label="Otras secuencias" class="my-2"/>
-          <div class="w-full">
-            <ul  role="list" class="divide-y divide-gray-200 dark:divide-gray-800 overflow-y-auto">
-              <li v-for="(secuencia) in secuenciasRelacionadas.secuenciasCompatibles" :key="secuencia.id"
-                class="flex items-center justify-between gap-3 py-3 px-4 sm:px-6">
-                <div class="flex items-center gap-3 w-full hover:cursor-pointer">
+          
+        </UDropdown>
+      </div>
+    </li>
+  </ul>
 
-                  <div class="text-sm min-w-0 flex gap-2">
-                    <UIcon name="tabler:file-text" class="w-5 h-5"/>
-                    <p class="truncate">
-                      Secuencia : {{ secuencia.nombre }}
-                    </p>
-                  </div>
-                </div>
+  <p
+    v-else
+    class="text-sm text-gray-500 dark:text-gray-400 px-4 py-3 text-center"
+  >
+    No hay secuencias asociadas a este grupo.
+  </p>
+</div>
 
-                <div class="flex items-center gap-3">
-                  <UDropdown position="bottom-end">     
+          <USeparator label="Otras secuencias" class="my-2" />
 
-                    <SecuenciasSecuenciaDetailModal 
-                    :secuencia="secuencia"
-                    @on:close=""></SecuenciasSecuenciaDetailModal>
-                    <UButton icon="tabler:chevron-right" color="gray" variant="ghost" @click="selectSecuencia(secuencia)"/>
+<div class="w-full">
+  <ul
+    v-if="secuenciasRelacionadas.secuenciasCompatibles?.length"
+    role="list"
+    class="divide-y divide-gray-200 dark:divide-gray-800 overflow-y-auto"
+  >
+    <li
+      v-for="secuencia in secuenciasRelacionadas.secuenciasCompatibles"
+      :key="secuencia.id"
+      class="flex items-center justify-between gap-3 py-3 px-4 sm:px-6"
+    >
+      <div class="flex items-center gap-3 w-full hover:cursor-pointer">
+        <div class="text-sm min-w-0 flex gap-2">
+          <UIcon name="tabler:file-text" class="w-5 h-5" />
+          <p class="truncate">
+            Secuencia : {{ secuencia.nombre }}
+          </p>
+        </div>
+      </div>
 
-                  </UDropdown>
-                </div>
-              </li>
-            </ul>
-          </div>
+      <div class="flex items-center gap-3">
+        <UDropdown position="bottom-end">
+          <SecuenciasSecuenciaDetailModal
+            :secuencia="secuencia"
+            @on:close=""
+          />
+          <UButton
+            icon="tabler:chevron-right"
+            color="primary"
+            variant="ghost"
+            @click="selectSecuencia(secuencia)"
+          />
+        </UDropdown>
+      </div>
+    </li>
+  </ul>
+
+  <p
+    v-else
+    class="text-sm text-gray-500 dark:text-gray-400 px-4 py-3 text-center"
+  >
+    No hay otras secuencias disponibles.
+  </p>
+</div>
+
           </div>
 
           <div v-else-if="currentStep == 2">
-              <UDivider label="Actividades" class="my-2" />
+              <USeparator label="Actividades" class="my-2" />
               <div class="w-full">
               <ul  v-if="actividadeSecuencias.length > 0" role="list" class="divide-y divide-gray-200 dark:divide-gray-800 overflow-y-auto">
                 <li v-for="(actividad) in actividadeSecuencias" :key="actividad.id"
@@ -255,13 +304,14 @@ const cargarActividadAlTramo = async()=>{
                   </div>
 
                   <div class="flex items-center gap-3">
-                    <ActividadSecuenciasActividadSecuenciaDetailModal 
+                    <ActividadSecuenciaDetailModal
                     :secuencia="secuenciaSelected" 
                     :actividadSecuencia="actividad"
-                    @on:close=""></ActividadSecuenciasActividadSecuenciaDetailModal>
+                    @onClose="emit('onClose')"
+                    ></ActividadSecuenciaDetailModal>
 
                     <UDropdown position="bottom-end">       
-                      <UToggle color="primary" :model-value="actividad.checked" @change="handleChangeActividad($event,actividad)"  />
+                      <USwitch color="primary" :model-value="actividad.checked" @update:model-value="handleChangeActividad($event,actividad)"  />
                     </UDropdown>
                   </div>
                 </li>
@@ -278,10 +328,9 @@ const cargarActividadAlTramo = async()=>{
         <div class="flex justify-end gap-3">
           
           <UButton
-            label="Gancelar"
-            color="white"
-            type="white"
-            @click="modal.close()"
+            label="Cancelar"
+            color="neutral"
+            @click="emit('onClose')"
           />
 
           <UButton
@@ -289,21 +338,25 @@ const cargarActividadAlTramo = async()=>{
             icon="tabler:upload"
             :disabled="disable"
             label="Cargar actividad al tramo"
-            color="black"
+            color="primary"
             @click="showModalConfirm = true"
           />
         </div>
       </template>
 
     </UCard>
-  </UModal>
 
-  <ConfirmModal 
+      <ConfirmModal 
    v-model="showModalConfirm"
    title="Cargar tramo desde secuencia"
    :description="'Cargar actividad ' + actividadSecuenciaSelected?.orden + ' al tramo ' + props.tramo.orden + ' de la planificacion ' + props.planificacion.nombre"
    @onConfirm="cargarActividadAlTramo"
+   @on-close="showModalConfirm = false"
    ></ConfirmModal>
+  </template>
 
+  </UModal>
+
+ 
 
 </template>

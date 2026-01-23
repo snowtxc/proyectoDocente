@@ -24,7 +24,10 @@
     const isLoading = ref(false);
     const { $apiRest } = useNuxtApp();
 
-    const modal = useModal();
+
+    const overlay = useOverlay()
+
+    const modal = overlay.create(ConfirmModal)
 
     const documentUrl = ref<string>();
 
@@ -54,16 +57,16 @@
     const optionsMenu = computed<{title : string, icon: string, function: any}[]>(()=>{
       return documento.value?.editorMode ? [
       {
-        title : 'Abrir',
+        label : 'Abrir',
         icon : 'tabler:edit',
-        function : ()=>{
+        onSelect : ()=>{
           openDocument()
         },
       },
       {
-        title : 'Eliminar',
+        label : 'Eliminar',
         icon: 'tabler:trash',
-        function : ()=>{
+        onSelect : ()=>{
            deleteDocument();
         },
       }
@@ -71,16 +74,16 @@
 
     [
       {
-        title : 'Usar editor local',
+        label : 'Usar editor local',
         icon : 'tabler:file-word',
-        function : ()=>{
+        onSelect : ()=>{
           openDocument(EditorModeEnum.LOCAL)
         },
       },
       {
-        title : 'Usar drive',
+        label : 'Usar drive',
         icon: 'tabler:brand-google-drive',
-        function : ()=>{
+        onSelect : ()=>{
           openDocument(EditorModeEnum.DRIVE);
         },
       }
@@ -100,26 +103,26 @@
             // Si el login funciona perfectamente se manda a reabrir el documento de drive.
             openDocument(EditorModeEnum.DRIVE);
         }else{
-          toast.add({
+          toast.error({
             title: "Error",
-            description: "Ha ocurrido un error al sincronizar tu cuenta de google. por favor vuelve a intentarlo.",
+            message: "Ha ocurrido un error al sincronizar tu cuenta de google. por favor vuelve a intentarlo.",
             color: "red"
           });
         }
 
       }catch(message){
-        toast.add({
+        toast.error({
           title: "Error",
-          description: message,
+          message: message,
           color: "red"
         });
       }
     
     },
     onError: (errorResponse: ImplicitFlowErrorResponse) => {
-      toast.add({
+      toast.error({
         title: "Error",
-        description: errorResponse.error_description,
+        message: errorResponse.error_description,
         color: "red"
       })
     }
@@ -169,9 +172,9 @@
 
         isLoading.value = false;
       }catch(message){
-          toast.add({
+          toast.error({
               title: "Error",
-              description: message,
+               message,
               color: "red"
           });
           isLoading.value = false;
@@ -180,7 +183,8 @@
     }
 
     const deleteDocument = async()=>{
-        modal.open(ConfirmModal, { 
+
+        modal.open({ 
         title: `Remover documento`,
         description: `
             Al remover el documento, perderás el acceso al archivo.
@@ -197,9 +201,9 @@
 
             if(response.status){
                 documento.value = response.documento;
-                toast.add({
+                toast.success({
                   title: "Exito",
-                  description: 'Se ha removido el documento correctamente.',
+                  message: 'Se ha removido el documento correctamente.',
                   color: "green"
             })
 
@@ -210,9 +214,9 @@
             }
 
           }catch(message){
-            toast.add({
+            toast.error({
                 title: "Error",
-                description: message ? message : 'Error al intentar remover el documento',
+                message: message ? message : 'Error al intentar remover el documento',
                 color: "red"
             })
           }
@@ -236,18 +240,17 @@
         documentUrl.value = documentSaved.document_url;
         isOpen.value = false;
       
-        toast.add({
+        toast.success({
               title: "Se ha guardado con exito",
-              description: "",
               color: "green"
         });
 
         emit('on:save',documentSaved);
 
       }catch(message){
-          toast.add({
+          toast.error({
               title: "Error",
-              description: message,
+              message,
               color: "red"
           });
           isLoading.value = false;
@@ -263,34 +266,25 @@
     <div class="flex justify-end"> 
 
      <UPopover :popper="{ placement: 'bottom-start' }">
-          <template #default="{ open }">
              <UTooltip :text="(disabled && disabledText) ? disabledText: 'Editar'">
         
-                <UButton
-                  icon="tabler:pencil"
-                  size="sm"
-                  color="primary"
-                  :loading="isLoading"
-                  variant="outline"
-                  :disabled="props.disabled"
-              />
+                    <UDropdownMenu :items="optionsMenu" >
+                      <UButton
+                        icon="tabler:pencil"
+                        size="sm"
+                        color="primary"
+                        :loading="isLoading"
+                        variant="outline"
+                        :disabled="props.disabled"
+                    />
+                  </UDropdownMenu>
             </UTooltip>
-          </template>
-
-          <template #panel="{ close }">
-                <div 
-                v-for="(value, idx) in optionsMenu" :key="idx"
-                class="p-4 text-black hover:bg-gray-100 flex items-center gap-2 hover:cursor-pointer" @click="value.function()">
-                  <UIcon :name="value.icon" class="w-5 h-5" />
-                  <span>  {{ value.title }} </span>
-                </div>
-            </template>
       </UPopover>
 
 
-        <UModal fullscreen title="Modal fullscreen" v-model="isOpen">  
+        <UModal fullscreen title="Modal fullscreen" v-model:open="isOpen">  
+          <template #content>
             <UCard
-              :ui="{ header: { padding: 'p-4 sm:px-6' }, body: { padding: '' } }"
               class="min-w-0 min-h-screen flex flex-col"
             >
               <template #header>
@@ -310,8 +304,7 @@
               </template>
 
               
-
-              <div class="w-full overflow-y-auto">
+                <div class="w-full overflow-y-auto">
               
                 <WebViewer 
                 :disabledEdit="isLoading"
@@ -322,8 +315,10 @@
                   </template>
                 </WebViewer>
               </div>
+              
 
             </UCard>
+          </template>
         </UModal>
     </div>
 </template>

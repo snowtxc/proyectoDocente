@@ -1,5 +1,6 @@
 <script setup lang="ts">
-  import type { ActividadSecuencia } from '~/types/actividadSecuencia';
+  import { ActividadSecuenciasActividadSecuenciaDetailModal } from '#components';
+import type { ActividadSecuencia } from '~/types/actividadSecuencia';
   import type { Secuencia } from '~/types/secuencia';
 import { EditorModeEnum } from '~/utils/enums/EditorModeEnum';
 
@@ -7,16 +8,13 @@ import { EditorModeEnum } from '~/utils/enums/EditorModeEnum';
       secuencia: Secuencia,
       actividadSecuencia: ActividadSecuencia
   }
-
-  const modal = useModal();
-
   const props = defineProps<Props>();
 
   const title = computed(()=>{
     return  `Actividad ${props.actividadSecuencia.orden} (secuencia: ${props.secuencia.nombre})`;
   })
 
-  const emit = defineEmits(['on:close']);
+  const emit = defineEmits(['onClose']);
 
   const isOpen = ref(false)
   
@@ -24,24 +22,24 @@ import { EditorModeEnum } from '~/utils/enums/EditorModeEnum';
   
   const goToFullSequence = () => {
     isOpen.value = false;
-    emit('on:close');
-    modal.close();
+    emit('onClose');
     router.push(`/secuencias/${props.secuencia.slug}`)
   }
 </script>
 
 <template>
   <div>
-    <UButton icon="tabler:eye" color="gray" variant="ghost" @click="isOpen = true" />           
+    <UButton icon="tabler:eye" color="primary" variant="ghost" @click="isOpen = true" />           
 
-    <UModal v-model="isOpen" prevent-close class="w-full">
-      <UCard :ui="{ ring: '', divide: 'w-full divide-y divide-gray-100 dark:divide-gray-800' }">
+    <UModal v-model:open="isOpen" class="w-full">
+      <template #content>
+         <UCard>
         <template #header>
           <div class="flex items-center justify-between">
             <h3 class="text-base font-semibold leading-6 text-gray-900 dark:text-white">
               {{ title }}
             </h3>
-            <UButton color="gray" variant="ghost" icon="i-heroicons-x-mark-20-solid" class="-my-1" @click="isOpen = false" />
+            <UButton color="neutral" variant="ghost" icon="i-heroicons-x-mark-20-solid" class="-my-1" @click="isOpen = false" />
           </div>
         </template>
 
@@ -125,6 +123,8 @@ import { EditorModeEnum } from '~/utils/enums/EditorModeEnum';
         </div>
 
       </UCard>
+      </template>
+     
     </UModal>
   </div>
 </template>

@@ -1,11 +1,12 @@
 <script setup lang="ts">
     import type { Grupo } from '~/types/grupo'
     import { HttpMethodEnum } from '~/utils/enums/HttpMethodEnum';
-    import { defineProps, defineEmits, ref ,onBeforeMount} from 'vue';
+    import { apiGrupoRoutes } from '~/utils/apiRoutes';
     
     const { $apiRest } = useNuxtApp();
     const toast = useToast();
     const isLoading = ref(false);
+    const selected = ref<Grupo | null>(null);
 
     const props = defineProps({
         modelValue: {
@@ -22,20 +23,24 @@
 
     const grupos = ref<Grupo[]>([]);
     
+    watch(() => props.modelValue, (newValue) => {
+        selected.value = newValue as Grupo | null;
+    }, { immediate: true });
+
     onMounted(async()=>{
         if(!props.disabled){
             isLoading.value = true;
             try{
-                const gruposData = await $apiRest(apiGrupoRoutes.listAll,HttpMethodEnum.GET);
+                const gruposData = await $apiRest<Grupo[]>(apiGrupoRoutes.listAll,HttpMethodEnum.GET);
                 grupos.value = gruposData;
                 isLoading.value = false;
 
             }catch(message){
                 isLoading.value = false;
-                toast.add({
+                toast.error({
                     title: "Error",
-                    description: message,
-                    color: "red"
+                    message,
+                    color: "error"
                 });
             }
         }
@@ -50,32 +55,33 @@
 
 <template>
     <USelectMenu 
-        @change="updateValue"
+        @update:model-value="updateValue"
         searchable 
         v-model="selected"
         :loading="isLoading"
         by="id"
-        :options="grupos"
+        :items="grupos"
         :disabled="props.disabled"
-        placeholder="Seleccionar grupo">
+        empty="No existen grupos">
 
-        <template #label>
-            <div v-if="props.modelValue" class="flex items-center gap-2">
+        <template #empty>
+            No existen grupos.
+        </template>
+
+        <template #leading="{ modelValue, ui }">
+             <div v-if="props.modelValue" class="flex items-center gap-2">
                 <UAvatar :src="props.modelValue.url_image" size="2xs" />
 
                  <span>{{ props.modelValue.nombre }} </span> 
             </div>
-
-            <div v-else>
-                Seleccionar Grupo
-            </div>
+            <span v-else> Selecciona un grupo</span>
         </template>
         
-        <template #option="{ option }">
+        <template #item-leading="{ item }">
             
-            <UAvatar :src="option.url_image" size="2xs" />
+            <UAvatar :src="item.url_image" size="2xs" />
 
-            <span>{{ option.nombre }} </span> 
+            <span>{{ item.nombre }} </span> 
           </template>
     </USelectMenu>
 </template>

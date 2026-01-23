@@ -1,19 +1,20 @@
-
 import { useAuthStore } from "#imports";
+import { LIST_PUBLIC_ROUTES } from "~/utils/publicRoutes";
 
-export default defineNuxtRouteMiddleware(async(to, from) => {
-    const authStore = useAuthStore();
+export default defineNuxtRouteMiddleware((to) => {
 
-    const { fullPath } = to;
+  if (process.server) return
 
-    const isPublicRoute =  fullPath && fullPath != '/' && LIST_PUBLIC_ROUTES.some(route => fullPath.includes(route));
+  const authStore = useAuthStore()
 
-    if(!authStore.token && !isPublicRoute)
-        return navigateTo("/login");
+  const publicRoutes = LIST_PUBLIC_ROUTES
+  const isPublicRoute = publicRoutes.includes(to.path)
 
-    if(authStore.token && isPublicRoute){
-        return navigateTo('/home');
-    }
+  if (!authStore.token && !isPublicRoute) {
+    return navigateTo('/login')
+  }
 
-    return;
+  if (authStore.token && to.path === '/login') {
+    return navigateTo('/home')
+  }
 })

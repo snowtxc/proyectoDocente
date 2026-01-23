@@ -9,8 +9,7 @@ import {
   type ImplicitFlowErrorResponse,
   type ImplicitFlowOptions
 } from "vue3-google-signin";
-import type { UserConfig } from '~/types/userConfig';
-import SelectFolder from './drive/SelectFolder.vue';
+
 import { TypeItemSyncGoogleDrive } from '~/utils/enums/typeItemSyncGoogleDrive';
 
 interface Props {
@@ -25,7 +24,6 @@ const toast = useToast();
 
 const open = ref(true);
 const responseResult = ref<SyncFileResult>(null);
-const showModalSelectFolder = ref<boolean>(false);
 
 const emit = defineEmits(['on-close']);
 
@@ -43,37 +41,28 @@ const googleSignInOptions: ImplicitFlowOptions = {
 
       if(response && response.id){
         // Volver a sincronizar
-
-        const config: UserConfig = await $apiRest(apiUserConfigRoutes.getConfig, HttpMethodEnum.GET);
-        const { drive_secuencias_folder_id } = config;
-        
-        if(!drive_secuencias_folder_id){
-          // se abre la carpeta para seleccionar.
-          showModalSelectFolder.value = true;
-        }else{
-            sync();
-        }
+        sync();
       }else{
-        toast.add({
+        toast.error({
           title: "Error",
-          description: "Ha ocurrido un error al sincronizar tu cuenta de google.",
+          message: "Ha ocurrido un error al sincronizar tu cuenta de google.",
           color: "red"
         });
       }
 
     }catch(message){
-      toast.add({
+      toast.error({
         title: "Error",
-        description: message,
+        message,
         color: "red"
       });
     }
    
   },
   onError: (errorResponse: ImplicitFlowErrorResponse) => {
-    toast.add({
+    toast.error({
       title: "Error",
-      description: errorResponse.error_description,
+      message: errorResponse.error_description,
       color: "red"
     })
   }
@@ -97,9 +86,9 @@ const sync = async()=>{
     responseResult.value = response;
 
   }catch(message){
-    toast.add({
+    toast.error({
       title: "Error",
-      description: message ? message : props.type == TypeItemSyncGoogleDrive.PLANIFICACION ? 'Error al sincronizar la planificacion con google drive.' : 'Error al sincronizar la secuencia con google drive.',
+      message: message ? message : props.type == TypeItemSyncGoogleDrive.PLANIFICACION ? 'Error al sincronizar la planificacion con google drive.' : 'Error al sincronizar la secuencia con google drive.',
       color: "red"
     })
   }
@@ -109,41 +98,11 @@ const openFileDrive = (link: string)=>{
     window.open(link, '_blank');
 }
 
-const updateFolderId = async(folder: DriveFolder) =>{
-
-  const { id ,name  } = folder;
-
-  const config: UserConfig =  props.type == TypeItemSyncGoogleDrive.PLANIFICACION ? 
-  {
-    drive_planificaciones_folder_id : id,
-    drive_planificaciones_folder_name: name
-  }: 
-  {
-    drive_secuencias_folder_id : id,
-    drive_secuencias_folder_name : name
-  }
-
-  try {
-    const data = await $apiRest(apiUserConfigRoutes.updateConfig, HttpMethodEnum.POST, config);
-    
-    if(data){
-      // una vez actualizado la carpeta mandamos a actualizar
-      open.value = true;
-      sync();
-    }
-  } catch {
-    toast.add({
-      title: "Error",
-      description: "No se ha podido actualizar la configuración de Google Drive. Por favor intentelo más tarde.",
-      color: "red"
-    })
-  }
-}
-
 </script>
 
 <template>
-   <UModal v-model:model-value="open"  @close="emit('on-close')">
+   <UModal v-model:open="open"  @close="emit('on-close')">
+    <template #content>
       <UCard variant="subtle">
         <template #header>
           <div class="flex justify-center">
@@ -172,18 +131,13 @@ const updateFolderId = async(folder: DriveFolder) =>{
               />
           </div>
 
-         <UProgress size="xl" color="green" v-else/>
+         <UProgress size="xl" color="primary" v-else/>
 
         <template #footer>
           <Placeholder class="h-8" />
         </template>
       </UCard>
+    </template>
+    
    </UModal>
-
-  <SelectFolder
-  v-if="showModalSelectFolder"
-  :openInstant="true"
-  @on:select="updateFolderId"
-  :hideButton="true"
-  ></SelectFolder>
 </template>

@@ -1,11 +1,17 @@
 <script setup lang="ts">
 import SelectStatus from "~/components/select/SelectStatus.vue";
+import SelectGrupo from "~/components/select/SelectGrupo.vue";
+import BadgeGrado from "~/components/badge/BadgeGrado.vue";
+import PlanificacionesForm from "~/components/planificaciones/PlanificacionesForm.vue";
 import type { ListRequest } from "~/types/list-request";
 import type { ListResponse } from "~/types/list-response";
 import type { Planificacion } from "~/types/planificacion";
 import { HttpMethodEnum } from "~/utils/enums/HttpMethodEnum"
 import { ModeEnum } from "~/utils/enums/ModeEnum";
 import { PlanificacionEstadoEnum } from "~/utils/enums/PlanificacionEstado.enum";
+import { apiPlanificacionesRoutes } from "~/utils/apiRoutes";
+import { appRoutes } from "~/utils/appRoutes";
+import { formattedImageUrlGrupo, getColorsEstado } from "~/utils/planificacion";
 
 let timeoutSearch: any = 0;
 const route = useRoute()
@@ -13,30 +19,46 @@ const route = useRoute()
 
 const defaultColumns = [
     {
+        id: 'nombre',
+        accessorKey: 'nombre',
+        header: 'Nombre',
         key: "nombre",
         label: "Nombre",
         sortable: true,
     },
     {
+        id: 'grupo',
+        accessorKey: 'grupo',
+        header: 'Grupo',
         key: "grupo",
         label: "Grupo",
     },
+    
     {
+        id: 'grados',
+        accessorKey: 'grados',
+        header: 'Grados',
         key: "grados",
         label: "Grados",
     },
     {
+        id: 'estado',
+        accessorKey: 'estado',
+        header: 'Estado',
         key: "estado",
         label: "Estado",
     },
     {
+        id: 'actions',
+        accessorKey: 'actions',
+        header: 'Acciones',
         key: 'actions',
         label: 'Acciones'
     }
 ];
 
 const mode =  ref<ModeEnum>(ModeEnum.CREATE);
-const planificacionSelected = ref<Planificacion>(null);
+const planificacionSelected = ref<Planificacion | null>(null);
 
 const isLoading = ref(false);
 
@@ -65,7 +87,6 @@ const selectedColumns = ref(defaultColumns);
 const { $apiRest } = useNuxtApp();
 
 const sort = ref({ column: "id", direction: "asc" as const });
-const input = ref<{ input: HTMLInputElement }>();
 
 const planificaciones = ref<Planificacion[]>([]);
 
@@ -80,10 +101,6 @@ const { page, rowsPerPage, totalRows, changePage, changeTotalRows } = usePaginat
 
 const isSlideoverOpen = ref(false);
 
-const handleUpdateSliderOver = (isOpen)=>{
-   isSlideoverOpen.value = isOpen;
-}
-
 const listReq = ref<ListRequest>({
     page: page.value,
     rowsPerPage: rowsPerPage.value,
@@ -94,8 +111,14 @@ const { data: response, error } = await useAsyncData('planificaciones', async() 
      return await  $apiRest<ListResponse<Planificacion[]>>(apiPlanificacionesRoutes.getPaginate, HttpMethodEnum.POST, listReq.value);
 });
 
-planificaciones.value = response.value.list;
-changeTotalRows(response.value.totalCount);
+if (error.value) {
+    console.error('Error loading planificaciones:', error.value);
+}
+
+if (response.value) {
+    planificaciones.value = response.value.list;
+    changeTotalRows(response.value.totalCount);
+}
 
 
 const loadPlanificaciones = async () => {
@@ -107,9 +130,9 @@ const loadPlanificaciones = async () => {
         isLoading.value = false;
 
     }catch(message){
-        toast.add({
+        toast.error({
             title: "Error",
-            description: message,
+            message: message,
             color: "red"
         });
         isLoading.value = false;
@@ -176,7 +199,11 @@ const verPlanificacion = async(row: Planificacion)=>{
 <template>
     <UDashboardPage>
         <UDashboardPanel grow>
-            <UDashboardNavbar title="Planificaciones" :badge="planificaciones.length">
+            <UDashboardNavbar title="Planificaciones">
+
+                 <template #trailing>
+                    <UBadge :label="totalRows" variant="subtle" />
+                </template>
                 <template #right>
                     <UInput 
                         ref="input" 
@@ -189,7 +216,7 @@ const verPlanificacion = async(row: Planificacion)=>{
                         </template>
                     </UInput>
 
-                    <UButton label="Crear planificación" trailing-icon="i-heroicons-plus" color="gray"
+                    <UButton label="Crear planificación" trailing-icon="i-heroicons-plus" color="primary"
                         @click="onCreatePlanificacion" />
                 </template>
             </UDashboardNavbar>
@@ -218,51 +245,53 @@ const verPlanificacion = async(row: Planificacion)=>{
             </UDashboardToolbar>
 
     
-            <UTable :empty-state="{
-                icon: 'i-heroicons-circle-stack-20-solid',
-                label: 'No hay planificaciones creadas',
-            }" no-results-text="Test" v-model:sort="sort" :rows="planificaciones" :columns="columns"
-                :loading="isLoading" sort-mode="manual" class="w-full"
-                :ui="{ divide: 'divide-gray-200 dark:divide-gray-800' }">
-                <template #nombre-data="{ row }">
-                                <span class="text-gray-900 dark:text-white font-medium">{{ row.nombre }}</span>
+            <UTable 
+                empty="No hay planificaciones creadas."
+                v-model:sort="sort" 
+                :data="planificaciones" 
+                :columns="columns"
+                :loading="isLoading" 
+                sort-mode="manual"
+                 class="w-full">
+                <template #nombre-cell="{ row }">
+                    <span class="text-gray-900 dark:text-white font-medium">{{ row.original.nombre }}</span>
 
                 </template>
 
-                <template #grupo-data="{ row }">
+                <template #grupo-cell="{ row }">
                     <div class="flex items-center gap-2">
-                        <UAvatar :src="formattedImageUrlGrupo(row.grupo?.url_image)" size="2xs" />
-                        <span>{{ row.grupo?.nombre }}</span>
+                        <UAvatar :src="formattedImageUrlGrupo(row.original.grupo?.url_image)" size="2xs" />
+                        <span>{{ row.original.grupo?.nombre }}</span>
                     </div>
                 </template>
 
-                <template #grados-data="{ row }">
+                <template #grados-cell="{ row }">
                     <div class="flex items-center gap-2">
-                        <BadgeGrado v-for="(grado,idx) in row.grupo.grados" :key="idx" :grado="grado"></BadgeGrado>
+                        <BadgeGrado v-for="(grado,idx) in row.original.grupo.grados" :key="idx" :grado="grado"></BadgeGrado>
                     </div>
                 </template>
 
-                <template #estado-data="{ row }">
-                    <UBadge :label="row.estado" :variant="'outline'" :color="(getColorsEstado(
-                        row.estado ?? ''
+                <template #estado-cell="{ row }">
+                    <UBadge :label="row.original.estado" :variant="'outline'" :color="(getColorsEstado(
+                        row.original.estado ?? null
                     ) as any)" />
                 </template>
 
-                <template #actions-data="{ row }">
+                <template #actions-cell="{ row }">
                     <div class="flex flex-wrap items-center gap-2">
                         <UButton
                         icon="i-heroicons-pencil-square"
                         size="sm"
                         color="primary"
                         variant="outline"
-                        @click="onSelect(row)"
+                        @click="onSelect(row.original)"
                         />
                         <UButton
                         icon="tabler:eye"
                         size="sm"
                         color="primary"
                         variant="outline"
-                        @click="verPlanificacion(row)"
+                        @click="verPlanificacion(row.original)"
                         />
                     </div>
                     
@@ -270,15 +299,14 @@ const verPlanificacion = async(row: Planificacion)=>{
                 
             </UTable>
             <div class="flex justify-end px-3 py-3.5 border-t border-gray-200 dark:border-gray-700">
-                <UPagination v-model="page" :page-count="rowsPerPage" :total="totalRows" />
+                <UPagination v-model:page="page" :page-count="rowsPerPage" :total="totalRows" />
             </div>
         </UDashboardPanel>
 
-        <UDashboardSlideover v-model="isSlideoverOpen" @update:modelValue="handleUpdateSliderOver">
-            <template #title>
-               {{ titleModal }}
+        <USlideover v-model:open="isSlideoverOpen" :title="titleModal">
+            <template #body>
+                <PlanificacionesForm @close="isSlideoverOpen = false" :mode="mode" :planificacionSelected="planificacionSelected" @on:update="loadPlanificaciones"/>
             </template>
-            <PlanificacionesForm @close="isSlideoverOpen = false" :mode="mode" :planificacionSelected="planificacionSelected" @on:update="loadPlanificaciones"/>
-          </UDashboardSlideover>
+        </USlideover>
     </UDashboardPage>
 </template>

@@ -1,5 +1,4 @@
 <script setup>
-import { onMounted, onBeforeUnmount, ref } from 'vue'
 import lottie from 'lottie-web'
 
 const props = defineProps({

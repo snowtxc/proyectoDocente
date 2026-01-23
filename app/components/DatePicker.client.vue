@@ -134,12 +134,12 @@ const smallerThanSm = breakpoints.smaller('sm')
 const attrs = ref({
   'transparent': true,
   'borderless': true,
-  'color': 'primary',
+  'color': 'yellow',
   'is-dark': { selector: 'html', darkClass: 'dark' },
   'first-day-of-week': 2,
   'dot': true,
   'dates': new Date(),
-
+  'highlight': true
 });
 
 const  attributes = computed(() => {
@@ -149,6 +149,7 @@ const  attributes = computed(() => {
   return props.highlightedDates.map((date: Date) => ({
     key: `fecha utilizada -${format(date,'dd/MM/yyyy')}`,
     dates: date,
+    color:'yellow',
     dot: true, //Se Agrega un punto en la fecha
   }));
 });
@@ -159,36 +160,51 @@ const  attributes = computed(() => {
 <template>
   <VCalendarDatePicker v-if="props.range"
     v-model.range="date" :columns="smallerThanSm ? 1 : 2" :rows="smallerThanSm ? 2 : 1" v-bind="{ ...attrs, ...$attrs }"
-    :disabled-dates="disabledDates" 
+    :disabled-dates="disabledDates"
+    color="primary" 
     :attributes="attributes"/>
   <VCalendarDatePicker v-else v-model="date" v-bind="{ ...attrs, ...$attrs }" :disabled-dates="disabledDates"  :attributes="attributes"/>
 
 </template>
 
-<style>
-:root {
-  --vc-gray-50: rgb(var(--color-gray-50));
-  --vc-gray-100: rgb(var(--color-gray-100));
-  --vc-gray-200: rgb(var(--color-gray-200));
-  --vc-gray-300: rgb(var(--color-gray-300));
-  --vc-gray-400: rgb(var(--color-gray-400));
-  --vc-gray-500: rgb(var(--color-gray-500));
-  --vc-gray-600: rgb(var(--color-gray-600));
-  --vc-gray-700: rgb(var(--color-gray-700));
-  --vc-gray-800: rgb(var(--color-gray-800));
-  --vc-gray-900: rgb(var(--color-gray-900));
+<style scoped>
+/* DÍA SELECCIONADO */
+:deep(.vc-day.is-selected),
+:deep(.vc-day.is-selected .vc-day-content) {
+  background-color: rgb(var(--color-primary-600)) !important;
+  color: white !important;
 }
 
-.vc-primary {
-  --vc-accent-50: rgb(var(--color-primary-50));
-  --vc-accent-100: rgb(var(--color-primary-100));
-  --vc-accent-200: rgb(var(--color-primary-200));
-  --vc-accent-300: rgb(var(--color-primary-300));
-  --vc-accent-400: rgb(var(--color-primary-400));
-  --vc-accent-500: rgb(var(--color-primary-500));
-  --vc-accent-600: rgb(var(--color-primary-600));
-  --vc-accent-700: rgb(var(--color-primary-700));
-  --vc-accent-800: rgb(var(--color-primary-800));
-  --vc-accent-900: rgb(var(--color-primary-900));
+/* RANGO ENTRE FECHAS */
+:deep(.vc-day.is-between),
+:deep(.vc-day.is-between .vc-day-content) {
+  background-color: rgb(var(--color-primary-200)) !important;
+  color: rgb(var(--color-primary-900)) !important;
 }
+
+/* INICIO Y FIN DEL RANGO */
+:deep(.vc-day.is-start),
+:deep(.vc-day.is-end),
+:deep(.vc-day.is-start .vc-day-content),
+:deep(.vc-day.is-end .vc-day-content) {
+  background-color: rgb(var(--color-primary-600)) !important;
+  color: white !important;
+}
+
+/* DARK MODE */
+:deep(.dark .vc-day.is-selected),
+:deep(.dark .vc-day.is-selected .vc-day-content),
+:deep(.dark .vc-day.is-start),
+:deep(.dark .vc-day.is-end) {
+  background-color: rgb(var(--color-primary-700)) !important;
+  color: white !important;
+}
+
+:deep(.dark .vc-day.is-between),
+:deep(.dark .vc-day.is-between .vc-day-content) {
+  background-color: rgb(var(--color-primary-900)) !important;
+  color: rgb(var(--color-primary-100)) !important;
+}
+
+
 </style>

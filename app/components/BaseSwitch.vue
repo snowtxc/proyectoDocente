@@ -1,5 +1,4 @@
 <script lang="ts" setup>
-import { ref, watch } from 'vue'
 
 interface Props {
   title: string;
@@ -33,10 +32,9 @@ watch(isOpen, (val) => {
     <div class="flex items-center gap-2">
       <h3 class="text-lg font-semibold text-gray-800"> {{  props.title }}</h3>
       <div class="flex items-center gap-3">
-        <UToggle
+        <USwitch
           v-model="isOpen"
           :disabled="props.disabled"
-          :label="props.title"
         />
       </div>
     </div>

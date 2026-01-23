@@ -1,138 +1,150 @@
-title: Nuxt UI Pro - SaaS template
-description: Nuxt UI Pro is a collection of premium Vue components built on top of Nuxt UI to create beautiful & responsive Nuxt applications in minutes.
+title: Ship Your [SaaS]{class="text-primary"} at light speed
+description: Build production-ready SaaS applications with Nuxt UI's powerful components, authentication flows, and enterprise features. The same component library trusted by the entire Nuxt ecosystem.
+seo:
+  title: Nuxt SaaS Template
+  description: Create stunning, fast and production-ready SaaS applications with Nuxt UI. 100+ Vue components, authentication, dark mode, and enterprise features built on Tailwind CSS.
 navigation: false
 hero:
-  title: Build your SaaS in seconds
-  description: This template demonstrates most of Nuxt UI Pro's components. It's a great starting point to build your own SaaS.
-  headline:
-    label: Made with Nuxt UI Pro
-    to: https://ui.nuxt.com/pro
-    icon: i-heroicons-arrow-top-right-on-square-20-solid
   links:
     - label: Get started
-      to: '/signup'
-      size: xl
-      color: black
-      icon: i-heroicons-arrow-right-20-solid
+      icon: i-lucide-arrow-right
       trailing: true
+      to: https://ui.nuxt.com/docs/getting-started/installation/nuxt
+      target: _blank
+      size: xl
+    - label: Use this template
+      icon: i-simple-icons-github
+      size: xl 
+      color: neutral
+      variant: subtle
+      to: https://github.com/nuxt-ui-templates/saas
+      target: _blank
 sections:
-  - title: The power of our service
-    description: Aliqua labore laboris fugiat. Reprehenderit exercitation eu commodo. Officia nostrud sit et aliqua ea ex sunt minim incididunt sunt.
+  - title: Powered by Nuxt UI Components
+    description: Access the complete Nuxt UI component library with 100+ beautifully styled, accessible, and customizable Vue components. Everything you need to build professional SaaS applications.
     id: features
-    align: left
+    orientation: horizontal
     features:
-      - name: Easy to use
-        description: Id laborum laboris duis nostrud excepteur ut velit.
-        icon: i-heroicons-cog
-      - name: Reliable
-        description: Magna Lorem ex cillum fugiat ad enim aute irure sit duis minim.
-        icon: i-heroicons-check
-      - name: Secure
-        description: Proident nostrud excepteur sint ut culpa consectetur aute adipisicing.
-        icon: i-heroicons-lock-closed
-    links:
-      - label: Explore components
-        to: /pro/components
-        color: gray
-        icon: i-heroicons-arrow-right-20-solid
-        trailing: true
-        size: md
-        class: ml-8
-  - title: The speed of our service
-    description: Cillum sint enim excepteur ut deserunt qui nisi in deserunt in. Deserunt aliquip quis aliquip eu quis ex velit velit nostrud sit.
-    align: right
+      - name: 100+ UI Components
+        description: From buttons to modals, data tables to forms - all styled with Tailwind CSS and accessible out of the box.
+        icon: i-lucide-package
+      - name: Authentication Ready
+        description: Pre-built login, signup, and password reset flows. Just connect your backend and start onboarding users.
+        icon: i-lucide-shield
+      - name: TypeScript First
+        description: Full TypeScript support with auto-completion, type safety, and IntelliSense for every component and composable.
+        icon: i-lucide-code-2
+  - title: Built for Modern SaaS
+    description: Everything you need to launch and scale your SaaS. From beautiful marketing pages to complex dashboards, ship faster with production-ready patterns.
+    orientation: horizontal
+    reverse: true
     features:
-      - name: Fast
-        description: Qui reprehenderit nostrud dolore nisi ad fugiat labore eiusmod.
-        icon: i-heroicons-rocket-launch
-      - name: Affordable
-        description: Reprehenderit fugiat elit in do ipsum ut pariatur.
-        icon: i-heroicons-currency-dollar
-      - name: Scalable
-        description: Lorem deserunt et eiusmod. Ea in consectetur minim officia.
-        icon: i-heroicons-chart-bar
-    links:
-      - label: Learn more
-        to: /pro/guide/content
-        color: gray
-        icon: i-heroicons-arrow-right-20-solid
-        trailing: true
-        size: md
-        class: ml-8
+      - name: Edge Performance
+        description: Optimized for Core Web Vitals with automatic code splitting, lazy loading, and SSR/SSG support.
+        icon: i-lucide-zap
+      - name: Dark Mode Ready
+        description: Automatic theme switching with smooth transitions. Respects system preferences and remembers user choice.
+        icon: i-lucide-moon
+      - name: Global Ready
+        description: Built-in i18n support for 50+ languages with RTL/LTR layouts and @nuxt/fonts integration.
+        icon: i-lucide-globe
 features:
-  title: Why choose our service?
-  description: Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+  title: Everything You Need to Ship
+  description: Stop building from scratch. Focus on your unique features while Nuxt UI handles the foundations with battle-tested components and patterns.
   items:
-    - title: Easy to use
-      description: Id laborum laboris duis nostrud excepteur ut velit nulla magna Lorem proident non.
-      icon: i-heroicons-cog
-    - title: Reliable
-      description: Magna Lorem ex cillum fugiat ad enim aute irure sit duis minim.
-      icon: i-heroicons-check
-    - title: Secure
-      description: Proident nostrud excepteur sint ut culpa consectetur aute adipisicing non anim ullamco.
-      icon: i-heroicons-lock-closed
-    - title: Fast
-      description: Qui reprehenderit nostrud dolore nisi ad fugiat labore eiusmod sint aliquip nisi voluptate.
-      icon: i-heroicons-rocket-launch
-    - title: Affordable
-      description: Reprehenderit fugiat elit in do ipsum ut pariatur.
-      icon: i-heroicons-currency-dollar
-    - title: Scalable
-      description: Lorem deserunt et eiusmod. Ea in consectetur minim officia ullamco enim deserunt est.
-      icon: i-heroicons-chart-bar
+    - title: Beautiful Design System
+      description: Semantic color aliases, comprehensive design tokens, and Tailwind Variants for consistent, customizable styling.
+      icon: i-lucide-palette
+    - title: Accessible by Default
+      description: Built on Reka UI for robust accessibility. WCAG compliant components that work for everyone, everywhere.
+      icon: i-lucide-accessibility
+    - title: Developer Experience
+      description: Auto-imports, hot module replacement, and comprehensive documentation. Build faster with less friction.
+      icon: i-lucide-terminal
+    - title: SEO Optimized
+      description: Server-side rendering, automatic meta tags, sitemap generation, and Open Graph images out of the box.
+      icon: i-lucide-search
+    - title: Production Ready
+      description: Error handling, loading states, form validation, and security best practices built into every component.
+      icon: i-lucide-check-circle
+    - title: Infinitely Customizable
+      description: Override any style with the ui prop, customize globally with AppConfig, or use Tailwind classes directly.
+      icon: i-lucide-settings
 testimonials:
-  headline: Testimonials
-  title: What our customers are saying.
-  description: Proident sunt exercitation minim laborum enim laboris labore esse.
+  headline: Trusted by Developers
+  title: Join Thousands Building with Nuxt UI
+  description: See why developers choose Nuxt UI to ship their SaaS applications faster and with more confidence.
   items:
-    - quote: Nostrud tempor sunt fugiat. Dolor in sint dolore labore non occaecat adipisicing Lorem labore ullamco enim excepteur. In fugiat Lorem sit velit id veniam esse eiusmod non ea voluptate cupidatat reprehenderit ullamco dolore. Mollit laborum occaecat aliquip.
-      author:
-        name: Rose Roberson
-        description: CEO at Company
+    - quote: Nuxt UI transformed how we build. The component quality is exceptional - everything just works with perfect TypeScript support, accessibility, and dark mode built in.
+      user:
+        name: Sarah Chen
+        description: CTO at TechScale Solutions
         avatar:
           src: https://i.pravatar.cc/120?img=1
-          loading: lazy
-    - quote: Eiusmod dolor aute ut nulla pariatur officia consequat aute amet exercitation.
-      author:
-        name: Chace Rodgers
-        description: CEO at Company
+    - quote: We shipped our MVP in 2 weeks instead of 2 months. The authentication flows and form components saved us countless hours of development time.
+      user:
+        name: Marcus Rodriguez
+        description: VP of Engineering at DataFlow
         avatar:
           src: https://i.pravatar.cc/120?img=7
-          loading: lazy
-    - quote: Id duis velit enim officia ad nisi incididunt magna ex dolor minim deserunt dolor. Esse incididunt cillum nostrud esse do quis amet labore amet nulla eiusmod amet nulla Lorem. Incididunt ex voluptate irure officia laboris ea proident est qui.
-      author:
-        name: Cornelius Sheppard
-        description: CEO at Company
+    - quote: The design system with AppConfig is brilliant. We maintain brand consistency across all our products while leveraging the full component library.
+      user:
+        name: David Kumar
+        description: Security Director at SecureStack
         avatar:
           src: https://i.pravatar.cc/120?img=3
-          loading: lazy
-    - quote: Velit consectetur in adipisicing culpa eiusmod commodo eu ex dolore. Officia irure nisi dolor dolore velit fugiat. Aliqua sint aliqua aute elit eu sunt.
-      author:
-        name: Destinee Woods
-        description: CEO at Company
+    - quote: Perfect Lighthouse scores out of the box. Our Core Web Vitals improved dramatically just by switching to Nuxt UI components.
+      user:
+        name: Emily Zhang
+        description: Lead Architect at ScaleForce
         avatar:
           src: https://i.pravatar.cc/120?img=5
-          loading: lazy
-    - quote: Proident quis deserunt qui ex exercitation veniam id Lorem est cupidatat ipsum irure aliquip ad.
-      author:
-        name: Kaleb Mccormick
-        description: CEO at Company
+    - quote: The Tailwind Variants system makes customization so intuitive. We can override any component style while keeping the functionality intact.
+      user:
+        name: James Wilson
+        description: DevOps Lead at CloudPro
         avatar:
           src: https://i.pravatar.cc/120?img=8
-          loading: lazy
-    - quote: Magna officia quis ea ea in officia non voluptate ipsum culpa do labore sunt. Aute est dolore commodo sint officia ad laboris dolor magna aliquip exercitation tempor commodo.
-      author:
-        name: Jazmin Mccall
-        description: CEO at Company
+    - quote: From the SaaS template to production in days. The pre-built layouts, navigation, and content structure accelerated our launch.
+      user:
+        name: Lisa Patel
+        description: CEO at AutoScale
         avatar:
           src: https://i.pravatar.cc/120?img=9
-          loading: lazy
+    - quote: Reka UI foundation means accessibility is never an afterthought. We achieved WCAG compliance without any custom work.
+      user:
+        name: Michael Torres
+        description: Frontend Lead at AccessFirst
+        avatar:
+          src: https://i.pravatar.cc/120?img=11
+    - quote: The documentation is outstanding. Every component has clear examples, and the community on Discord is incredibly helpful.
+      user:
+        name: Rachel Kim
+        description: Performance Engineer at APIHub
+        avatar:
+          src: https://i.pravatar.cc/120?img=10
+    - quote: We replaced three different UI libraries with Nuxt UI. The consistency and quality across all components is unmatched.
+      user:
+        name: Thomas Weber
+        description: UI Architecture Lead at DesignScale
+        avatar:
+          src: https://i.pravatar.cc/120?img=12
+    - quote: The integration with Nuxt modules is seamless. Color mode, fonts, icons - everything works together perfectly.
+      user:
+        name: Sophia Martinez
+        description: Integration Specialist at TechFlow
+        avatar:
+          src: https://i.pravatar.cc/120?img=14
 cta:
-  title: Get started today
-  description: Nisi mollit id aliquip sunt est laborum sit sit.
+  title: Ready to build an amazing SaaS?
+  description: Join thousands of developers building with Nuxt and Nuxt UI. Get this template and start shipping today.
   links:
-    - label: Buy now
-      size: xl
-      color: black
-      to: /pricing
+    - label: Start building
+      to: 'https://ui.nuxt.com/docs/getting-started/installation/nuxt'
+      target: _blank
+      trailingIcon: i-lucide-arrow-right
+    - label: View on GitHub
+      to: 'https://github.com/nuxt-ui-templates/saas'
+      target: _blank
+      variant: subtle
+      icon: i-simple-icons-github
