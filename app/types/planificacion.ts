@@ -1,7 +1,4 @@
-import type { PlanificacionEstadoEnum } from "~/utils/enums/PlanificacionEstado.enum";
-import type { EstadoType } from "../types";
 import type { Grupo } from "./grupo";
-import type { BaseModel } from "./base.model";
 import type { SimplePlanificacionFecha } from "./planificacionFecha";
 
 export interface CreatePlanificacionDTO {
@@ -25,7 +22,6 @@ export type Planificacion = {
   deleted_at: string | null;
   created_at: string;
   updated_at: string;
-  estado: PlanificacionEstadoEnum;
   grados: Grado[];
   grupo: Grupo;
   tramos: number;

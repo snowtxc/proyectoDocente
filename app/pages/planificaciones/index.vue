@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import SelectStatus from "~/components/select/SelectStatus.vue";
 import SelectGrupo from "~/components/select/SelectGrupo.vue";
 import BadgeGrado from "~/components/badge/BadgeGrado.vue";
 import PlanificacionesForm from "~/components/planificaciones/PlanificacionesForm.vue";
@@ -8,10 +7,9 @@ import type { ListResponse } from "~/types/list-response";
 import type { Planificacion } from "~/types/planificacion";
 import { HttpMethodEnum } from "~/utils/enums/HttpMethodEnum"
 import { ModeEnum } from "~/utils/enums/ModeEnum";
-import { PlanificacionEstadoEnum } from "~/utils/enums/PlanificacionEstado.enum";
 import { apiPlanificacionesRoutes } from "~/utils/apiRoutes";
 import { appRoutes } from "~/utils/appRoutes";
-import { formattedImageUrlGrupo, getColorsEstado } from "~/utils/planificacion";
+import { formattedImageUrlGrupo } from "~/utils/planificacion";
 
 let timeoutSearch: any = 0;
 const route = useRoute()
@@ -42,13 +40,6 @@ const defaultColumns = [
         label: "Grados",
     },
     {
-        id: 'estado',
-        accessorKey: 'estado',
-        header: 'Estado',
-        key: "estado",
-        label: "Estado",
-    },
-    {
         id: 'actions',
         accessorKey: 'actions',
         header: 'Acciones',
@@ -64,8 +55,6 @@ const isLoading = ref(false);
 
 const search = ref("");
 
-const selectedStatus = ref(PlanificacionEstadoEnum.EN_CURSO);
-
 const defaultGrupoSelected: any = route.query?.grupoId ?  {
     id: route.query?.grupoId,
     nombre: route.query.grupoNombre,
@@ -73,9 +62,8 @@ const defaultGrupoSelected: any = route.query?.grupoId ?  {
 
 const selectedGrupo = ref(defaultGrupoSelected);
 
-const filters = ref<{query?: string, estado?: string , search : string, grupo_id?:number }>(
+const filters = ref<{query?: string, search : string, grupo_id?:number }>(
     { query: undefined, 
-     estado: selectedStatus.value, 
      search : '',
      grupo_id : defaultGrupoSelected?.id
     }
@@ -147,13 +135,11 @@ const onFilter = () => {
 
 watch(
     () => [
-        selectedStatus.value,  
         search.value,
         selectedGrupo.value 
     ],
     () => {
         filters.value.search = search.value;
-        filters.value.estado = selectedStatus.value;
         filters.value.grupo_id = selectedGrupo.value?.id
 
         clearTimeout(timeoutSearch);
@@ -183,7 +169,6 @@ const onCreatePlanificacion = ()=>{
 }
 
 const clearFilters = ()=>{
-    selectedStatus.value = null;
     selectedGrupo.value = null;
     onFilter();
 }
@@ -224,10 +209,6 @@ const verPlanificacion = async(row: Planificacion)=>{
             <UDashboardToolbar>
                 <template #default>
                     <div class="w-auto flex md:flex-row flex-col items-center justify-start gap-4">
-                        <div class="w-full flex gap-2">
-                            <SelectStatus v-model="selectedStatus" @update:modelValue="() => null" :multiple="false"
-                                class="flex-1 md:w-[200px]" />
-                        </div>
 
                         <div class="w-full flex gap-2">
                             <SelectGrupo v-model="selectedGrupo" 
@@ -269,12 +250,6 @@ const verPlanificacion = async(row: Planificacion)=>{
                     <div class="flex items-center gap-2">
                         <BadgeGrado v-for="(grado,idx) in row.original.grupo.grados" :key="idx" :grado="grado"></BadgeGrado>
                     </div>
-                </template>
-
-                <template #estado-cell="{ row }">
-                    <UBadge :label="row.original.estado" :variant="'outline'" :color="(getColorsEstado(
-                        row.original.estado ?? null
-                    ) as any)" />
                 </template>
 
                 <template #actions-cell="{ row }">

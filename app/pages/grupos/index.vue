@@ -284,7 +284,6 @@ const verPlanificaciones = async (row: Grupo) => {
                 </template>
             </UDashboardToolbar>
 
-            <!-- Table -->
       <UTable
         :data="grupos"
         :columns="columns"

@@ -4,6 +4,7 @@ useSeoMeta({
   ogImage: '/logo.png',
 })
 
+
 const loading = ref(true)
 
 onMounted(async () => {
