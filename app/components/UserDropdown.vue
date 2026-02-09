@@ -1,12 +1,14 @@
 <script setup lang="ts">
-import { useAuthStore } from '~/services/authService/authService';
+import { useAuthStore } from '~/utils/authStore';
+import { apiAuthRoutes } from '~/utils/apiRoutes';
+import { HttpMethodEnum } from '~/utils/enums/HttpMethodEnum';
 
-const { isHelpSlideoverOpen } = useDashboard()
-const { isDashboardSearchModalOpen } = useUIState()
-const { metaSymbol } = useShortcuts()
 const authStore = useAuthStore();
-const { signOut } = authStore;
+const { $apiRest } = useNuxtApp();
+const toast = useToast()
 const user = computed(() => authStore.user);
+const runtimeConfig = useRuntimeConfig()
+
 
 const items = computed(() => [
   [{
@@ -17,54 +19,35 @@ const items = computed(() => [
     label: 'Configuración',
     icon: 'i-heroicons-cog-8-tooth',
     to: '/configuracion'
-  }, {
-    label: 'Command menu',
-    icon: 'i-heroicons-command-line',
-    shortcuts: [metaSymbol.value, 'K'],
-    click: () => {
-      isDashboardSearchModalOpen.value = true
+  },
+  {
+    label: 'Salir',
+    icon: 'tabler:logout',
+    onSelect: async()=>{
+      try{
+       const response = await $apiRest(apiAuthRoutes.logout,HttpMethodEnum.POST);
+       navigateTo("/login");
+       authStore.setToken(null);
+       authStore.setUser(null);
+      }catch(message){
+        toast.error({
+          message: message ? message : 'Error al deslogearse',
+        })
+      }
     }
-  }, {
-    label: 'Help & Support',
-    icon: 'i-heroicons-question-mark-circle',
-    shortcuts: ['?'],
-    click: () => isHelpSlideoverOpen.value = true
-  }], [{
-    label: 'Documentation',
-    icon: 'i-heroicons-book-open',
-    to: 'https://ui.nuxt.com/pro/getting-started',
-    target: '_blank'
-  }, {
-    label: 'GitHub repository',
-    icon: 'i-simple-icons-github',
-    to: 'https://github.com/nuxt-ui-pro/dashboard',
-    target: '_blank'
-  }, {
-    label: 'Buy Nuxt UI Pro',
-    icon: 'i-heroicons-credit-card',
-    to: 'https://ui.nuxt.com/pro/purchase',
-    target: '_blank'
-  }], [{
-    click: async () => {
-      await signOut()
-    },
-    label: 'Cerrar sesion',
-    icon: 'i-heroicons-arrow-left-on-rectangle'
   }]
 ])
 </script>
 
 <template>
-  <UDropdown
+  <UDropdownMenu
     mode="hover"
     :items="items"
-    :ui="{ width: 'w-full', item: { disabled: 'cursor-text select-text' } }"
-    :popper="{ strategy: 'absolute', placement: 'top' }"
     class="w-full"
   >
     <template #default="{ open }">
       <UButton
-        color="gray"
+        color="primary"
         variant="ghost"
         class="w-full"
         :label="user.nombre1"
@@ -72,7 +55,7 @@ const items = computed(() => [
       >
         <template #leading>
           <UAvatar
-            :src="user.url_image_profile"
+            :src="user.url_image_profile ? user.url_image_profile : runtimeConfig.public.DEFAULT_IMAGE_URL"
             size="2xs"
           />
         </template>
@@ -96,5 +79,5 @@ const items = computed(() => [
         </p>
       </div>
     </template>
-  </UDropdown>
+  </UDropdownMenu>
 </template>

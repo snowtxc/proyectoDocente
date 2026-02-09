@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue';
-import { useGrupoService, useGrupoStore } from '~/services/grupoService/grupoService';
+import {  useGrupoStore } from '~/services/grupoService/grupoService';
 import { usePlanificacionService } from '~/services/planificacionService/planificacionService';
 import type { CreatePlanificacionDTO } from '~/types/planificacion';
 

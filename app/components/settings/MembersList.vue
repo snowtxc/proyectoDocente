@@ -11,11 +11,9 @@ defineProps({
 function getItems(member: Member) {
   return [[{
     label: 'Edit member',
-    click: () => console.log('Edit', member)
   }, {
     label: 'Remove member',
     labelClass: 'text-red-500 dark:text-red-400',
-    click: () => console.log('Remove', member)
   }]]
 }
 

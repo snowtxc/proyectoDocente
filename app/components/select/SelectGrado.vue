@@ -1,11 +1,12 @@
 <script setup lang="ts">
-    import { useGradoService } from '~/services/gradoService/gradoService';
 
-    const gradoService = useGradoService();
+    import type { Grado } from '~/types/grado';
 
     interface Props {
         modelValue: any,
+        grados: Grado[],
         multiple: boolean
+        loading?: boolean
     }
 
     const props = withDefaults(defineProps<Props>(), {
@@ -15,11 +16,11 @@
 
     const emit = defineEmits(['update:modelValue']);
 
-    onMounted(async()=>{
-        if(gradoService.alreadyLoaded){
-            return;
-        }
-        await gradoService.getAll();
+    const  grados =  ref<Grado[]>(props.grados);
+
+
+    watch(() => props.grados, ()=>{
+        grados.value = props.grados;
     })
 
     const updateValue = (value) => {
@@ -29,25 +30,26 @@
 </script>
 
 <template>
+
+
     <USelectMenu
-            @change="updateValue"
+            @update:model-value="updateValue"
             searchable
             searchable-placeholder="Buscar un grado..."
             class="w-full"
             by="id"
             option-attribute="nombre"
             :search-attributes="['nombre']"
-            :options="gradoService.grados"
-            :loading="gradoService.isLoading"
+            :items="grados"
             :multiple="props.multiple"
-            :model-value="props.modelValue"            
+            :loading="loading"   
         >
-        <template #label>
+        
+        <template #leading="{ modelValue, ui }">
             <span v-if="!props.modelValue || (typeof props.modelValue == 'object' && props.modelValue.length <= 0)"> {{  props.multiple ? 'Seleccionar Grados' : 'Seleccionar Grado' }} </span>
 
-            <span class="truncate flex flex-wrap gap-2" v-else-if="(props.multiple && props.modelValue  && Array.isArray(props.modelValue))">
-                
-                <BadgeGrado
+            <span class="truncate flex flex-wrap gap-2" v-else-if="(props.multiple && props.modelValue)">    
+                                <BadgeGrado
                 v-for="grado in props.modelValue"
                 :key="grado.id"
                 :grado="grado">
@@ -61,11 +63,12 @@
                 
             </span>
         </template>
+        
 
-        <template #option="{ option }">
+        <template #item-leading="{ item }">
             <BadgeGrado
-                :key="option.id"
-                :grado="option">
+                :key="item.id"
+                :grado="item">
               </BadgeGrado>
           </template>
     </USelectMenu>

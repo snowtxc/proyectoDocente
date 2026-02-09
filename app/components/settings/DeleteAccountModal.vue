@@ -1,52 +1,75 @@
 <script setup lang="ts">
+import { HttpMethodEnum } from '~/utils/enums/HttpMethodEnum';
+
 const model = defineModel({
   type: Boolean
 })
 
 const toast = useToast()
 
+
 const loading = ref(false)
 
-function onDelete() {
+const emit = defineEmits(['on:close']);
+
+const { $apiRest } = useNuxtApp();
+const authStore = useAuthStore();
+
+async function onDelete() {
+
   loading.value = true
 
-  setTimeout(() => {
-    loading.value = false
-    toast.add({ icon: 'i-heroicons-check-circle', title: 'Your account has been deleted', color: 'red' })
-    model.value = false
-  }, 2000)
+  try{
+       const response = await $apiRest<{status: boolean, message: string}>(apiAuthRoutes.deactivate, HttpMethodEnum.POST);
+    
+        if(response.status){
+            toast.success({ icon: 'i-heroicons-check-circle', title: response.message })
+            authStore.setToken(null);
+            authStore.setUser(null);
+            await navigateTo({ path: '/login' })
+
+        }else{
+            toast.error({
+                title: "Error",
+                  message: response.message,
+                color: "red"
+            });
+            loading.value = false;
+        }
+
+    }catch(message){
+      toast.error({
+          title: "Error",
+            message,
+          color: "red"
+      });
+      loading.value = false;
+    }
 }
+
+  
 </script>
 
 <template>
-  <UDashboardModal
-    v-model="model"
+  <UModal
+    v-model:open="model"
     title="Eliminar Cuenta"
     description="¿Estás seguro que deseas eliminar tu cuenta?"
     icon="i-heroicons-exclamation-circle"
-    prevent-close
-    :close-button="null"
-    :ui="{
-      icon: {
-        base: 'text-red-500 dark:text-red-400'
-      } as any,
-      footer: {
-        base: 'ml-16'
-      } as any
-    }"
+    :close="{ onClick: () => emit('on:close') }"
   >
     <template #footer>
       <UButton
-        color="red"
+        color="error"
         label="Eliminar Cuenta"
         :loading="loading"
         @click="onDelete"
       />
       <UButton
-        color="white"
+        color="neutral"
         label="Cancel"
-        @click="model = false"
+        @click="emit('on:close')"
       />
     </template>
-  </UDashboardModal>
+  </UModal>
 </template>

@@ -66,7 +66,7 @@ export const useGrupoService = defineStore('grupo', () => {
           formData.append('logo', data.logo)
         }
       }
-      else{
+    else{
         formData.append(key, data[key]);
       }
     });
