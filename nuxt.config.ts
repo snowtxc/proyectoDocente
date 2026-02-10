@@ -35,6 +35,7 @@ export default defineNuxtConfig({
   },
   runtimeConfig: {
     public: {
+      apiDomain : process.env.NUXT_PUBLIC_API_DOMAIN,
       apiBaseUrl: process.env.NUXT_PUBLIC_API_BASE_URL,
       DEFAULT_IMAGE_URL: process.env.NUXT_PUBLIC_DEFAULT_IMAGE,
       piniaPersist: true, // Activar persistencia
