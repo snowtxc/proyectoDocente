@@ -23,7 +23,7 @@ export default defineNuxtPlugin((nuxtApp) => {
         let csrfToken = getCookie('XSRF-TOKEN');
 
         if(!csrfToken){
-            await $fetch(`http://localhost:8000/sanctum/csrf-cookie`, { method : 'GET', credentials: 'include'});
+            await $fetch(`${config.public.apiDomain}/sanctum/csrf-cookie`, { method : 'GET', credentials: 'include'});
             csrfToken = getCookie('X-CSRF-TOKEN');
         }
 
