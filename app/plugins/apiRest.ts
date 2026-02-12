@@ -7,7 +7,6 @@ export default defineNuxtPlugin((nuxtApp) => {
     const config = useRuntimeConfig();
     const { start, finish } = useLoadingIndicator();
 
-    // ✅ Función getCookie mejorada
     const getCookie = (name) => {
         const match = document?.cookie?.match(new RegExp('(^| )' + name + '=([^;]+)'));
         return match ? match[2] : null;
@@ -16,23 +15,22 @@ export default defineNuxtPlugin((nuxtApp) => {
     const apiRest = async (endpoint: string, method: HttpMethodEnum, body: any, options: Record<string, any> = {}) => {
         const token = authStore.token;
         
-        // ✅ 1. LEER COOKIE CORRECTA: XSRF-TOKEN (NO X-CSRF-TOKEN)
+        // ✅ 1. SIEMPRE usar XSRF-TOKEN
         let csrfToken = getCookie('XSRF-TOKEN');
 
-        // ✅ 2. SI NO EXISTE, OBTENERLA DE /sanctum/csrf-cookie
         if (!csrfToken) {
             await $fetch(`${config.public.apiDomain}/sanctum/csrf-cookie`, {
                 method: 'GET',
                 credentials: 'include'
             });
-            // ✅ RECUPERAR LA MISMA COOKIE XSRF-TOKEN
+            // ✅ 2. Leer la MISMA cookie XSRF-TOKEN
             csrfToken = getCookie('XSRF-TOKEN');
         }
 
-        // ✅ 3. HEADER CORRECTO: X-XSRF-TOKEN (NO X-CSRF-TOKEN)
+        // ✅ 3. Header X-XSRF-TOKEN (¡clave del éxito!)
         const headers = {
             Accept: "application/json",
-            "X-XSRF-TOKEN": csrfToken || "",  // 👈 CABECERA QUE SANCTUM ESPERA
+            "X-XSRF-TOKEN": csrfToken || "",
             ...(token ? { Authorization: `Bearer ${token}` } : {}),
             ...options.headers
         };
@@ -45,7 +43,7 @@ export default defineNuxtPlugin((nuxtApp) => {
                 ...options,
                 headers,
                 body,
-                credentials: 'include' // ✅ OBLIGATORIO PARA ENVIAR COOKIES
+                credentials: 'include'
             });
             finish();
             return response;
