@@ -4,56 +4,55 @@ import type { HttpMethodEnum } from "~/utils/enums/HttpMethodEnum";
 export default defineNuxtPlugin((nuxtApp) => {
 
     const authStore = useAuthStore();
-
     const config = useRuntimeConfig();
     const { start, finish } = useLoadingIndicator();
 
+    // ✅ Función getCookie mejorada
     const getCookie = (name) => {
-        const match = document?.cookie?.match(new RegExp('(^| )' + name + '=([^;]+)')) || null;
-        if (match) 
-            return match[2];
-        else
-            return null;
+        const match = document?.cookie?.match(new RegExp('(^| )' + name + '=([^;]+)'));
+        return match ? match[2] : null;
     };
 
-    // Definir el tipo de la función `apiRest`
-    const apiRest = async(endpoint: string, method: HttpMethodEnum, body: any, options: Record<string, any> = {}) => {
+    const apiRest = async (endpoint: string, method: HttpMethodEnum, body: any, options: Record<string, any> = {}) => {
         const token = authStore.token;
         
+        // ✅ 1. LEER COOKIE CORRECTA: XSRF-TOKEN (NO X-CSRF-TOKEN)
         let csrfToken = getCookie('XSRF-TOKEN');
 
-        if(!csrfToken){
-            await $fetch(`${config.public.apiDomain}/sanctum/csrf-cookie`, { method : 'GET', credentials: 'include'});
-            csrfToken = getCookie('X-CSRF-TOKEN');
+        // ✅ 2. SI NO EXISTE, OBTENERLA DE /sanctum/csrf-cookie
+        if (!csrfToken) {
+            await $fetch(`${config.public.apiDomain}/sanctum/csrf-cookie`, {
+                method: 'GET',
+                credentials: 'include'
+            });
+            // ✅ RECUPERAR LA MISMA COOKIE XSRF-TOKEN
+            csrfToken = getCookie('XSRF-TOKEN');
         }
 
-        const headers = token ? {
-            Authorization: `Bearer ${token}`,
+        // ✅ 3. HEADER CORRECTO: X-XSRF-TOKEN (NO X-CSRF-TOKEN)
+        const headers = {
             Accept: "application/json",
-            "X-CSRF-TOKEN": csrfToken || "",
-            ...options.headers
-        } : {
-            Accept: "application/json",
-            "X-CSRF-TOKEN": csrfToken || "",
+            "X-XSRF-TOKEN": csrfToken || "",  // 👈 CABECERA QUE SANCTUM ESPERA
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
             ...options.headers
         };
 
         start();
 
-        try{
+        try {
             const response = await $fetch(`${config.public.apiBaseUrl}${endpoint}`, {
                 method,
                 ...options,
                 headers,
                 body,
-                credentials: 'include'
+                credentials: 'include' // ✅ OBLIGATORIO PARA ENVIAR COOKIES
             });
             finish();
             return response;
-        }catch(e: any){
+        } catch (e: any) {
             finish();
             const statusCode = e?.response?.status || e?.statusCode || e?.status;
-            if(statusCode == 401){
+            if (statusCode === 401) {
                 authStore.clearToken();
                 authStore.clearUser();
                 navigateTo("/login");
@@ -61,9 +60,8 @@ export default defineNuxtPlugin((nuxtApp) => {
             const responseError = e?.response?._data || e?.data || e;
             const message = responseError?.message || responseError || 'An error occurred';
             throw message;
-        }        
+        }
     };
 
-    // Proveer la función tipada
     nuxtApp.provide("apiRest", apiRest);
 });
