@@ -12,15 +12,19 @@ export default defineNuxtPlugin((nuxtApp) => {
     };
 
     const apiRest = async (endpoint: string, method: HttpMethodEnum, body: any, options: Record<string, any> = {}) => {
+
         const token = authStore.token;
         
-        await $fetch(`${config.public.apiDomain}/sanctum/csrf-cookie`, {
-            method: 'GET',
-            credentials: 'include'
-        });
-        
-        const csrfToken = getCookie('XSRF-TOKEN');
-        
+        let csrfToken = getCookie('XSRF-TOKEN');
+
+        if(!csrfToken){
+            await $fetch(`${config.public.apiDomain}/sanctum/csrf-cookie`, {
+                method: 'GET',
+                credentials: 'include'
+            });
+            csrfToken = getCookie('XSRF-TOKEN');
+        }
+                
         const headers = {
             Accept: "application/json",
             "Content-Type": "application/json",
