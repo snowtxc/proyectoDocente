@@ -24,15 +24,17 @@ export default defineNuxtPlugin((nuxtApp) => {
             });
             csrfToken = getCookie('XSRF-TOKEN');
         }
-                
+
+        const isFormData = body instanceof FormData;
+
         const headers = {
             Accept: "application/json",
-            "Content-Type": "application/json",
-            "X-XSRF-TOKEN": csrfToken || "", // 👈 ESTE ES EL BUENO
+            ...(isFormData ? {} : { "Content-Type": "application/json" }),
+            "X-XSRF-TOKEN": csrfToken || "",
             ...(token ? { Authorization: `Bearer ${token}` } : {}),
             ...options.headers
         };
-
+        
         console.log('✅ Enviando headers:', {
             'X-XSRF-TOKEN': csrfToken?.substring(0, 20) + '...',
             Authorization: token ? 'Bearer ...' : 'none'
