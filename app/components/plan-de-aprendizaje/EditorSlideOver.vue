@@ -233,13 +233,14 @@
         formData.append('documento', blob);
 
         isLoading.value = true;
+        isOpen.value = false;
+
         const documentSaved = await $apiRest<Documento>(apiDocumentos.saveDocument(documento.value.id), HttpMethodEnum.POST, formData);
         isLoading.value = false;
         
         // SE SETEA EL URL DEL DOCUMENTO
         documentUrl.value = documentSaved.document_url;
-        isOpen.value = false;
-      
+              
         toast.success({
               title: "Se ha guardado con exito",
               color: "green"

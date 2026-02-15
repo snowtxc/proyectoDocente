@@ -186,7 +186,7 @@ async function onSubmit(payload: FormSubmitEvent<Schema>) {
 
           <!-- small footer under card -->
           <div class="mt-4 text-center text-xs text-slate-500 dark:text-slate-400">
-            © {{ new Date().getFullYear() }} Proyecto Docentes
+            © {{ new Date().getFullYear() }} Flopi Docentes
           </div>
         </div>
       </div>

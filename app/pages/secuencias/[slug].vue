@@ -55,6 +55,16 @@ const { data: response, error, refresh } = await useAsyncData('secuenciaDetalle'
   return { secuencia ,  espacios , competenciasGenerales};
 });
 
+if(error.value){
+   throw createError({
+    status: 404,
+    statusText: error.value.message,
+    data: {
+      myCustomField: true,
+    },
+  })
+}
+
 const loadContenidosCriteriosDeLogrosYCompetencias = async(unidadCurricularId: number)=>{
 
    loadingMoreData.value = true;
@@ -694,7 +704,7 @@ const onDelete = async() : Promise<void> =>{
     
     </UDashboardNavbar>
 
-    <div class="w-full flex flex-col gap-2 justify-center border-b border-b-4 border-b-100 p-2">
+    <div class="w-full flex flex-col gap-2 justify-center border-b border-b-1 p-2">
         <div class="flex md:flex-row gap-2 ">
           <USelectMenu :model-value="secuencia.espacio" :items="espacios" option-attribute="id" class="flex-1"
           @update:model-value="onChangeEspacio">

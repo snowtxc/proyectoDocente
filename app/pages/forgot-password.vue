@@ -59,6 +59,8 @@ const onSubmit = async (payload: FormSubmitEvent<Schema>) => {
       message,
       color: 'green'
     })
+
+    submit.value = false;
   } catch (message: any) {
     toast.error({
       title: 'Error',
@@ -120,8 +122,13 @@ const onSubmit = async (payload: FormSubmitEvent<Schema>) => {
               title="Restablecer contraseña"
               align="top"
               icon="heroicons:key-16-solid"
-              :submit-button="{ label: 'Restablecer', trailingIcon: 'i-heroicons-paper-airplane-20-solid' }"
               @submit="onSubmit"
+               :submit="{
+                  label: 'Continuar',
+                  color: 'primary',
+                  icon: 'tabler:arrow-narrow-right',
+                  loading:  submit
+                }"
             >
               <template #description>
                 Volver a
@@ -137,7 +144,7 @@ const onSubmit = async (payload: FormSubmitEvent<Schema>) => {
           </UCard>
 
           <div class="mt-4 text-center text-xs text-slate-500 dark:text-slate-400">
-            © {{ new Date().getFullYear() }} Proyecto Docentes
+            © {{ new Date().getFullYear() }} Flopi Docentes
           </div>
         </div>
       </div>

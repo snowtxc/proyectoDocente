@@ -199,7 +199,7 @@ const onSubmit = async (payload: FormSubmitEvent<Schema>) => {
           </UCard>
 
           <div class="mt-4 text-center text-xs text-slate-500 dark:text-slate-400">
-            © {{ new Date().getFullYear() }} Proyecto Docentes
+            © {{ new Date().getFullYear() }} Floi Docentes
           </div>
         </div>
       </div>

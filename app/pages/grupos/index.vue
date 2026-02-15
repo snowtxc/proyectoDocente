@@ -254,7 +254,7 @@ const verPlanificaciones = async (row: Grupo) => {
             <UDashboardToolbar>
                 <template #default>
                   <!-- Toolbar / Filters -->
-                  <div class="w-full border-b border-gray-200 dark:border-gray-700 px-4 py-4 flex gap-3 items-center flex-wrap">
+                  <div class="w-full border-b border-gray-200 dark:border-gray-700 flex gap-3 items-center flex-wrap">
                     <SelectYear 
                       v-model="filters.year" 
                       class="flex-1 max-w-72" 
@@ -268,18 +268,6 @@ const verPlanificaciones = async (row: Grupo) => {
                       class="flex-1 max-w-72"
                       @update:model-value="loadGrupos"
                     />
-
-                    <USelectMenu
-                      v-model="selectedColumns"
-                      icon="i-heroicons-adjustments-horizontal-solid"
-                      :options="defaultColumns.map(col => ({ 
-                        value: col.key, 
-                        label: col.label 
-                      }))"
-                      multiple
-                      class="hidden lg:block"
-                    >
-                    </USelectMenu>
                   </div>
                 </template>
             </UDashboardToolbar>

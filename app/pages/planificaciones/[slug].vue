@@ -39,6 +39,16 @@ const { data: response, error, refresh } = await useAsyncData('planificacionDeta
   return { planificacion,  espacios , competenciasGenerales};
 });
 
+if(error.value){
+   throw createError({
+    status: 404,
+    statusText: error.value.message,
+    data: {
+      myCustomField: true,
+    },
+  })
+}
+
 const planificacion = ref<Planificacion>(response.value.planificacion);
 const espacios = ref<Espacio[]>(response.value.espacios);
 const competenciasGenerales = ref<CompetenciaGeneral[]>(response.value.competenciasGenerales);
@@ -440,12 +450,12 @@ const actionsMenuTramo = ref([
         planificacion: planificacion.value,
         planificacionFecha: planificacionFechaSelected.value,
         tramo,
-        "loadTramo" : (tramo:Tramo)=>{
+        "onLoadTramo" : (tramo:Tramo)=>{
           modal.close();
           onUpdateTramo(tramo)
         },
 
-        "on:OnClose" : ()=>{
+        "onOnClose" : ()=>{
           modal.close();
         }
       })
