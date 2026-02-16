@@ -177,7 +177,7 @@ async function onSubmit(payload: FormSubmitEvent<Schema>) {
 
               <template #footer>
                 Al iniciar aceptas nuestros
-                <NuxtLink to="/" class="text-primary font-medium">
+                <NuxtLink to="/terminos-y-condiciones" class="text-primary font-medium">
                   Términos y condiciones
                 </NuxtLink>.
               </template>

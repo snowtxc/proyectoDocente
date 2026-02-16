@@ -4,169 +4,145 @@ definePageMeta({
 });
 
 const page = ref({
-  "title": "FlopiDocentes: Planifica con IA",
-  "description": "Plataforma para docentes uruguayos que simplifica la creación de planificaciones, secuencias y gestión de grupos usando inteligencia artificial.",
-  "seo": {
-    "title": "FlopiDocentes - Gestión Educativa con IA",
-    "description": "Herramienta digital que ayuda a docentes a crear planificaciones y gestionar clases usando inteligencia artificial."
+  title: "FlopiDocentes: Planificaciones en minutos",
+  description: "La herramienta que centraliza el programa curricular de ANEP y te ayuda a crear planificaciones y secuencias didácticas en tiempo récord. Olvídate del papeleo y dedícate a lo que importa: enseñar.",
+  seo: {
+    title: "FlopiDocentes - Gestión Educativa para Docentes Uruguayos",
+    description: "Crea planificaciones, gestiona grupos y accede al programa curricular de ANEP en un solo lugar. Ahorra horas de trabajo administrativo."
   },
-  "navigation": false,
-  "hero": {
-    "links": [
+  navigation: false,
+  hero: {
+    links: [
       {
-        "label": "Comenzar Gratis",
-        "icon": "i-lucide-arrow-right",
-        "trailing": true,
-        "to": "/signup",
-        "size": "xl"
+        label: "Comenzar gratis",
+        icon: "i-lucide-arrow-right",
+        trailing: true,
+        to: "/signup",
+        size: "xl"
       },
       {
-        "label": "Ver Demo",
-        "icon": "i-lucide-play-circle",
-        "size": "xl",
-        "color": "neutral",
-        "variant": "subtle",
-        "to": "/demo"
+        label: "Ver demo",
+        icon: "i-lucide-play-circle",
+        size: "xl",
+        color: "neutral",
+        variant: "subtle",
+        to: "/demo"
       }
     ]
   },
-  "sections": [
+  sections: [
     {
-      "title": "Funcionalidades Principales",
-      "description": "Todo lo esencial para organizar tu trabajo docente en un solo lugar.",
-      "id": "features",
-      "orientation": "horizontal",
-      "features": [
+      title: "Todo lo que necesitas para planificar",
+      description: "Olvídate de las plantillas en Word y los archivos desordenados. FlopiDocentes te ofrece un entorno integrado con el programa curricular oficial.",
+      id: "features",
+      orientation: "horizontal",
+      features: [
         {
-          "name": "Planificaciones",
-          "description": "Genera planificaciones automáticas usando inteligencia artificial como asistente, adaptadas a tus necesidades.",
-          "icon": "i-lucide-brain"
+          name: "Planificaciones automáticas",
+          description: "Genera planificaciones completas en minutos con base en el programa de ANEP. Solo eliges el grado, la unidad y el contenido, y obtienes una estructura lista para usar.",
+          icon: "i-lucide-file-text"
         },
         {
-          "name": "Secuencias Didácticas",
-          "description": "Organiza tus clases en secuencias lógicas y coherentes fácilmente e integra sus actividades en las planificaciones.",
-          "icon": "i-lucide-list-ordered"
+          name: "Secuencias didácticas",
+          description: "Organiza tus clases en secuencias lógicas, asocia actividades y lleva un seguimiento de cada grupo. Todo interconectado con tus planificaciones.",
+          icon: "i-lucide-list-ordered"
         },
         {
-          "name": "Gestión de Grupos",
-          "description": "Administra tus grupos de forma sencilla.",
-          "icon": "i-lucide-users"
+          name: "Programa curricular de ANEP integrado",
+          description: "Accede directamente a todos los contenidos, criterios de logro y competencias del programa oficial. Ya no necesitas buscar en PDFs.",
+          icon: "i-lucide-book-open"
         },
         {
-          "name": "Sincronización en Google Drive",
-          "description": "Sincroniza tus documentos y planificaciones con Google Drive para un acceso fácil y rápido.",
-          "icon": "tabler:brand-google-drive"
+          name: "Sincronización con Google Drive",
+          description: "Tus documentos y planificaciones se guardan automáticamente en tu Drive. Puedes acceder desde cualquier lugar y compartirlos fácilmente.",
+          icon: "tabler:brand-google-drive"
         }
       ]
     },
     {
-      "title": "Optimizado para Docentes",
-      "description": "Herramientas prácticas que realmente ahorran tiempo y esfuerzo.",
-      "orientation": "horizontal",
-      "reverse": true,
-      "features": [
+      title: "Diseñado para ahorrar tiempo",
+      description: "Herramientas prácticas que simplifican tu rutina docente.",
+      orientation: "horizontal",
+      reverse: true,
+      features: [
         {
-          "name": "Ahorro de Tiempo",
-          "description": "Reduce horas de trabajo administrativo con una herramienta extremadamente simple.",
-          "icon": "i-lucide-clock"
+          name: "Menos papeleo, más enseñanza",
+          description: "Reduce horas de trabajo administrativo. Con FlopiDocentes, todo está a unos pocos clics.",
+          icon: "i-lucide-clock"
         },
         {
-          "name": "Fácil de Usar",
-          "description": "Interfaz intuitiva diseñada para docentes, sin complicaciones técnicas.",
-          "icon": "i-lucide-smile"
+          name: "Interfaz intuitiva",
+          description: "Sin complicaciones técnicas. Creada por y para docentes, con la experiencia de usuario en primer lugar.",
+          icon: "i-lucide-smile"
         },
         {
-          "name": "Formatos Útiles",
-          "description": "Exporta en formatos compatibles con los sistemas educativos.",
-          "icon": "i-lucide-file-text"
+          name: "Exportación flexible",
+          description: "Descarga tus planificaciones en formatos compatibles con los requerimientos de tu institución.",
+          icon: "i-lucide-file-text"
         }
       ]
     }
   ],
-  "features": {
-    "title": "¿Por Qué FlopiDocentes?",
-    "description": "Características clave que hacen la diferencia en tu día a día.",
-    "items": [
+  features: {
+    title: "¿Por qué elegir FlopiDocentes?",
+    description: "Características clave que marcan la diferencia en tu día a día.",
+    items: [
       {
-        "title": "Asistente de IA",
-        "description": "Sugiere actividades y estructura clases basándose en tus objetivos.",
-        "icon": "i-lucide-sparkles"
+        title: "Programa ANEP siempre actualizado",
+        description: "Los contenidos curriculares se actualizan automáticamente, así que siempre trabajas con la versión oficial vigente.",
+        icon: "i-lucide-calendar"
       },
       {
-        "title": "Sincronización con Google Drive",
-        "description": "Mantén tus documentos y planificaciones siempre actualizados y accesibles.",
-        "icon": "tabler:brand-google-drive"
+        title: "Ahorro de tiempo real",
+        description: "Crea una planificación completa en menos de 10 minutos. Prueba y verás.",
+        icon: "i-lucide-clock"
       },
       {
-        "title": "Organización Visual",
-        "description": "Vista clara de tus planificaciones, tramos y secuencias para una mejor gestión.",
-        "icon": "i-lucide-calendar"
+        title: "Acceso desde cualquier dispositivo",
+        description: "Al sincronizar con Google Drive, puedes trabajar desde tu computadora, tablet o celular.",
+        icon: "i-lucide-smartphone"
       },
       {
-        "title": "Programa Curricular Integrado",
-        "description": "Accede fácilmente a los contenidos oficiales de ANEP para planificar tus clases.",
-        "icon": "i-lucide-book-open"
+        title: "Pensado para el aula uruguaya",
+        description: "Diseñado específicamente para el sistema educativo de Uruguay, con todas las particularidades de nuestro currículo.",
+        icon: "i-lucide-map-pin"
       },
     ]
   },
-  "testimonials": {
-    "headline": "Primeros Usuarios",
-    "title": "Docentes que ya están probando",
-    "description": "Experiencias iniciales de educadores que están descubriendo la plataforma.",
-    "items": [
+  pricing: {
+    title: "Precio pensado para docentes",
+    description: "Queremos que pruebes la herramienta sin compromiso. Por eso, los primeros 3 meses son completamente gratis. Luego, solo $250 UYU por mes.",
+    note: "Sin permanencia. Puedes cancelar cuando quieras.",
+    links: [
       {
-        "quote": "La IA me ayuda a estructurar mejor mis clases. Ahorro tiempo valioso cada semana.",
-        "user": {
-          "name": "Docente de Primaria",
-          "description": "Montevideo",
-          "avatar": {
-            "src": "https://i.pravatar.cc/120?img=1"
-          }
-        }
-      },
-      {
-        "quote": "Me gusta lo simple que es crear secuencias didácticas. Todo está bien organizado.",
-        "user": {
-          "name": "Maestra de 3ro",
-          "description": "Canelones",
-          "avatar": {
-            "src": "https://picsum.photos/seed/docente1/120/120"
-          }
-        }
-      },
-      {
-        "quote": "Gestión de grupos muy práctica. Mantengo todo ordenado sin esfuerzo.",
-        "user": {
-          "name": "Docente Rural",
-          "description": "Interior",
-          "avatar": {
-            "src": "https://picsum.photos/seed/docente2/120/120"
-          }
-        }
+        label: "Empieza gratis",
+        to: "/signup",
+        trailingIcon: "i-lucide-arrow-right",
+        size: "lg"
       }
     ]
   },
-  "cta": {
-    "title": "¿Listo para simplificar tu trabajo?",
-    "description": "Únete gratis a FlopiDocentes y descubre cómo la IA puede ayudarte en tu labor docente.",
-    "links": [
+  cta: {
+    title: "¿Listo para recuperar tu tiempo?",
+    description: "Únete gratis a FlopiDocentes y descubre lo fácil que es planificar con el programa de ANEP integrado.",
+    links: [
       {
-        "label": "Registrarse Gratis",
-        "to": "/signup",
-        "trailingIcon": "i-lucide-arrow-right"
+        label: "Registrarse gratis",
+        to: "/signup",
+        trailingIcon: "i-lucide-arrow-right"
       },
       {
-        "label": "Probar Demo",
-        "to": "/demo",
-        "variant": "subtle",
-        "icon": "i-lucide-play"
+        label: "Ver demo",
+        to: "/demo",
+        variant: "subtle",
+        icon: "i-lucide-play"
       }
     ]
   }
 });
 
-const title = page.value?.seo?.title || page.value?.title
-const description = page.value?.seo?.description || page.value?.description
+const title = computed(() => page.value?.seo?.title || page.value?.title)
+const description = computed(() => page.value?.seo?.description || page.value?.description)
 
 useSeoMeta({
   titleTemplate: '',
@@ -187,12 +163,7 @@ useSeoMeta({
       :links="page.hero.links"
       class="relative overflow-hidden my-10"
     >
-      <template #top>
-        <div class="absolute inset-0 bg-gradient-to-r from-yellow-400/10 to-yellow-500/10">
-          <div class="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width=%2260%22 height=%2260%22 viewBox=%220 0 60 60%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cg fill=%22none%22 fill-rule=%22evenodd%22%3E%3Cg fill=%22%23CA8A04%22 fill-opacity=%220.05%22%3E%3Cpath d=%22M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z%22/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-50"></div>
-        </div>
-      </template>
-
+      <!-- ... fondo igual ... -->
       <template #title>
         <MDC
           :value="page.title"
@@ -243,50 +214,159 @@ useSeoMeta({
         </UPageGrid>
       </UPageSection>
 
-      <div class="bg-gradient-to-r from-yellow-50 to-yellow-100 rounded-3xl p-8 mb-16 border border-yellow-200">
-        <UPageSection
-          id="testimonials"
-          :headline="page.testimonials.headline"
-          :title="page.testimonials.title"
-          :description="page.testimonials.description"
-        >
-          <UPageColumns class="xl:columns-3 gap-6">
-            <UPageCard
-              v-for="(testimonial, index) in page.testimonials.items"
-              :key="index"
-              variant="subtle"
-              :description="testimonial.quote"
-              :ui="{ 
-                description: 'before:content-[open-quote] after:content-[close-quote] text-gray-700',
-                root: 'break-inside-avoid bg-white/80 backdrop-blur-sm border border-yellow-100 hover:bg-white transition-colors duration-300'
-              }"
-            >
-              <template #footer>
-                <UUser
-                  v-bind="testimonial.user"
-                  size="lg"
-                  class="mt-4"
-                />
-              </template>
-            </UPageCard>
-          </UPageColumns>
-        </UPageSection>
+      <!-- Sección de precios -->
+     <div class="relative rounded-3xl overflow-hidden mb-16 bg-gradient-to-br from-yellow-400 to-amber-500 shadow-2xl">
+  <!-- Patrón de fondo sutil -->
+  <div class="absolute inset-0 opacity-10">
+    <div class="absolute inset-0" style="background-image: url('data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'none\' fill-rule=\'evenodd\'%3E%3Cg fill=\'%23ffffff\' fill-opacity=\'1\'%3E%3Cpath d=\'M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z\'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E'); background-repeat: repeat;"></div>
+  </div>
+  
+  <!-- Círculos decorativos -->
+  <div class="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl"></div>
+  <div class="absolute bottom-0 left-0 w-48 h-48 bg-yellow-300/20 rounded-full translate-y-1/2 -translate-x-1/2 blur-2xl"></div>
+  
+  <div class="relative z-10 px-8 py-16 md:px-12 md:py-20 lg:px-16 text-center">
+    <!-- Badge "Lanzamiento" -->
+    <div class="mb-6">
+      <span class="inline-flex items-center gap-2 text-sm font-medium text-amber-600 bg-white px-4 py-2 rounded-full shadow-md">
+        <UIcon name="i-lucide-gift" class="w-4 h-4" />
+        Oferta de lanzamiento
+      </span>
+    </div>
+
+    <!-- Título -->
+    <h2 class="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-4">
+      {{ page.pricing.title }}
+    </h2>
+    
+    <!-- Descripción -->
+    <p class="text-lg md:text-xl text-yellow-50/90 max-w-2xl mx-auto mb-8">
+      {{ page.pricing.description }}
+    </p>
+
+    <!-- Tarjeta de precio -->
+    <div class="max-w-md mx-auto mb-10">
+      <div class="bg-white/10 backdrop-blur-sm rounded-2xl p-8 border border-white/20">
+        <div class="text-white mb-4">
+          <span class="text-sm uppercase tracking-wider opacity-80">Precio especial</span>
+          <div class="flex items-end justify-center gap-2 mt-2">
+            <span class="text-5xl font-bold">$250</span>
+            <span class="text-xl opacity-80 mb-1">/mes</span>
+          </div>
+        </div>
+        
+        <!-- Lista de beneficios -->
+        <ul class="space-y-3 text-white/90 text-left mb-8">
+          <li class="flex items-center gap-2">
+            <UIcon name="i-lucide-check-circle" class="w-5 h-5 text-yellow-300 flex-shrink-0" />
+            <span>3 meses <span class="font-bold text-white">completamente gratis</span></span>
+          </li>
+          <li class="flex items-center gap-2">
+            <UIcon name="i-lucide-check-circle" class="w-5 h-5 text-yellow-300 flex-shrink-0" />
+            <span>Programa curricular ANEP integrado</span>
+          </li>
+          <li class="flex items-center gap-2">
+            <UIcon name="i-lucide-check-circle" class="w-5 h-5 text-yellow-300 flex-shrink-0" />
+            <span>Planificaciones ilimitadas</span>
+          </li>
+          <li class="flex items-center gap-2">
+            <UIcon name="i-lucide-check-circle" class="w-5 h-5 text-yellow-300 flex-shrink-0" />
+            <span>Sincronización con Google Drive</span>
+          </li>
+          <li class="flex items-center gap-2">
+            <UIcon name="i-lucide-check-circle" class="w-5 h-5 text-yellow-300 flex-shrink-0" />
+            <span>Gestión de grupos incluida</span>
+          </li>
+        </ul>
+
+        <!-- Botón principal -->
+        <UButton
+          v-for="(link, idx) in page.pricing.links"
+          :key="idx"
+          v-bind="link"
+          size="xl"
+          block
+          class="bg-white text-amber-600 hover:bg-yellow-50 hover:text-amber-700 border-0 shadow-lg hover:shadow-xl transition-all duration-200 font-semibold"
+        />
       </div>
+    </div>
+
+    <!-- Nota adicional -->
+    <p class="text-sm text-yellow-50/80 max-w-2xl mx-auto">
+      {{ page.pricing.note }}
+    </p>
+    
+    <!-- Badge de confianza -->
+    <div class="mt-6 flex flex-wrap gap-4 justify-center items-center text-sm text-yellow-50/70">
+      <span class="flex items-center gap-1">
+        <UIcon name="i-lucide-credit-card" class="w-4 h-4" />
+        Pago seguro
+      </span>
+      <span class="flex items-center gap-1">
+        <UIcon name="i-lucide-calendar" class="w-4 h-4" />
+        Cancela cuando quieras
+      </span>
+      <span class="flex items-center gap-1">
+        <UIcon name="i-lucide-shield" class="w-4 h-4" />
+        Sin permanencia
+      </span>
+    </div>
+  </div>
+</div>
 
       <USeparator class="my-16 border-yellow-200" />
 
-      <div class="relative rounded-3xl overflow-hidden">
-        <div class="absolute inset-0 bg-gradient-to-r from-yellow-100 to-yellow-200"></div>
-        <div class="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width=%22100%22 height=%22100%22 viewBox=%220 0 100 100%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cpath d=%22M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z%22 fill=%22%23ffffff%22 fill-opacity=%220.15%22 fill-rule=%22evenodd%22/%3E%3C/svg%3E')] opacity-20"></div>
-        <UPageCTA
-          v-bind="page.cta"
-          variant="naked"
-          class="relative z-10 p-12 text-white"
-        >
-          <LazyStarsBg class="opacity-20" />
-        </UPageCTA>
-      </div>
+      <div class="relative rounded-3xl overflow-hidden bg-gradient-to-br from-yellow-400 to-amber-500 shadow-2xl">
+  <!-- Patrón de fondo sutil -->
+  <div class="absolute inset-0 opacity-10">
+    <div class="absolute inset-0" style="background-image: url('data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'none\' fill-rule=\'evenodd\'%3E%3Cg fill=\'%23ffffff\' fill-opacity=\'1\'%3E%3Cpath d=\'M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z\'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E'); background-repeat: repeat;"></div>
+  </div>
+  
+  <!-- Círculos decorativos -->
+  <div class="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl"></div>
+  <div class="absolute bottom-0 left-0 w-48 h-48 bg-yellow-300/20 rounded-full translate-y-1/2 -translate-x-1/2 blur-2xl"></div>
+  
+  <div class="relative z-10 px-8 py-16 md:px-12 md:py-20 lg:px-16 text-center">
+    <!-- Título -->
+    <h2 class="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-4">
+      {{ page.cta.title }}
+    </h2>
+    
+    <!-- Descripción -->
+    <p class="text-lg md:text-xl text-yellow-50/90 max-w-2xl mx-auto mb-10">
+      {{ page.cta.description }}
+    </p>
+    
+    <!-- Botones -->
+    <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
+      <UButton
+        v-for="(link, index) in page.cta.links"
+        :key="index"
+        :label="link.label"
+        :to="link.to"
+        :icon="link.icon"
+        :trailing="link.trailingIcon ? true : false"
+        size="xl"
+        :class="[
+          index === 0 
+            ? 'bg-white text-amber-600 hover:bg-yellow-50 hover:text-amber-700 border-0 shadow-lg hover:shadow-xl transition-all duration-200 px-8'
+            : 'bg-transparent text-white border-2 border-white/30 hover:border-white/50 hover:bg-white/10 backdrop-blur-sm transition-all duration-200'
+        ]"
+      />
     </div>
+    
+    <!-- Badge opcional de "Sin permanencia" -->
+    <div class="mt-6">
+      <span class="inline-flex items-center gap-2 text-sm text-yellow-50/80 bg-white/10 px-4 py-2 rounded-full backdrop-blur-sm">
+        <UIcon name="i-lucide-check-circle" class="w-4 h-4" />
+        Sin permanencia. Cancela cuando quieras.
+      </span>
+    </div>
+  </div>
+</div>
+    </div>
+
+    <AppFooter></AppFooter>
   </div>
 </template>
 

@@ -5,4 +5,6 @@ export const LIST_PUBLIC_ROUTES = [
     "/signup",
     "/forgot-password",
     "/restablecer-password",
+    "/terminos-y-condiciones",
+    "/politica-de-privacidad"
 ]
