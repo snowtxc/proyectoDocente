@@ -8,7 +8,7 @@
     
     <!-- Modal -->
     <div class="relative h-full flex items-center justify-center p-4">
-      <div class="bg-transparent rounded-2xl shadow-2xl border border-gray-200 max-w-4xl w-full overflow-hidden animate-fade-in-up">
+      <div class="bg-transparent rounded-2xl shadow-2xl border border-gray-200 max-w-full w-full overflow-hidden animate-fade-in-up">
         <!-- Header -->
         <div class="bg-gradient-to-r from-red-500 to-red-600 p-6">
           <div class="flex items-center justify-center gap-3">
@@ -47,7 +47,7 @@
            <div class="flex items-center gap-2">
             <div class="bg-gray-50 rounded-xl p-5 mb-6 border border-gray-200 flex-1" 
           v-for="plan in props.planes" :key="plan.id">
-            <h3 class="text-lg font-semibold text-gray-900 mb-4">Renovación del Plan</h3>
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">{{ plan.nombre }}</h3>
             
             <div class="space-y-3">
               <div class="flex justify-between items-center">

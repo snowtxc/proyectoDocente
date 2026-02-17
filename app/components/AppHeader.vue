@@ -48,12 +48,12 @@ onUnmounted(() => {
   >
     <template #left>
        <NuxtLink to="/" class="flex items-center gap-2 hover:opacity-80 transition-opacity">
-    <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-yellow-400 to-amber-500 flex items-center justify-center shadow-sm">
-      <UIcon name="i-lucide-notebook-text" class="w-5 h-5 text-white" />
-    </div>
-    <span class="font-bold text-xl bg-clip-text text-transparent bg-gradient-to-r from-yellow-600 to-amber-600">
-      FlopiDocentes
-    </span>
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-yellow-400 to-amber-500 flex items-center justify-center shadow-sm">
+          <UIcon name="i-lucide-notebook-text" class="w-5 h-5 text-white" />
+        </div>
+        <span class="font-bold text-xl bg-clip-text text-transparent bg-gradient-to-r from-yellow-600 to-amber-600">
+          FlopiDocentes
+        </span>
   </NuxtLink>
 
 

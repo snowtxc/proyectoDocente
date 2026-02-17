@@ -16,8 +16,6 @@ const planificaciones = computed(() =>
   dashboardData.value?.ultimasPlanificacionesAccedidas ?? []
 )
 
-console.log('Dashboard Data:', dashboardData.value);
-
 </script>
 
 <template>

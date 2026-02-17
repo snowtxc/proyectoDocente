@@ -3,8 +3,6 @@ import { LIST_PUBLIC_ROUTES } from "~/utils/publicRoutes";
 
 export default defineNuxtRouteMiddleware((to) => {
 
-  if (process.server) return
-
   const authStore = useAuthStore()
 
   const publicRoutes = LIST_PUBLIC_ROUTES
@@ -14,7 +12,7 @@ export default defineNuxtRouteMiddleware((to) => {
     return navigateTo('/login')
   }
 
-  if (authStore.token && to.path === '/login') {
+  if (authStore.token && isPublicRoute) {
     return navigateTo('/home')
   }
 })
