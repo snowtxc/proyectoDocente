@@ -201,8 +201,6 @@ defineExpose({
             :disabled="true"/>
             </div>
 
-       
-
         <USeparator class="w-full"></USeparator>
 
         <template v-if="currentStep == 1">
@@ -270,12 +268,12 @@ defineExpose({
             </div>
             
 
-            <UTextarea v-model="form.promptValue" class="w-full h-full mt-4" :rows="15" />
+            <UTextarea v-model="form.promptValue" class="w-full h-full my-1" :rows="10" />
 
             <UButton
                 color="primary"
                 variant="outline"
-                class="w-full text-center py-2 flex justify-center mt-2"
+                class="w-full text-center py-2 flex justify-center"
                 label="Volver atras"
                 @click="currentStep --"
                 icon="tabler:arrow-left"

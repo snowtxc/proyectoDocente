@@ -1,5 +1,6 @@
 import type { Grupo } from "./grupo";
 import type { SimplePlanificacionFecha } from "./planificacionFecha";
+import type { Tramo } from "./tramo";
 
 export interface CreatePlanificacionDTO {
   groupId: any;
@@ -24,7 +25,7 @@ export type Planificacion = {
   updated_at: string;
   grados: Grado[];
   grupo: Grupo;
-  tramos: number;
+  tramos: Tramo[];
   slug: string;
   fechas: SimplePlanificacionFecha[];
   last_planning_access_at?: Date;

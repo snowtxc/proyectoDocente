@@ -36,16 +36,16 @@
 
   <UModal v-model:open="isOpen">
     <template #content>
-        <UCard  class="min-w-0 min-h-[75vh] p-4">
-        <UFormField :label="props.label" name="name">
-            <UTextarea v-model="value" class="w-full h-full" :rows="25" />
-        </UFormField>
+        <div  class="min-w-0 min-h-[60vh] my-2 p-4">
+          <UFormField :label="props.label" name="name">
+              <UTextarea v-model="value" class="w-full h-full" :rows="20" />
+          </UFormField>
 
-         <div class="flex w-full justify-end gap-3 mt-4">
-              <UButton label="Cancelar" color="neutral" variant="ghost" @click="isOpen = false" />
-              <UButton type="submit" @click="onSave" label="Guardar" color="primary"/>
+          <div class="flex w-full justify-end gap-3 mt-1">
+                <UButton label="Cancelar" color="neutral" variant="ghost" @click="isOpen = false" />
+                <UButton type="submit" @click="onSave" label="Guardar" color="primary"/>
+            </div>
           </div>
-      </UCard>
     </template>
       
   </UModal>

@@ -201,6 +201,8 @@ const onAddPlanificacionFechas = async(planificacionFechas: PlanificacionFecha[]
     
     planificacion.value.fechas = ordenarFechasPlanificacion();
 
+    tramoSelected.value = null;
+    
     toast.success({ title: 'Se agregaron nuevos días a la planificación correctamente!', color: 'green', icon: 'i-heroicons-check-circle' })
 
   }catch(message){

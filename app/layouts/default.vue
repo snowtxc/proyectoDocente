@@ -55,14 +55,14 @@ const links = [
     icon: 'i-tabler-message-chatbot',
     to: '/asistentes-virtuales',
   },
-  {
-    id: 'flopi-bot',
-    label: 'Flopi Bot',
-    icon: 'i-tabler-robot',
-    onSelect: () => {
-      flopiBotRef.value?.openModal();
-    },
-  },
+  // {
+  //   id: 'flopi-bot',
+  //   label: 'Flopi Bot',
+  //   icon: 'i-tabler-robot',
+  //   onSelect: () => {
+  //     flopiBotRef.value?.openModal();
+  //   },
+  // },
 ]
 </script>
 
