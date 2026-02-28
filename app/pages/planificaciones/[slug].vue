@@ -124,16 +124,17 @@ const tramoNoSelectedText = computed(()=>{
 
 
 const stepsTramos =  computed(()=>{
-  return tramos.value.map((tramo,idx) =>{
-    const step = idx + 1;
+  return [...tramos.value]
+  .sort((a, b) => a.orden - b.orden)
+  .map((tramo, idx) => {
     return {
-      step,
+      step: tramo.orden,
       tramo,
-      title: `Tramo ${step}`,
-      description: `Tramo ${step}`,      
+      title: `Tramo ${tramo.orden}`,
+      description: `Tramo ${tramo.orden}`,
       icon: 'tabler:file-text'
-    }
-  })
+    };
+  });
 })
 
 const showModalAddTramo = ref(false);
@@ -388,6 +389,7 @@ const actionsMenuTramo = ref([
         tramos :  cloneDeep(tramos.value),
         "onOn-change-order" : (tramosUpdated)=>{
           
+          console.log(tramosUpdated);
           updateOrdersTramos(tramosUpdated);
           modal.close()
         }
@@ -479,6 +481,8 @@ const updateOrdersTramos = (tramosUpdated: Tramo[]) => {
             tramoSelected.value.orden = tramoUpdated.orden;
         }
     });
+
+     planificacionFechaSelected.value.tramos = planificacionFechaSelected.value.tramos.sort((a, b) => a.orden - b.orden);
 };
 
 
@@ -494,7 +498,7 @@ const updateOrdersTramos = (tramosUpdated: Tramo[]) => {
    const responseFile = await $apiRest(apiPlanificacionesRoutes.exportar(planificacion.value.id), HttpMethodEnum.POST, {responseType: 'blob'});
    
    if(responseFile){
-     const fileName = `${planificacion.value.slug}.docx`;
+     const fileName = `${planificacion.value.slug}.pdf`;
      downloadBlob(responseFile, fileName);
 
       toast.success({
@@ -507,7 +511,7 @@ const updateOrdersTramos = (tramosUpdated: Tramo[]) => {
   }catch(message){
     toast.error({
       title: "Error",
-      message: message ? message : 'Error al crear un nuevo tramo',
+      message: message ? message : 'Error al intentar exportar la planificacion',
       color: "red"
     })
   }
@@ -710,9 +714,9 @@ const onUpdateTramo = (tramo: Tramo)=>{
                 </UButton>
                 </UTooltip>
 
-                <UTooltip text="Exportar a Word">
+                <UTooltip text="Exportar a PDF">
                   <UButton
-                    icon="tabler:file-word"
+                    icon="tabler:pdf"
                     color="neutral"
                     variant="ghost"
                     @click="showModalExportConfirm = true"

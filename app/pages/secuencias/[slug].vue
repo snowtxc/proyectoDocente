@@ -55,8 +55,10 @@ const { data: response, error, refresh } = await useAsyncData('secuenciaDetalle'
   return { secuencia ,  espacios , competenciasGenerales};
 });
 
+console.log(response.value)
+
 if(error.value){
-   throw createError({
+   throw createError({ 
     status: 404,
     statusText: error.value.message,
     data: {
@@ -249,6 +251,7 @@ const onCreateActividad = async()=>{
     secuencia: secuencia.value,
     created_at: undefined,
     updated_at: undefined,
+    metodologia: ''
   }
 
   try{
@@ -256,6 +259,7 @@ const onCreateActividad = async()=>{
    const actividadSecuencia = await $apiRest<ActividadSecuencia>(apiActividadSecuenciaRoutes.create, HttpMethodEnum.POST, newActividadSecuencia);
 
    actividadesSecuencia.value.push(actividadSecuencia);
+
 
    actividadSecuenciaSelected.value = actividadSecuencia;
 
@@ -489,6 +493,8 @@ const actionsMenuActividad = ref([
     if(actividadSecuenciaSelected.value?.id == actividadUpdated?.id && actividadSecuenciaSelected.value?.orden != actividadUpdated.orden)
       actividadSecuenciaSelected.value.orden = actividadUpdated.orden;
    })
+
+   secuencia.value.actividades_secuencia =  secuencia.value.actividades_secuencia.sort((a, b) => a.orden - b.orden);
  }
 
  
@@ -504,7 +510,7 @@ const actionsMenuActividad = ref([
    const responseFile = await $apiRest(apiSecuenciasRoutes.exportar(secuencia.value.id), HttpMethodEnum.POST, {responseType: 'blob'});
    
    if(responseFile){
-     const fileName = `${secuencia.value.slug}.docx`;
+     const fileName = `${secuencia.value.slug}.pdf`;
      downloadBlob(responseFile, fileName);
 
       toast.success({
@@ -673,9 +679,9 @@ const onDelete = async() : Promise<void> =>{
         </UButton>
         </UTooltip>
 
-        <UTooltip text="Exportar a Word">
+        <UTooltip text="Exportar a PDF">
           <UButton
-            icon="tabler:file-word"
+            icon="tabler:pdf"
             color="neutral"
             variant="ghost"
             @click="showModalExportConfirm = true"
@@ -1015,7 +1021,7 @@ const onDelete = async() : Promise<void> =>{
             side="left"
             :width="200">
 
-        <div class="overflow-y-auto mb- max-h-[100vh]">
+        <div class="overflow-y-auto">
             <Stepper 
             :showButtonAddStep="true"
             buttonAddStep="Agregar nueva actividad"
@@ -1041,7 +1047,7 @@ const onDelete = async() : Promise<void> =>{
           grow>
     
         <div class="p-2 overflow-y-auto"  v-if="actividadSecuenciaSelected">
-      
+       
         <ActividadSecuenciaForm
         v-model="actividadSecuenciaSelected"
         v-if="actividadSecuenciaSelected"

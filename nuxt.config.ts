@@ -1,3 +1,5 @@
+import { excludes } from "valibot";
+
 export default defineNuxtConfig({
   srcDir: "app",
   plugins: ['~/plugins/apiRest.ts','~/plugins/v-calendar.ts'],
@@ -11,7 +13,6 @@ export default defineNuxtConfig({
     'reka-ui/nuxt',
     'nuxt-vue3-google-signin',
     '@nuxtjs/i18n',
-    'nuxt-tiptap-editor',
     'nuxt-toast',
     'pinia-plugin-persistedstate/nuxt'
   ],
@@ -83,7 +84,7 @@ export default defineNuxtConfig({
       }
     },
     optimizeDeps: {
-      include: ['@vueuse/core', '@pinia/nuxt', 'v-calendar']
+      include: ['@vueuse/core', '@pinia/nuxt', 'v-calendar'],
     }
   },
   experimental: {

@@ -9,4 +9,6 @@ export interface Actividad extends BaseModel{
     meta_aprendizaje_document_id?: number;
     plan_aprendizaje_documento: Documento;
     meta_aprendizaje_documento: Documento;
+    meta_aprendizaje_html_content? : string;
+    plan_aprendizaje_html_content? : string;
 }

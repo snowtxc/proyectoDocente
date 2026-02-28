@@ -111,7 +111,7 @@ import { HttpMethodEnum } from '~/utils/enums/HttpMethodEnum';
                     <UCheckbox size="xl" v-model="multipleFecha" label="Elegir más de 1 día" />
                 </div> -->
 
-                <DatePicker v-model="fecha"  :disableWeekends="true" :range="multipleFecha" :disabledDates="fechasDisabled"/>
+                <DatePicker locale="es" v-model="fecha"  :disableWeekends="true" :range="multipleFecha" :disabledDates="fechasDisabled"/>
                 
                 <div class="w-full flex justify-end">
                     <UButton color="primary" icon="tabler:calendar-plus" :disabled="!validForm" @click="onShowModalConfirm"> 

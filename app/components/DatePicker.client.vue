@@ -7,6 +7,24 @@ import 'v-calendar/dist/style.css'
 import { format } from 'date-fns'
 
 
+const calendarLocale = {
+  id: 'es',
+  firstDayOfWeek: 2,
+  dayNames: [
+    'Domingo','Lunes','Martes','Miércoles',
+    'Jueves','Viernes','Sábado'
+  ],
+  dayNamesShort: ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'],
+  monthNames: [
+    'Enero','Febrero','Marzo','Abril','Mayo','Junio',
+    'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'
+  ],
+  monthNamesShort: [
+    'Ene','Feb','Mar','Abr','May','Jun',
+    'Jul','Ago','Sep','Oct','Nov','Dic'
+  ],
+}
+
 const getDatesBetween = (from: Date, end: Date): Date[] => {
   const dateArray: Date[] = [];
   const currentDate = new Date(from);
@@ -159,6 +177,7 @@ const  attributes = computed(() => {
 
 <template>
   <VCalendarDatePicker v-if="props.range"
+    :locale="calendarLocale"
     v-model.range="date" :columns="smallerThanSm ? 1 : 2" :rows="smallerThanSm ? 2 : 1" v-bind="{ ...attrs, ...$attrs }"
     :disabled-dates="disabledDates"
     color="primary" 

@@ -57,9 +57,9 @@ import { HttpMethodEnum } from '~/utils/enums/HttpMethodEnum';
             
             const planificacionFechaUpdated = await $apiRest<PlanificacionFecha>(apiPlanificacionesFechaRoutes.cambiarFecha, HttpMethodEnum.POST, body);
         
-            toast.add({
+            toast.success({
                 title: "Actualización de fecha",
-                description: `Se ha actualizado la planificación del día ${ format(convertDateStrToDateLocal(props.planificacionFecha.fecha),'dd/MM/yyyy')} a ${format(fecha.value, 'dd/MM/yyyy')} correctamente.`,
+                message: `Se ha actualizado la planificación del día ${ format(convertDateStrToDateLocal(props.planificacionFecha.fecha),'dd/MM/yyyy')} a ${format(fecha.value, 'dd/MM/yyyy')} correctamente.`,
                 color: "green"
             })
 
@@ -69,9 +69,9 @@ import { HttpMethodEnum } from '~/utils/enums/HttpMethodEnum';
         }
         catch(message){
             showPopover.value = false;
-            toast.add({ 
+            toast.error({ 
                 title: 'Error',
-                description: message ? message : 'Error al agregar días a la planificación',
+                message: message ? message : 'Error al agregar días a la planificación',
                 color: 'red', 
                 icon: 'i-heroicons-check-circle' 
             })
@@ -97,9 +97,9 @@ import { HttpMethodEnum } from '~/utils/enums/HttpMethodEnum';
                 descriptionModalConfirm.value = `¿Seguro deseas cambiar de fecha el día planificado desde  ${format(convertDateStrToDateLocal(props.planificacionFecha.fecha),'dd/MM/yyyy')}  ${ format(fecha.value, 'dd/MM/yyyy')} ?`;
 
             }catch(message){
-                toast.add({
+                toast.error({
                     title: "Error",
-                    description: message ? message : 'Error',
+                    message: message ? message : 'Error',
                     color: "red"
                 })
                 buscandoFechaUsada.value = false
@@ -129,13 +129,13 @@ import { HttpMethodEnum } from '~/utils/enums/HttpMethodEnum';
                     
                 </UDashboardSection>
 
-                <DatePicker v-model="fecha"  :disableWeekends="true"  :disabledDates="fechasDisabled" :highlightedDates="fechasYaOcupadas"/>
+                <DatePicker locale="es" v-model="fecha"  :disableWeekends="true"  :disabledDates="fechasDisabled" :highlightedDates="fechasYaOcupadas"/>
                 
                 <UAlert
                     v-if="showModalFechaExistente"
                     title="Atención!"
                     description="Ya existe un día planificado en la fecha a la que intentas cambiar. Continuar implica que perderás los planificado en esa fecha."
-                    color="red"
+                    color="error"
                     variant="outline"
                     close
                 />

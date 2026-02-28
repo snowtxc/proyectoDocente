@@ -104,7 +104,7 @@ const onDelete = async()=>{
                 </template>
       
                 <template #content="{ close }">
-                  <DatePicker  v-model="fechaPickerSelected" @close="close"  :enabledDates="enableDates" :disableWeekends="true"/>
+                  <DatePicker  locale="es" v-model="fechaPickerSelected" @close="close"  :enabledDates="enableDates" :disableWeekends="true"/>
                 </template>
               </UPopover>
             <span class="font-bold text-base">{{ fechaSelectedFormatted  }}</span>

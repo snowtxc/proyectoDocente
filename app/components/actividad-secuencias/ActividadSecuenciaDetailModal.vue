@@ -2,7 +2,6 @@
   import { ActividadSecuenciasActividadSecuenciaDetailModal } from '#components';
 import type { ActividadSecuencia } from '~/types/actividadSecuencia';
   import type { Secuencia } from '~/types/secuencia';
-import { EditorModeEnum } from '~/utils/enums/EditorModeEnum';
 
   interface Props {
       secuencia: Secuencia,
@@ -47,32 +46,7 @@ import { EditorModeEnum } from '~/utils/enums/EditorModeEnum';
           <div class="flex flex-col"> 
             <div class="flex gap-2 items-center">
                 <strong>  Meta de aprendizaje </strong>
-
-               <div v-if="props.actividadSecuencia.actividad?.meta_aprendizaje_documento?.editorMode">
-                <img
-                  src="/localEditor.png"
-                  alt="Editor local icono"
-                  class="w-6"
-                  v-if="props.actividadSecuencia.actividad?.meta_aprendizaje_documento?.editorMode == EditorModeEnum.LOCAL"
-                >
-
-                <img
-                  src="/google-drive.png"
-                  alt="Google drive icono"
-                  class="w-6"
-                    v-if="props.actividadSecuencia.actividad?.meta_aprendizaje_documento?.editorMode == EditorModeEnum.DRIVE"
-                />
-              </div>
             </div>
-            <div v-if="props.actividadSecuencia.actividad?.meta_aprendizaje_documento.editorMode" class="mt-1">
-               <a 
-                :href="props.actividadSecuencia.actividad?.meta_aprendizaje_documento.document_url" 
-                target="_blank"
-                class="text-primary font-bold py-1 rounded hover:cursor-pointer transition-colors duration-300">
-                Haz clic aquí para abrir el plan de aprendizaje
-              </a>
-            </div>
-            <p v-else> Sin asignar</p>
           </div>
         
           <UDivider class="my-4"></UDivider>
@@ -80,33 +54,8 @@ import { EditorModeEnum } from '~/utils/enums/EditorModeEnum';
           <div class="flex flex-col"> 
             <div class="flex gap-2 items-center">
                 <strong> Plan de aprendizaje </strong>
-
-               <div v-if="props.actividadSecuencia.actividad?.plan_aprendizaje_documento?.editorMode" class="mt-1">
-                <img
-                  src="/localEditor.png"
-                  alt="Editor local icono"
-                  class="w-6"
-                  v-if="props.actividadSecuencia.actividad?.plan_aprendizaje_documento?.editorMode == EditorModeEnum.LOCAL"
-                >
-
-                <img
-                  src="/google-drive.png"
-                  alt="Google drive icono"
-                  class="w-6"
-                    v-if="props.actividadSecuencia.actividad?.plan_aprendizaje_documento?.editorMode == EditorModeEnum.DRIVE"
-                />
-              </div>
             </div>
-            
-             <div v-if="props.actividadSecuencia.actividad?.plan_aprendizaje_documento.editorMode">
-               <a 
-                :href="props.actividadSecuencia.actividad?.plan_aprendizaje_documento.document_url" 
-                target="_blank"
-                class="text-primary font-bold py-1 rounded hover:cursor-pointer transition-colors duration-300">
-                Haz clic aquí para abrir el plan de aprendizaje
-              </a>
-            </div>
-            <p v-else> Sin asignar</p>
+    
           </div>
         </div>
 
