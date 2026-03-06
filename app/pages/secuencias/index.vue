@@ -292,7 +292,7 @@ const onChangeUnidadCurricular = (unidadCurricular: UnidadCurricular)=>{
                                     :class="['inline-block h-2 w-2 flex-shrink-0 rounded-full mr-2']" aria-hidden="true" />
 
                                     <span class="truncate" v-if="selectedUnidadCurricular">{{ selectedUnidadCurricular?.nombre }}</span>
-                                    <span v-else>Selecciona un espacio.</span>
+                                    <span v-else>Selecciona una unidad curricular.</span>
                                 </template>
 
                                 <template #item-leading="{ item }">
