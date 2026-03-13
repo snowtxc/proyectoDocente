@@ -1,11 +1,19 @@
 <script setup lang="ts">
 
-import { useRoute } from '#app'
-import GlobalSpinner from './components/GlobalSpinner/GlobalSpinner.vue';
-import { useLoadingStore } from './services/loadingService/loadingService';
+useSeoMeta({
+  ogImage: '/logo.png',
+})
 
-let timeout: any = 0;
+
+const loading = ref(true)
+
+onMounted(async () => {
+  loading.value = false
+})
+
 const colorMode = useColorMode()
+
+colorMode.value == 'light';
 const color = computed(() => colorMode.value === 'dark' ? '#111827' : 'white')
 
 useHead({
@@ -22,8 +30,8 @@ useHead({
   }
 })
 
-const title = 'Nuxt UI Pro - Dashboard template'
-const description = 'Nuxt UI Pro is a collection of premium Vue components built on top of Nuxt UI to create beautiful & responsive Nuxt applications in minutes.'
+const title = 'Flopi Docentes'
+const description = 'Flopi Docentes ayuda a maestros de Uruguay a planificar, organizar y gestionar sus planes de aprendizaje en un entorno digital intuitivo y eficiente.'
 
 useSeoMeta({
   title,
@@ -34,16 +42,21 @@ useSeoMeta({
   twitterImage: 'https://dashboard-template.nuxt.dev/social-card.png',
   twitterCard: 'summary_large_image'
 })
+
+
 </script>
 
 <template>
   <div>
     <NuxtLoadingIndicator />
 
-    <NuxtLayout>
-      <NuxtPage />
-    </NuxtLayout>
+      <UApp>
+         <NuxtLayout>
+          <NuxtPage />
+        </NuxtLayout>
 
+      </UApp>
+   
     <UNotifications />
     <UModals />
   </div>

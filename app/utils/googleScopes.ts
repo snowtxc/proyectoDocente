@@ -1,0 +1,1 @@
+export const googleScopes = 'openid email profile https://www.googleapis.com/auth/drive.file';

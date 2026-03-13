@@ -1,8 +1,14 @@
 <script setup lang="ts">
 import { useAuthStore } from '~/utils/authStore';
+import { apiAuthRoutes } from '~/utils/apiRoutes';
+import { HttpMethodEnum } from '~/utils/enums/HttpMethodEnum';
 
 const authStore = useAuthStore();
+const { $apiRest } = useNuxtApp();
+const toast = useToast()
 const user = computed(() => authStore.user);
+const runtimeConfig = useRuntimeConfig()
+
 
 const items = computed(() => [
   [{
@@ -13,21 +19,35 @@ const items = computed(() => [
     label: 'Configuración',
     icon: 'i-heroicons-cog-8-tooth',
     to: '/configuracion'
+  },
+  {
+    label: 'Salir',
+    icon: 'tabler:logout',
+    onSelect: async()=>{
+      try{
+       const response = await $apiRest(apiAuthRoutes.logout,HttpMethodEnum.POST);
+       navigateTo("/login");
+       authStore.setToken(null);
+       authStore.setUser(null);
+      }catch(message){
+        toast.error({
+          message: message ? message : 'Error al deslogearse',
+        })
+      }
+    }
   }]
 ])
 </script>
 
 <template>
-  <UDropdown
+  <UDropdownMenu
     mode="hover"
     :items="items"
-    :ui="{ width: 'w-full', item: { disabled: 'cursor-text select-text' } }"
-    :popper="{ strategy: 'absolute', placement: 'top' }"
     class="w-full"
   >
     <template #default="{ open }">
       <UButton
-        color="gray"
+        color="primary"
         variant="ghost"
         class="w-full"
         :label="user.nombre1"
@@ -35,7 +55,7 @@ const items = computed(() => [
       >
         <template #leading>
           <UAvatar
-            :src="user.url_image_profile"
+            :src="user.url_image_profile ? user.url_image_profile : runtimeConfig.public.DEFAULT_IMAGE_URL"
             size="2xs"
           />
         </template>
@@ -59,5 +79,5 @@ const items = computed(() => [
         </p>
       </div>
     </template>
-  </UDropdown>
+  </UDropdownMenu>
 </template>

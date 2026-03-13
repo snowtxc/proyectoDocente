@@ -1,149 +1,199 @@
 <script setup lang="ts">
-import SelectStatus from "~/components/select/SelectStatus.vue";
-import { usePlanificacionService } from "~/services/planificacionService/planificacionService";
-import type { PlanificacionList } from "~/types/index";
+import SelectGrupo from "~/components/select/SelectGrupo.vue";
+import BadgeGrado from "~/components/badge/BadgeGrado.vue";
+import PlanificacionesForm from "~/components/planificaciones/PlanificacionesForm.vue";
+import type { ListRequest } from "~/types/list-request";
+import type { ListResponse } from "~/types/list-response";
+import type { Planificacion } from "~/types/planificacion";
+import { HttpMethodEnum } from "~/utils/enums/HttpMethodEnum"
+import { ModeEnum } from "~/utils/enums/ModeEnum";
+import { apiPlanificacionesRoutes } from "~/utils/apiRoutes";
+import { appRoutes } from "~/utils/appRoutes";
+import { formattedImageUrlGrupo } from "~/utils/planificacion";
 
 let timeoutSearch: any = 0;
+const route = useRoute()
+
+
 const defaultColumns = [
     {
+        id: 'nombre',
+        accessorKey: 'nombre',
+        header: 'Nombre',
         key: "nombre",
         label: "Nombre",
         sortable: true,
     },
     {
-        key: "rangoTiempos",
-        label: "Fechas",
-    },
-    {
-        key: "tramosCount",
-        label: "Tramos",
-    },
-    {
+        id: 'grupo',
+        accessorKey: 'grupo',
+        header: 'Grupo',
         key: "grupo",
         label: "Grupo",
     },
+    
     {
+        id: 'grados',
+        accessorKey: 'grados',
+        header: 'Grados',
         key: "grados",
         label: "Grados",
     },
     {
-        key: "estado",
-        label: "Estado",
-    },
+        id: 'actions',
+        accessorKey: 'actions',
+        header: 'Acciones',
+        key: 'actions',
+        label: 'Acciones'
+    }
 ];
 
-const selected = ref<PlanificacionList[]>([]);
+const mode =  ref<ModeEnum>(ModeEnum.CREATE);
+const planificacionSelected = ref<Planificacion | null>(null);
+
+const isLoading = ref(false);
+
+const search = ref("");
+
+const defaultGrupoSelected: any = route.query?.grupoId ?  {
+    id: route.query?.grupoId,
+    nombre: route.query.grupoNombre,
+} : null;
+
+const selectedGrupo = ref(defaultGrupoSelected);
+
+const filters = ref<{query?: string, search : string, grupo_id?:number }>(
+    { query: undefined, 
+     search : '',
+     grupo_id : defaultGrupoSelected?.id
+    }
+);
+
+const toast = useToast();
 const selectedColumns = ref(defaultColumns);
-const openAddModal = ref(false);
+
+const { $apiRest } = useNuxtApp();
+
 const sort = ref({ column: "id", direction: "asc" as const });
-const input = ref<{ input: HTMLInputElement }>();
-const planificacionesStore = usePlanificacionService();
-const { getPlanificaciones, paginationFilters } = planificacionesStore;
+
+const planificaciones = ref<Planificacion[]>([]);
+
 const columns = computed(() =>
     defaultColumns.filter((column) => selectedColumns.value.includes(column))
 );
-const planificaciones = computed(() => planificacionesStore.planificaciones);
-const loadingPlanificaciones = computed(() => planificacionesStore.loading);
-const rangeDate = ref<{ start: string, end: string }>({ start: null, end: null })
 
-const { page, rowsPerPage, totalRows, changePage, changeTotalRows } =
-    usePagination();
+const titleModal = ref<string>('');
 
-onMounted(() => {
-    onFilter();
+const { page, rowsPerPage, totalRows, changePage, changeTotalRows } = usePagination();
+
+
+const isSlideoverOpen = ref(false);
+
+const listReq = ref<ListRequest>({
+    page: page.value,
+    rowsPerPage: rowsPerPage.value,
+    filters: filters.value
 });
 
-const loadPlanifications = async () => {
-    const listItems = await getPlanificaciones();
-    changeTotalRows(listItems.totalCount);
+const { data: response, error } = await useAsyncData('planificaciones', async() => { 
+     return await  $apiRest<ListResponse<Planificacion[]>>(apiPlanificacionesRoutes.getPaginate, HttpMethodEnum.POST, listReq.value);
+});
+
+if (error.value) {
+    console.error('Error loading planificaciones:', error.value);
+}
+
+if (response.value) {
+    planificaciones.value = response.value.list;
+    changeTotalRows(response.value.totalCount);
+}
+
+
+const loadPlanificaciones = async () => {
+    isLoading.value = true;
+    try{
+        const response = await $apiRest<ListResponse<Planificacion[]>>(apiPlanificacionesRoutes.getPaginate, HttpMethodEnum.POST , listReq.value);
+        changeTotalRows(response.totalCount);
+        planificaciones.value = response.list;  
+        isLoading.value = false;
+
+    }catch(message){
+        toast.error({
+            title: "Error",
+            message: message,
+            color: "red"
+        });
+        isLoading.value = false;
+    }
 };
 
 const onFilter = () => {
     changePage(1);
-    loadPlanifications();
+    loadPlanificaciones();
 };
 
-const query = computed({
-    get: () => planificacionesStore?.filters?.query,
-    set: (value) => {
-        console.log("value", value);
-        planificacionesStore.filters.query = value;
-    },
-});
-
-const selectedStatus = computed({
-    get: () => planificacionesStore?.filters?.estado,
-    set: (value) => {
-        planificacionesStore.filters.estado = value;
-    },
-});
 
 watch(
     () => [
-        planificacionesStore.filters.estado,
-        planificacionesStore.filters.query,
-        planificacionesStore.filters.rangeDates?.from,
-        planificacionesStore.filters.rangeDates?.to,
+        search.value,
+        selectedGrupo.value 
     ],
     () => {
+        filters.value.search = search.value;
+        filters.value.grupo_id = selectedGrupo.value?.id
+
         clearTimeout(timeoutSearch);
         timeoutSearch = setTimeout(() => {
             onFilter();
-        }, 1000);
+        }, 400);
     }
 );
 
-watch(
-    () => [rowsPerPage.value, page.value],
-    () => {
-        paginationFilters.rowsPerPage = rowsPerPage.value;
-        paginationFilters.page = page.value;
-    }
-);
 
-watch(
-    () => [rangeDate.value],
-    () => {
-        planificacionesStore.filters.rangeDates.from = rangeDate?.value?.start;
-        planificacionesStore.filters.rangeDates.to = rangeDate?.value?.end;
-    }
-);
-
-onMounted(async () => {
-    await getPlanificaciones();
+watch(()=> page.value, ()=>{
+  listReq.value.page = page.value;
+  loadPlanificaciones();
 });
 
-const clearRangeSelection = () => {
-    rangeDate.value.start = undefined;
-    rangeDate.value.end = undefined;
-    planificacionesStore.filters.rangeDates.from = undefined;
-    planificacionesStore.filters.rangeDates.to = undefined;
+function onSelect(row: Planificacion) {
+  titleModal.value = "Editar Planificación";
+  mode.value = ModeEnum.UPDATE;
+  planificacionSelected.value =  row;
+  isSlideoverOpen.value = true;
 }
 
-function onSelect(row: PlanificacionList) {
-    const index = selected.value.findIndex((item) => item.id === row.id);
-    if (index === -1) {
-        selected.value.push(row);
-    } else {
-        selected.value.splice(index, 1);
-    }
+const onCreatePlanificacion = ()=>{
+    isSlideoverOpen.value = true;
+    mode.value = ModeEnum.CREATE;
+    titleModal.value = "Nueva Planificación";
 }
 
-defineShortcuts({
-    "/": () => {
-        input.value?.input?.focus();
-    },
-});
+const clearFilters = ()=>{
+    selectedGrupo.value = null;
+    onFilter();
+}
+
+const verPlanificacion = async(row: Planificacion)=>{
+    await navigateTo({
+        path: appRoutes.planificacionPage(row.slug)
+    })
+}
+
 </script>
 
 <template>
     <UDashboardPage>
-        <AddPlanificacionSlide @update:open="openAddModal = $event" :open="openAddModal" />
-
         <UDashboardPanel grow>
-            <UDashboardNavbar title="Planificaciones" :badge="planificaciones.length">
+            <UDashboardNavbar title="Planificaciones">
+
+                 <template #trailing>
+                    <UBadge :label="totalRows" variant="subtle" />
+                </template>
                 <template #right>
-                    <UInput ref="input" v-model="query" icon="i-heroicons-funnel" autocomplete="off"
+                    <UInput 
+                        ref="input" 
+                        v-model="search" 
+                        icon="i-heroicons-funnel" autocomplete="off"
                         placeholder="Buscar..." class="hidden lg:block"
                         @keydown.esc="$event.target.blur()">
                         <template #trailing>
@@ -151,94 +201,87 @@ defineShortcuts({
                         </template>
                     </UInput>
 
-                    <UButton label="Crear planificación" trailing-icon="i-heroicons-plus" color="gray"
-                        @click="openAddModal = true" />
+                    <UButton label="Crear planificación" trailing-icon="i-heroicons-plus" color="primary"
+                        @click="onCreatePlanificacion" />
                 </template>
             </UDashboardNavbar>
 
             <UDashboardToolbar>
                 <template #default>
                     <div class="w-auto flex md:flex-row flex-col items-center justify-start gap-4">
-                        <div class="w-full flex gap-2">
-                            <SelectStatus v-model="selectedStatus" @update:modelValue="() => null" :multiple="false"
-                                class="flex-1 md:w-[200px]" />
-                        </div>
 
                         <div class="w-full flex gap-2">
-                            <v-date-picker :focus="false" id="date" v-model="rangeDate" is-range>
-                                <template #default="{ inputValue, inputEvents }">
-                                    <UInput :autofocus="false" color="white"
-                                        icon="material-symbols-light:calendar-month-rounded"
-                                        placeholder="Fechas" class="w-full !h-[36px] z-0"
-                                        :value="inputValue?.start && rangeDate?.start ? (inputValue.start + '-' + inputValue.end) : ''"
-                                        v-on="inputEvents.start">
-                                        <template #trailing>
-                                            <button v-if="rangeDate?.start !== undefined && rangeDate.end !== undefined"
-                                                @click="clearRangeSelection"
-                                                class="cursor-pointer pointer-events-auto z-50 text-sm text-gray-500 hover:text-gray-700">
-                                                <UIcon name="i-heroicons-x-mark" class="w-5 h-5 cursor-pointer" />
-                                            </button>
-                                        </template>
-                                    </UInput>
-                                </template>
-                            </v-date-picker>
+                            <SelectGrupo v-model="selectedGrupo" 
+                            class="flex-1 md:min-w-[350px]" ></SelectGrupo>
                         </div>
+                        <UButton
+                            icon="tabler:filter-x"
+                            size="sm"
+                            color="primary"
+                            variant="outline"
+                            @click="clearFilters"
+                            />
                     </div>
-                </template>
-
-                <template #right>
-                    <USelectMenu v-model="selectedColumns" icon="i-heroicons-adjustments-horizontal-solid"
-                        :options="defaultColumns" multiple class="hidden lg:block">
-                        <template #label> Mostrar columnas </template>
-                    </USelectMenu>
                 </template>
             </UDashboardToolbar>
 
     
-            <UTable :empty-state="{
-                icon: 'i-heroicons-circle-stack-20-solid',
-                label: 'No hay planificaciones creadas',
-            }" no-results-text="Test" v-model:sort="sort" :rows="planificaciones" :columns="columns"
-                :loading="loadingPlanificaciones" sort-mode="manual" class="w-full"
-                :ui="{ divide: 'divide-gray-200 dark:divide-gray-800' }" @select="onSelect">
-                <template #nombre-data="{ row }">
-                    <ULink :to="appRoutes.planificacionPage(row.id)" active-class=""
-                        class="text-green-500 underline dark:text-green-400 hover:text-green-700 dark:hover:text-green-200">
-                        {{ row?.nombre }}
-                    </ULink>
+            <UTable 
+                empty="No hay planificaciones creadas."
+                v-model:sort="sort" 
+                :data="planificaciones" 
+                :columns="columns"
+                :loading="isLoading" 
+                sort-mode="manual"
+                 class="w-full">
+                <template #nombre-cell="{ row }">
+                    <span class="text-gray-900 dark:text-white font-medium">{{ row.original.nombre }}</span>
+
                 </template>
 
-                <template #rangoTiempos-data="{ row }">
+                <template #grupo-cell="{ row }">
                     <div class="flex items-center gap-2">
-                        <UIcon name="i-heroicons-calendar" class="w-5 h-5" />
-                        <span>{{ row?.fechaDesde }} - {{ row?.fechaHasta }}</span>
+                        <UAvatar :src="formattedImageUrlGrupo(row.original.grupo?.url_image)" size="2xs" />
+                        <span>{{ row.original.grupo?.nombre }}</span>
                     </div>
                 </template>
 
-                <template #grupo-data="{ row }">
+                <template #grados-cell="{ row }">
                     <div class="flex items-center gap-2">
-                        <UAvatar :src="formattedImageUrlGrupo(row.grupo?.url_image)" size="2xs" />
-                        <span>{{ row.grupo?.nombre }}</span>
+                        <BadgeGrado v-for="(grado,idx) in row.original.grupo.grados" :key="idx" :grado="grado"></BadgeGrado>
                     </div>
                 </template>
 
-                <template #grados-data="{ row }">
-                    <div class="flex items-center gap-2">
-                        <span>{{
-                            row.grados.map((grado) => grado?.nombre)?.join(", ")
-                        }}</span>
+                <template #actions-cell="{ row }">
+                    <div class="flex flex-wrap items-center gap-2">
+                        <UButton
+                        icon="i-heroicons-pencil-square"
+                        size="sm"
+                        color="primary"
+                        variant="outline"
+                        @click="onSelect(row.original)"
+                        />
+                        <UButton
+                        icon="tabler:eye"
+                        size="sm"
+                        color="primary"
+                        variant="outline"
+                        @click="verPlanificacion(row.original)"
+                        />
                     </div>
-                </template>
-
-                <template #estado-data="{ row }">
-                    <UBadge :label="row.estado" :variant="'outline'" :color="(getColorsEstado(
-                        row.estado ?? ''
-                    ) as any)" />
-                </template>
+                    
+                    </template>
+                
             </UTable>
             <div class="flex justify-end px-3 py-3.5 border-t border-gray-200 dark:border-gray-700">
-                <UPagination v-model="page" :page-count="rowsPerPage" :total="totalRows" />
+                <UPagination v-model:page="page" :page-count="rowsPerPage" :total="totalRows" />
             </div>
         </UDashboardPanel>
+
+        <USlideover v-model:open="isSlideoverOpen" :title="titleModal">
+            <template #body>
+                <PlanificacionesForm @close="isSlideoverOpen = false" :mode="mode" :planificacionSelected="planificacionSelected" @on:update="loadPlanificaciones"/>
+            </template>
+        </USlideover>
     </UDashboardPage>
 </template>

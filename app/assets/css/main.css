@@ -1,0 +1,17 @@
+@import "tailwindcss";
+@import "@nuxt/ui";
+
+@theme static {
+  --font-sans: 'Public Sans', sans-serif;
+  --ui-container: 90rem;
+}
+
+.vc-day.is-selected .vc-day-content {
+  background-color: rgb(var(--color-primary-500)) !important;
+  color: white !important;
+}
+
+.vc-day.is-between .vc-day-content {
+  background-color: rgb(var(--color-primary-100)) !important;
+  color: rgb(var(--color-primary-900)) !important;
+}

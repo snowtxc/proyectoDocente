@@ -13,12 +13,13 @@ const props = withDefaults(defineProps<Props>() , {});
 
 <template>
     <UBadge
+        size="md"
         :label="props.grado.nombre"
         :color="
-            props.grado.ciclo_grado_id == CicloGradoEnum.TRAMO_1 ? 'red' : 
-            props.grado.ciclo_grado_id == CicloGradoEnum.TRAMO_2 ? 'orange': 
-            props.grado.ciclo_grado_id == CicloGradoEnum.TRAMO_3 ? 'blue' :
-            props.grado.ciclo_grado_id == CicloGradoEnum.TRAMO_4 ? 'green' : 'red'"
+            props.grado.ciclo_grado_id == CicloGradoEnum.TRAMO_1 ? 'error' :  
+            props.grado.ciclo_grado_id == CicloGradoEnum.TRAMO_2 ? 'warning': 
+            props.grado.ciclo_grado_id == CicloGradoEnum.TRAMO_3 ? 'secondary' : 
+            props.grado.ciclo_grado_id == CicloGradoEnum.TRAMO_4 ? 'success' : 'error'"
         variant="subtle"
         class="capitalize"
     />

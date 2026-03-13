@@ -2,64 +2,91 @@ import { useAuthStore } from "~/utils/authStore";
 import type { HttpMethodEnum } from "~/utils/enums/HttpMethodEnum";
 
 export default defineNuxtPlugin((nuxtApp) => {
-
     const authStore = useAuthStore();
-    const token = authStore.token;
     const config = useRuntimeConfig();
     const { start, finish } = useLoadingIndicator();
 
     const getCookie = (name) => {
-        const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
-        if (match) return match[2];
+        const match = document?.cookie?.match(new RegExp('(^| )' + name + '=([^;]+)'));
+        return match ? decodeURIComponent(match[2]) : null;
     };
 
-    // Definir el tipo de la función `apiRest`
-    const apiRest = async(endpoint: string, method: HttpMethodEnum, body: any, options: Record<string, any> = {}) => {
-        if(!document.cookie.includes('XSRF-TOKEN')){
-            const endpointRequestCrsfToken = config.public.apiBaseUrl.replace("/api","/sanctum/csrf-cookie");
+    const apiRest = async (endpoint: string, method: HttpMethodEnum, body: any, options: Record<string, any> = {}) => {
 
-            await $fetch(endpointRequestCrsfToken); // Solo si no está presente la cookie se envia la request para setear la cookie del token csrf.
+        const token = authStore.token;
+        
+        let csrfToken = getCookie('XSRF-TOKEN');
+
+        if(!csrfToken){
+            await $fetch(`${config.public.apiDomain}/sanctum/csrf-cookie`, {
+                method: 'GET',
+                credentials: 'include'
+            });
+            csrfToken = getCookie('XSRF-TOKEN');
         }
 
-        const csrfToken =  getCookie('XSRF-TOKEN');
-    
-        const headers = token ? {
-            Authorization: `Bearer ${token}`,
+        const isFormData = body instanceof FormData;
+
+        const headers = {
             Accept: "application/json",
-            "X-CSRF-TOKEN": csrfToken || "",
-            credentials: 'include',
-            ...options.headers
-        } : {
-            Accept: "application/json",
-            credentials: 'include',
-            "X-CSRF-TOKEN": csrfToken || "",
+            ...(isFormData ? {} : { "Content-Type": "application/json" }),
+            "X-XSRF-TOKEN": csrfToken || "",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
             ...options.headers
         };
+        
+        console.log('✅ Enviando headers:', {
+            'X-XSRF-TOKEN': csrfToken?.substring(0, 20) + '...',
+            Authorization: token ? 'Bearer ...' : 'none'
+        });
 
         start();
-        try{
+
+        try {
             const response = await $fetch(`${config.public.apiBaseUrl}${endpoint}`, {
                 method,
-                ...options,
                 headers,
-                body
+                body,
+                credentials: 'include',
+                ...options
             });
             finish();
             return response;
-        }catch(e){
+            
+        } catch (e: any) {
             finish();
-            const statusCode = e.response.status;  // Aquí obtenemos el código de estado
-            if(statusCode == 401){
+            
+            const statusCode = e?.response?.status || e?.statusCode;
+            const responseData = e?.response?._data || e?.data;
+            
+            console.error('❌ Error API:', { statusCode, responseData });
+
+            // ✅ 5. MANEJAR 422 VALIDATION ERROR (¡LO QUE TE FALTA!)
+            if (statusCode === 422) {
+                // Lanzar error de validación con todos los detalles
+                throw {
+                    status: 422,
+                    message: responseData?.message || 'Error de validación',
+                    errors: responseData?.errors || {},
+                    data: responseData
+                };
+            }
+
+            if (statusCode === 419) {
+                console.warn('🔄 CSRF expirado, reintentando...');
+                return apiRest(endpoint, method, body, options);
+            }
+
+            if (statusCode === 401) {
                 authStore.clearToken();
                 authStore.clearUser();
                 navigateTo("/login");
             }
-            const responseError = await e.response._data;
-            const { message } = responseError;
+
+            const message = responseData?.message || responseData || 'An error occurred';
             throw message;
-        }        
+        }
     };
 
-    // Proveer la función tipada
     nuxtApp.provide("apiRest", apiRest);
 });

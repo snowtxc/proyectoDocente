@@ -1,8 +1,8 @@
-// https://nuxt.com/docs/api/configuration/nuxt-config
+import { excludes } from "valibot";
+
 export default defineNuxtConfig({
-  extends: ['@nuxt/ui-pro'],
   srcDir: "app",
-  plugins: ['~/plugins/apiRest.ts','~/plugins/v-calendar.ts' ],
+  plugins: ['~/plugins/apiRest.ts','~/plugins/v-calendar.ts'],
   modules: [
     '@nuxt/content',
     '@nuxt/eslint',
@@ -10,10 +10,11 @@ export default defineNuxtConfig({
     '@nuxt/ui',
     '@vueuse/nuxt',
     '@pinia/nuxt',
-    'pinia-plugin-persistedstate/nuxt',
+    'reka-ui/nuxt',
     'nuxt-vue3-google-signin',
     '@nuxtjs/i18n',
-    'nuxt-tiptap-editor'
+    'nuxt-toast',
+    'pinia-plugin-persistedstate/nuxt'
   ],
 
   tiptap: {
@@ -26,43 +27,42 @@ export default defineNuxtConfig({
     ],
     defaultLocale: 'es' // Idioma por defecto
   },
-  
+
   googleSignIn: {
-    clientId: process.env.NUXT_GOOGLE_CLIENT_ID
+       clientId: process.env.NUXT_PUBLIC_GOOGLE_CLIENT_ID,
+       scope: 'openid email profile https://www.googleapis.com/auth/drive https://www.googleapis.com/auth/drive.file',
+       prompt: 'consent',
+       access_type: 'offline',
   },
   runtimeConfig: {
     public: {
+      apiDomain : process.env.NUXT_PUBLIC_API_DOMAIN,
       apiBaseUrl: process.env.NUXT_PUBLIC_API_BASE_URL,
-      DEFAULT_GRUPO_IMAGE_URL: process.env.NUXT_DEFAULT_GRUPO_IMAGE_URL, //definimos la variable de entorno con la url de la imagen por defecto del grupo
+      DEFAULT_IMAGE_URL: process.env.NUXT_PUBLIC_DEFAULT_IMAGE,
       piniaPersist: true, // Activar persistencia
     },
   },
   
   ui: {
-    safelistColors: ['primary', 'red', 'orange', 'green']
+    safelistColors: ['primary', 'red', 'orange', 'green'],
+    global: true,
+    colorMode : false
   },
   colorMode: {
     disableTransition: true
   },
 
-  ssr: false,
+  ssr: true,
   routeRules: {
     // Temporary workaround for prerender regression. see https://github.com/nuxt/nuxt/issues/27490
     '/': { prerender: true }
   },
-  router: {
-    middleware: 'userAuth',
-  },
   devtools: {
-    enabled: true
+    enabled: false
   },
 
   typescript: {
     strict: false
-  },
-
-  future: {
-    compatibilityVersion: 4
   },
 
   eslint: {
@@ -74,5 +74,24 @@ export default defineNuxtConfig({
     }
   },
 
-  compatibilityDate: '2024-07-11'
+  compatibilityDate: '2025-07-15',
+
+  vite: {
+    server: {
+      watch: {
+        usePolling: false,
+        interval: 100
+      }
+    },
+    optimizeDeps: {
+      include: ['@vueuse/core', '@pinia/nuxt', 'v-calendar'],
+    }
+  },
+  experimental: {
+    payloadExtraction: true,
+    watcher: 'chokidar'
+  },
+
+  css: ['~/assets/css/main.css'],
+
 } as any)

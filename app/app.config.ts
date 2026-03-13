@@ -1,6 +1,13 @@
+import { colors } from "@unovis/ts";
+
 export default defineAppConfig({
   ui: {
-    primary: 'sky',
+    primary: 'yellow',
+    colors:{
+      primary: 'yellow',
+      secondary: 'purple',
+      neutral: 'zinc'
+    },
     gray: 'cool',
     tooltip: {
       default: {

@@ -7,6 +7,8 @@
         }
     });
 
+    const selectedYear = ref(props.modelValue);
+
     const emit = defineEmits(['update:modelValue']);
 
     const years = computed(()=>{
@@ -19,24 +21,27 @@
     })
 
     const updateValue = (value) => {
+        console.log(value)
         emit('update:modelValue', value);
     };
+
+    watch(()=> props.modelValue, ()=>{
+        selectedYear.value = props.modelValue;
+    })
 
 </script>
 
 <template>
     <USelectMenu
-            @change="updateValue"
+            @update:modelValue="updateValue"
             searchable
             searchable-placeholder="Buscar un año..."
             class="w-full"
             placeholder="Selecciona un Año"
-            :options="years"
-            :model-value="props.modelValue"
+            :items="years"
+            v-model="selectedYear"
             
         >
-        <template #option-empty="{ query }">
-            <q>{{ query }}</q> no encontrado
-        </template>
+    
     </USelectMenu>
 </template>

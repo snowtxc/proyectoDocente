@@ -11,6 +11,15 @@ export interface DriveFolder{
 }
 
 export interface DriveFolderList {
+    status: boolean;
+    relogin: boolean;
     isRoot:boolean;
     folders: DriveFolder[]
+}
+
+export interface SyncFileResult {
+    status : boolean;
+    relogin: boolean;
+    id: string;
+    link : string;
 }
