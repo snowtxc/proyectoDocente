@@ -98,7 +98,7 @@ watch([
       :disabled="props.disabled"
   />
 
-  <UModal v-model:open="isOpen">
+  <UModal v-model:open="isOpen" fullscreen>
     <template #content>
 
       <!-- CARD FLEX -->
