@@ -1,4 +1,3 @@
-import { createDocument } from "@tiptap/core"
 
 export const apiGoogleDriveRoutes = {
     listFolders: '/google-drive/listFolders'
@@ -36,6 +35,10 @@ export const apiGrupoRoutes = {
 
 export const apiGradoRoutes = {
     listAll: '/grados',
+}
+
+export const apiCicloGradosRoutes = {
+    listAll: '/ciclos-grados',
 }
 
 export const apiPlanificacionesRoutes = {

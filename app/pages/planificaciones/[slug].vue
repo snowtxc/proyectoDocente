@@ -49,6 +49,8 @@ if(error.value){
   })
 }
 
+console.log(response.value.planificacion)
+
 const planificacion = ref<Planificacion>(response.value.planificacion);
 const espacios = ref<Espacio[]>(response.value.espacios);
 const competenciasGenerales = ref<CompetenciaGeneral[]>(response.value.competenciasGenerales);
@@ -761,7 +763,8 @@ const onUpdateTramo = (tramo: Tramo)=>{
                   :gradosIds="grupo.grados.map(g => g.id)"
                   :ciclosGradosIds="ciclosGradosIds"
                   :competenciasGenerales="competenciasGenerales"
-                  :nroTramo="currentStepTramo"></TramosTramoForm>
+                  :nroTramo="currentStepTramo"
+                  :planificacion="planificacion"></TramosTramoForm>
 
                 <div v-else class="flex flex-col justify-center items-center h-screen">
                   <UIcon
