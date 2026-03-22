@@ -41,4 +41,5 @@ export interface Secuencia  extends BaseModel {
   duracion?: string;
   detallaEvaluacion?: boolean;
   evaluacion? : string;
+  readonly url?: string
 };

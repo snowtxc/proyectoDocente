@@ -29,4 +29,5 @@ export type Planificacion = {
   slug: string;
   fechas: SimplePlanificacionFecha[];
   last_planning_access_at?: Date;
+  readonly url?: string
 };

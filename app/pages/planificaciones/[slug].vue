@@ -686,12 +686,6 @@ const onUpdateTramo = (tramo: Tramo)=>{
                   @on:add="onAddPlanificacionFechas"
                   :showSmallBtn="true"
                   :fechasDisabled="planificacion.fechas.map(pf => pf.fecha)"></PlanificacionesPopoverAddPlanificacionFecha>
-
-                  <PlanificacionesPopoverChangePlanificacionFecha 
-                  :planificacionId="planificacion.id"
-                  :planificacionFecha="planificacionFechaSelected"
-                  :fechasYaPlanificadas="planificacion.fechas.map(pf => pf.fecha)"
-                  @on:change="onChangePlanificacionFecha"></PlanificacionesPopoverChangePlanificacionFecha>
                 </div>
               
               </template>

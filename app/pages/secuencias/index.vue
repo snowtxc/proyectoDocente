@@ -224,6 +224,10 @@ const onChangeUnidadCurricular = (unidadCurricular: UnidadCurricular)=>{
   selectedUnidadCurricular.value = unidadCurricular;
 }
 
+const descargarSecuencia = async (row: Secuencia) => {
+    window.open(row.url, "_blank");
+};
+
 </script>
 
 <template>
@@ -386,6 +390,22 @@ const onChangeUnidadCurricular = (unidadCurricular: UnidadCurricular)=>{
                         variant="outline"
                         @click="verSecuencia(row.original)"
                         />
+
+                         <UTooltip
+                        text="La secuencia aún no ha sido generada. Para descargarla, primero debes ingresar a la secuencia y exportarla."
+                        :disabled="row.original.url !== null"
+                        >
+                        <span>
+                            <UButton
+                            icon="tabler:book-download"
+                            size="sm"
+                            color="primary"
+                            variant="outline"
+                            :disabled="!row.original.url"
+                            @click="descargarSecuencia(row.original)"
+                            />
+                        </span>
+                        </UTooltip>
                     </div>
                     
                     </template>

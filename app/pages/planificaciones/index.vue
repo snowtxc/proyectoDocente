@@ -179,6 +179,10 @@ const verPlanificacion = async(row: Planificacion)=>{
     })
 }
 
+const descargarPlanificacion = async (row: Planificacion) => {
+    window.open(row.url, "_blank");
+};
+
 </script>
 
 <template>
@@ -268,6 +272,22 @@ const verPlanificacion = async(row: Planificacion)=>{
                         variant="outline"
                         @click="verPlanificacion(row.original)"
                         />
+
+                     <UTooltip
+                        text="La planificación aún no ha sido generada. Para descargarla, primero debes ingresar a la planificación y exportarla."
+                        :disabled="row.original.url !== null"
+                        >
+                        <span>
+                            <UButton
+                            icon="tabler:book-download"
+                            size="sm"
+                            color="primary"
+                            variant="outline"
+                            :disabled="!row.original.url"
+                            @click="descargarPlanificacion(row.original)"
+                            />
+                        </span>
+                        </UTooltip>
                     </div>
                     
                     </template>

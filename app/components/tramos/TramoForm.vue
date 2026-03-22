@@ -224,6 +224,8 @@ const onChangeUnidadCurricular = (unidadCurricular: UnidadCurricular)=>{
     titleChangeEspacioOrUnidadCurricular.value = "Cambiar de unidad curricular."
     descriptionChangeEspacioOrUnidadCurricular.value = "¿Segur@ deseas cambiar de unidad curricular?. En caso de confirmar perderas los datos del tramo(contenido,criterios de logros, competencias especificas), meta de aprendizaje y plan de aprendizaje"
     showModalChangeEspacioOrUnidadCurricular.value = true;
+    
+    return;
   }
 
   form.value.unidad_curricular = unidadCurricular;
