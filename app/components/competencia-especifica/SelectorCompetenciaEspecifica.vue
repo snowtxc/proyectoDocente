@@ -16,10 +16,10 @@ interface Props {
   competenciasGeneralesSelected?: CompetenciaGeneral[],
   contenidoSelected?: Contenido,
   criteriosDeLogrosSelected?: CriterioDeLogro[]
-  color: string
+  color?: string
   disabled?: boolean
   ciclosGradosEspecificos: CicloGrado[]       // CiclosGrados del contexto actual
-  unidadCurricular: UnidadCurricular
+  unidadCurricular?: UnidadCurricular | null
 }
 
 const props = withDefaults(defineProps<Props>(), {
