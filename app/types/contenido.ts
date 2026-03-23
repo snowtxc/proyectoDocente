@@ -11,6 +11,8 @@ export interface Contenido extends BaseModel{
     descripcion: string;
     competencias_especificas: CompetenciaEspecifica[],
     criterios_de_logros: CriterioDeLogro[]
+    contenido_estructurante_id: number;
+    contenido_estructurante: ContenidoEstructurante;
 }
 
 export type ContenidoItemSelector = Contenido & {

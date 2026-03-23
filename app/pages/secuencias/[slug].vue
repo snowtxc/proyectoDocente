@@ -28,6 +28,7 @@ import SelectorCompetenciaGeneral from "~/components/competencia-general/Selecto
 import SyncGoogleDrive from '~/components/SyncGoogleDrive.vue'
 import type { Actividad } from '~/types/actividad';
 import { page } from '#build/ui';
+import type { CicloGrado } from '~/types/cicloGrado';
 
 const { $apiRest } = useNuxtApp();
 
@@ -60,7 +61,10 @@ const { data: response, error, refresh } = await useAsyncData('secuenciaDetalle'
   return { secuencia, espacios, competenciasGenerales };
 });
 
-console.log(response.value)
+const cicloGradosSelected = computed<CicloGrado[]>(()=>{
+    return secuencia.value.grupo.grados.map(g => g.ciclo_grado);
+})
+
 
 if (error.value) {
   throw createError({
@@ -554,8 +558,9 @@ const syncGoogleDrive = async () => {
 
 const onChangeEspacio = (espacio: Espacio) => {
 
-  if (secuencia.value.espacio && secuencia.value.unidad_curricular) {
-    espacioToChange.value = espacio;
+  if(secuencia.value.espacio && secuencia.value.unidad_curricular){
+
+    espacioToChange.value =  { ... espacio } ;
     optionToChange.value = EspacioOUnidadOptionEnum.ESPACIO;
     titleChangeEspacioOrUnidadCurricular.value = "Cambiar de espacio."
     descriptionChangeEspacioOrUnidadCurricular.value = "¿Segur@ deseas cambiar de unidad curricular?. En caso de confirmar perderas los datos de la secuencia(contenido), incluido los datos de cada actividad(criterios de logros, competencias especificas meta de aprendizaje y plan de aprendizaje)"
@@ -601,16 +606,21 @@ const onConfirmChangeEspacioOUnidad = () => {
 
   switch (optionToChange.value) {
     case EspacioOUnidadOptionEnum.ESPACIO:
-      secuencia.value.espacio = { ...espacioToChange.value };
+      secuencia.value.espacio =  { ... espacioToChange.value };
+      secuencia.value.espacio_id = espacioToChange.value.id;
+      secuencia.value.unidad_curricular_id = null;
+      secuencia.value.unidad_curricular = null;
       break;
     case EspacioOUnidadOptionEnum.UNIDAD_CURRICULAR:
-      secuencia.value.unidad_curricular = { ...unidadCurricularToChange.value }
+      secuencia.value.unidad_curricular = { ...unidadCurricularToChange.value}
+      secuencia.value.unidad_curricular_id =  unidadCurricularToChange.value.id;
       break;
   }
 
   secuencia.value.contenido = null;
   secuencia.value.contenido_id = null;
   contenidos.value = [];
+  criteriosDeLogros.value = [];
 
   if (optionToChange.value == EspacioOUnidadOptionEnum.ESPACIO) {
     secuencia.value.unidad_curricular = null;
@@ -696,8 +706,9 @@ const onDelete = async (): Promise<void> => {
 
       <div class="w-full flex flex-col gap-2 justify-center border-b border-neutral-200 p-2">
         <div class="flex md:flex-row gap-2 ">
-          <USelectMenu :model-value="secuencia.espacio" :items="espacios" option-attribute="id" class="flex-1"
-            @update:model-value="onChangeEspacio">
+          <USelectMenu
+           :model-value="secuencia.espacio" :items="espacios" option-attribute="id" class="flex-1"
+          @update:model-value="onChangeEspacio">
             <template #leading="{ modelValue, ui }">
               <div class="flex items-center" v-if="secuencia.espacio">
                 <span :style="{ backgroundColor: secuencia.espacio?.rgbColor }"
@@ -744,21 +755,24 @@ const onDelete = async (): Promise<void> => {
         </div>
 
         <UCard class="flex-1 flex flex-col">
-          <div class="flex items-center justify-between">
-            <span class="font-medium text-xl">Contenido</span>
-            <SelectorContenido v-model="secuencia.contenido" :contenidos="contenidos"
-              :color="secuencia.espacio?.rgbColor">
-            </SelectorContenido>
-          </div>
-          <div class="flex justify-between gap-2 items-center">
-            <div>
-              <ul class="list-disc" v-if="secuencia.contenido">
-                <li>{{ secuencia.contenido.descripcion }}</li>
-              </ul>
-              <span v-else>
-                No se ha seleccionado ningún contenido.
-              </span>
-            </div>
+        <div class="flex items-center justify-between">
+          <span class="font-medium text-xl">Contenido</span>
+          <SelectorContenido 
+            v-model="secuencia.contenido" 
+            :contenidos="contenidos"
+            :color="secuencia.espacio?.rgbColor"
+            :gradosEspecificos="grupo.grados"
+            :unidadCurricular="secuencia.unidad_curricular">
+          </SelectorContenido>
+        </div>
+        <div class="flex justify-between gap-2 items-center">
+          <div>
+            <ul class="list-disc" v-if="secuencia.contenido">
+              <li>{{ secuencia.contenido.descripcion }}</li>
+            </ul>
+            <span v-else>
+              No se ha seleccionado ningún contenido.
+            </span>
           </div>
 
         </UCard>
@@ -846,12 +860,19 @@ const onDelete = async (): Promise<void> => {
 
         <UCard class="flex-1 flex flex-col">
           <div class="flex items-center justify-between">
-            <span class="font-medium text-xl">Criterios de Logros</span>
-            <SelectorCriteriosDeLogros v-model="secuencia.criterios_de_logros" :criteriosDeLogros="criteriosDeLogros"
-              :color="secuencia.espacio?.rgbColor" :contenidoSelected="secuencia.contenido"
-              :competenciasEspecificasSelected="secuencia.competencias_especificas"
-              :disabled="secuencia.unidad_curricular == null">
-            </SelectorCriteriosDeLogros>
+            <span class="font-medium text-xl">Competencias Especificas</span>
+            <SelectorCompetenciaEspecifica
+              v-model="secuencia.competencias_especificas" 
+              :competenciasEspecificas="competenciasEspecificas" 
+              :color="secuencia.espacio?.rgbColor"
+              :disabled="secuencia.unidad_curricular == null" 
+              :contenidoSelected="secuencia.contenido"
+              :competenciasGeneralesSelected="secuencia.competencias_generales"
+              :criteriosDeLogrosSelected="secuencia.criterios_de_logros" 
+              :competenciasGenerales="competenciasGenerales"
+              :ciclosGradosEspecificos="cicloGradosSelected"
+              :unidadCurricular="secuencia.unidad_curricular">
+            </SelectorCompetenciaEspecifica>
           </div>
           <div class="flex justify-between gap-2 items-center">
             <div>
@@ -868,15 +889,29 @@ const onDelete = async (): Promise<void> => {
 
         </UCard>
 
-        <UCard class="flex-1 flex flex-col">
-          <div class="flex items-center justify-between">
-            <span class="font-medium text-xl">Meta General</span>
-            <InputTextModal label="Meta General" v-model="secuencia.metaGeneral"></InputTextModal>
-          </div>
-          <div class="flex justify-between gap-2 items-center">
-            <div class="break-words w-full whitespace-normal" v-if="secuencia.metaGeneral">
-              {{ secuencia.metaGeneral }}
-            </div>
+      </div>
+
+      <UCard class="flex-1 flex flex-col">
+        <div class="flex items-center justify-between">
+          <span class="font-medium text-xl">Criterios de Logros</span>
+          <SelectorCriteriosDeLogros 
+            v-model="secuencia.criterios_de_logros"
+            :criteriosDeLogros="criteriosDeLogros" 
+            :color="secuencia.espacio?.rgbColor" 
+            :contenidoSelected="secuencia.contenido"
+            :competenciasEspecificasSelected="secuencia.competencias_especificas" 
+            :disabled="secuencia.unidad_curricular == null"
+            :gradosEspecificos="grupo.grados"
+            :unidadCurricular="secuencia.unidad_curricular">
+          </SelectorCriteriosDeLogros>
+        </div>
+        <div class="flex justify-between gap-2 items-center">
+          <div>
+            <ul class="list-disc" v-if="secuencia.criterios_de_logros.length > 0">
+              <li v-for="criterioDeLogro in secuencia.criterios_de_logros" :key="criterioDeLogro.id">
+                {{ criterioDeLogro.descripcion }}
+              </li>
+            </ul>
             <span v-else>
               No se ha especificado ninguna meta general.
             </span>
@@ -1021,34 +1056,64 @@ const onDelete = async (): Promise<void> => {
   </div>
 
   <!--Extender tramo-->
-  <UModal v-model:open="showModalAddActividad" title="Agregar nueva actividad de secuencia"
-    description="¿Estás seguro que deseas agregar una siguiente actividad la secuencia?" icon="tabler:butterfly-filled"
-    prevent-close :close-button="null">
-    <template #footer>
-      <UButton color="primary" label="Confirmar" :loading="loadingCreatingActividad" @click="onCreateActividad" />
+  <UModal
+  v-model:open="showModalAddActividad"
+  title="Agregar nueva actividad de secuencia"
+  description="¿Estás seguro que deseas agregar una siguiente actividad la secuencia?"
+  icon="tabler:butterfly-filled"
+  prevent-close
+  :close-button="null"
+>
+  <template #footer> 
+    <UButton
+      color="primary"
+      label="Confirmar"
+      :loading="loadingCreatingActividad"
+      @click="onCreateActividad"
+    />
 
-      <UButton color="neutral" label="Cancelar" @click="onCancelNuevaActividad" />
-    </template>
-  </UModal>
+    <UButton
+        color="neutral"
+        label="Cancelar"
+        @click="onCancelNuevaActividad"
+      />
+  </template>
+</UModal>
 
-  <!--Confirmacion de modal de descargar el archivo de secuencia. -->
-  <ConfirmModal v-show="showModalExportConfirm" v-model="showModalExportConfirm" title="Descargar secuencia"
-    description="¿Querés descargar la secuencia actual como un archivo? Esto guardará una copia en tu computadora."
-    @onConfirm="onExport" @onClose="showModalExportConfirm = false" />
+<!--Confirmacion de modal de descargar el archivo de secuencia. -->
+<ConfirmModal 
+  v-show="showModalExportConfirm" 
+  v-model="showModalExportConfirm"
+  title="Descargar secuencia" 
+  description="¿Querés descargar la secuencia actual como un archivo? Esto guardará una copia en tu computadora." 
+  @onConfirm="onExport"
+  @onClose="showModalExportConfirm = false"
+/>
 
-  <!--Confirmacion de modal de sincronizacion de planificacion a google drive-->
-  <ConfirmModal v-if="showModalSyncGDrive" v-model="showModalSyncGDrive" title="Sincronizar secuencia con Google Drive"
-    description="¿Deseás sincronizar la secuencia actual con tu cuenta de Google Drive? Esto guardará una copia actualizada en la nube."
-    @onConfirm="syncGoogleDrive" @onClose="showModalSyncGDrive = false"></ConfirmModal>
+<!--Confirmacion de modal de sincronizacion de planificacion a google drive-->
+<ConfirmModal 
+v-if="showModalSyncGDrive" 
+v-model="showModalSyncGDrive"
+title="Sincronizar secuencia con Google Drive" 
+description="¿Deseás sincronizar la secuencia actual con tu cuenta de Google Drive? Esto guardará una copia actualizada en la nube." 
+@onConfirm="syncGoogleDrive"
+@onClose="showModalSyncGDrive = false"></ConfirmModal>
 
 
-  <ConfirmModal v-model="showModalDeleteConfirm" title="Eliminar secuencia"
-    description="¿Deseás eliminar la secuencia actual? Esta acción no se puede deshacer." @onConfirm="onDelete"
-    @onClose="showModalDeleteConfirm = false">
-  </ConfirmModal>
+<ConfirmModal 
+  v-model="showModalDeleteConfirm"
+  title="Eliminar secuencia" 
+  description="¿Deseás eliminar la secuencia actual? Esta acción no se puede deshacer." 
+  @onConfirm="onDelete"
+  @onClose="showModalDeleteConfirm = false">
+</ConfirmModal>
 
-  <ConfirmModal v-model="showModalChangeEspacioOrUnidadCurricular" :title="titleChangeEspacioOrUnidadCurricular"
-    :description="descriptionChangeEspacioOrUnidadCurricular" @onConfirm="onConfirmChangeEspacioOUnidad"></ConfirmModal>
+<ConfirmModal 
+  v-model="showModalChangeEspacioOrUnidadCurricular" 
+    :title="titleChangeEspacioOrUnidadCurricular"
+  :description="descriptionChangeEspacioOrUnidadCurricular" 
+  @onConfirm="onConfirmChangeEspacioOUnidad"
+  @onClose="showModalChangeEspacioOrUnidadCurricular = false"></ConfirmModal>
 
-
+  
 </template>

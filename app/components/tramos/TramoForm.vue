@@ -16,6 +16,8 @@ import { EspacioOUnidadOptionEnum } from '~/utils/enums/EspacioOUnidadOption.enu
 
 import EditorSlideOver from '../plan-de-aprendizaje/EditorSlideOver.client.vue';
 import { PromptCategory } from '~/utils/enums/PromptCategory.enum';
+import type { Planificacion } from '~/types/planificacion';
+import type { CicloGrado } from '~/types/cicloGrado';
 
 interface Props {
     modelValue: Tramo,
@@ -25,6 +27,7 @@ interface Props {
     espacios: Espacio[],
     nroTramo: number;
     competenciasGenerales: CompetenciaGeneral[]
+    planificacion: Planificacion
 }
 
 const { $apiRest } = useNuxtApp();
@@ -122,6 +125,11 @@ const unidadesCurriculares = computed<UnidadCurricular[]>(()=>{
     return form.value.espacio?.unidades_curriculares;
 })
 
+const cicloGradosSelected = computed<CicloGrado[]>(()=>{
+    return props.planificacion.grupo.grados.map(g => g.ciclo_grado);
+})
+
+
 const competenciasGeneralesSelected = computed<CompetenciaGeneralItemSelector[]>(()=>{
 
   return form.value.competenciasGenerales.map(cg => {
@@ -216,6 +224,8 @@ const onChangeUnidadCurricular = (unidadCurricular: UnidadCurricular)=>{
     titleChangeEspacioOrUnidadCurricular.value = "Cambiar de unidad curricular."
     descriptionChangeEspacioOrUnidadCurricular.value = "¿Segur@ deseas cambiar de unidad curricular?. En caso de confirmar perderas los datos del tramo(contenido,criterios de logros, competencias especificas), meta de aprendizaje y plan de aprendizaje"
     showModalChangeEspacioOrUnidadCurricular.value = true;
+    
+    return;
   }
 
   form.value.unidad_curricular = unidadCurricular;
@@ -384,7 +394,7 @@ watch(()=> form.value.noSeDesarrolla, ()=>{
          :items="espacios" 
          option-attribute="id" 
          class="flex-1"
-        @update:model-value="onChangeEspacio">
+         @update:model-value="onChangeEspacio">
 
         <template #leading="{ modelValue, ui }">
             <span v-if="form.espacio" :style="{ backgroundColor: form.espacio?.rgbColor }"
@@ -445,10 +455,13 @@ watch(()=> form.value.noSeDesarrolla, ()=>{
             @update:model-value="onChangeModel" 
             :contenidos="contenidos"
             :color="form.espacio?.rgbColor" 
+            :competenciasEspecificas="competenciasEspecificas"
+            :competencias-generales="competenciasGenerales"
             :competenciasEspecificasSelected="form.competenciasEspecificas"
             :criteriosDeLogrosSelected="form.criteriosDeLogros" 
-            :disabled="form.unidad_curricular == null">
-          </SelectorContenido>
+            :disabled="form.unidad_curricular == null"
+            :gradosEspecificos="props.planificacion.grupo.grados"
+            :unidadCurricular="form.unidad_curricular"></SelectorContenido>
           
         </div>
         <div class="flex justify-between gap-2 items-center">
@@ -518,7 +531,8 @@ watch(()=> form.value.noSeDesarrolla, ()=>{
         <UCard class="w-3/5  flex flex-col">
           <div class="flex items-center justify-between">
             <span class="font-medium text-xl">Competencias Especificas</span>
-            <SelectorCompetenciaEspecifica v-model="form.competenciasEspecificas" 
+            <SelectorCompetenciaEspecifica 
+               v-model="form.competenciasEspecificas" 
               :competenciasEspecificas="competenciasEspecificas" 
               :color="form.espacio?.rgbColor"
               :disabled="form.unidad_curricular == null" 
@@ -526,7 +540,10 @@ watch(()=> form.value.noSeDesarrolla, ()=>{
               :criteriosDeLogrosSelected="form.criteriosDeLogros" 
               :competenciasGenerales="props.competenciasGenerales"
               :competenciasGeneralesSelected="form.competenciasGenerales"
-              @update:model-value="onChangeModel">
+              @update:model-value="onChangeModel"
+              :gradosEspecificos="props.planificacion.grupo.grados"
+              :ciclosGradosEspecificos="cicloGradosSelected"
+              :unidadCurricular="form.unidad_curricular">
             </SelectorCompetenciaEspecifica>
           </div>
 
@@ -558,7 +575,9 @@ watch(()=> form.value.noSeDesarrolla, ()=>{
             :color="form.espacio?.rgbColor"
              :contenidoSelected="form.contenido"
             :competenciasEspecificasSelected="form.competenciasEspecificas" 
-            :disabled="form.unidad_curricular == null">
+            :disabled="form.unidad_curricular == null"
+            :gradosEspecificos="props.planificacion.grupo.grados"
+            :unidadCurricular="form.unidad_curricular">
           </SelectorCriteriosDeLogros>
         </div>
         <div class="flex justify-between gap-2 items-center">
@@ -580,23 +599,6 @@ watch(()=> form.value.noSeDesarrolla, ()=>{
         <div class="flex flex-col justify-between">
           <div class="flex items-center gap-2">
             <span class="font-medium text-xl my-2">Meta de Aprendizaje</span>
-
-            <!-- <div v-if="metaAprendizajeDocumento?.editorMode">
-               <img
-                src="/localEditor.png"
-                alt="Google drive icono"
-                class="w-6"
-                v-if="metaAprendizajeDocumento?.editorMode == EditorModeEnum.LOCAL"
-              >
-
-              <img
-                src="/google-drive.png"
-                alt="Google drive icono"
-                class="w-6"
-                  v-if="metaAprendizajeDocumento?.editorMode == EditorModeEnum.DRIVE"
-              />
-            </div> -->
-
           </div>
 
           <EditorSlideOver 
@@ -631,7 +633,11 @@ watch(()=> form.value.noSeDesarrolla, ()=>{
     </div>
   </div>
 
-  <ConfirmModal v-model="showModalChangeEspacioOrUnidadCurricular" :title="titleChangeEspacioOrUnidadCurricular"
-    :description="descriptionChangeEspacioOrUnidadCurricular" @onConfirm="onConfirmChangeEspacioOUnidad"></ConfirmModal>
+  <ConfirmModal 
+    v-model="showModalChangeEspacioOrUnidadCurricular" 
+    :title="titleChangeEspacioOrUnidadCurricular"
+    :description="descriptionChangeEspacioOrUnidadCurricular" 
+    @onConfirm="onConfirmChangeEspacioOUnidad"
+    @onClose="showModalChangeEspacioOrUnidadCurricular = false"></ConfirmModal>
 
 </template>

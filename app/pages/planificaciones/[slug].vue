@@ -49,6 +49,8 @@ if (error.value) {
   })
 }
 
+console.log(response.value.planificacion)
+
 const planificacion = ref<Planificacion>(response.value.planificacion);
 const espacios = ref<Espacio[]>(response.value.espacios);
 const competenciasGenerales = ref<CompetenciaGeneral[]>(response.value.competenciasGenerales);
@@ -684,15 +686,113 @@ const onUpdateTramo = (tramo: Tramo) => {
 
           </template>
 
-          <template #right>
+          <template #default> 
 
-            <UTooltip text="Guardar planificación">
-              <UButton icon="tabler:device-floppy" color="neutral" variant="ghost" @click="onSavePlanificacionFecha()">
-                <template #leading="{ ui }">
+            <UDashboardPanel
+            >
+            <UDashboardNavbar>
+              <template #toggle>
+                <UDashboardNavbarToggle icon="i-heroicons-x-mark" />
 
-                  <div class="flex flex-col">
-                    <div class="w-2 h-2 rounded-full bg-primary  absolute float-right" v-if="pendingSave"> </div>
-                    <UIcon name="tabler:device-floppy" class="size-5" />
+                <UDivider
+                  orientation="vertical"
+                  class="lg:hidden"
+                />
+              </template>
+
+              <template #left>
+
+                <div class="flex items-center">
+                  <UDashboardNavbar
+                  :title="planificacion.nombre"
+                    >
+                    </UDashboardNavbar>
+          
+                  <PlanificacionesPopoverAddPlanificacionFecha 
+                  :planificacionId="planificacion.id"
+                  @on:add="onAddPlanificacionFechas"
+                  :showSmallBtn="true"
+                  :fechasDisabled="planificacion.fechas.map(pf => pf.fecha)"></PlanificacionesPopoverAddPlanificacionFecha>
+                </div>
+              
+              </template>
+
+              <template #right>
+
+                <UTooltip text="Guardar planificación">
+                  <UButton
+                    icon="tabler:device-floppy"
+                    color="neutral"
+                    variant="ghost"
+                    @click="onSavePlanificacionFecha()"
+                  >
+                  <template #leading="{ ui }">
+                                
+                    <div class="flex flex-col">
+                        <div class="w-2 h-2 rounded-full bg-primary  absolute float-right" v-if="pendingSave"> </div>
+                        <UIcon name="tabler:device-floppy" class="size-5" />
+                    </div>
+                
+                  </template>
+                </UButton>
+                </UTooltip>
+
+                <UTooltip text="Exportar a PDF">
+                  <UButton
+                    icon="tabler:pdf"
+                    color="neutral"
+                    variant="ghost"
+                    @click="showModalExportConfirm = true"
+                  />
+                </UTooltip>
+
+                <UTooltip text="Exportar planificación a Google Drive">
+                  <UButton
+                    icon="tabler:brand-google-drive"
+                    color="neutral"
+                    variant="ghost"
+                    @click="showModalSyncGDrive = true"
+                  />
+                </UTooltip>
+
+                <UTooltip text="Eliminar">
+                  <UButton
+                    icon="tabler:trash"
+                    color="neutral"
+                    variant="ghost"
+                    @click="showModalDeleteConfirm = true"
+                  />
+                </UTooltip>
+
+                <UDivider
+                  orientation="vertical"
+                  class="mx-1.5"
+                />
+              </template>
+
+            
+            </UDashboardNavbar>
+              <div class="p-2 overflow-y-auto"
+                v-if="planificacionFechaSelected">
+
+                <TramosTramoForm 
+                  ref="tramoFormRef" 
+                  v-if="tramoSelected"  
+                  v-model="tramoSelected" 
+                  :tramo="tramoSelected"  
+                  :espacios="espacios" 
+                  :gradosIds="grupo.grados.map(g => g.id)"
+                  :ciclosGradosIds="ciclosGradosIds"
+                  :competenciasGenerales="competenciasGenerales"
+                  :nroTramo="currentStepTramo"
+                  :planificacion="planificacion"></TramosTramoForm>
+
+                <div v-else class="flex flex-col justify-center items-center h-screen">
+                  <UIcon
+                    name="tabler:file-text"
+                    size="60px"
+                  />
+                    <h1 class="mt-1"> {{  tramoNoSelectedText }} </h1>
                   </div>
 
                 </template>

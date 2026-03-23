@@ -65,12 +65,7 @@
       // Plugins necesarios - ELIMINADO 'uploadcare'
       plugins: [
         'anchor', 'autolink', 'charmap', 'codesample', 'emoticons', 'link', 'lists', 
-        'media', 'searchreplace', 'table', 'visualblocks', 'wordcount',
-        'checklist', 'mediaembed', 'casechange', 'formatpainter', 'pageembed', 
-        'a11ychecker', 'tinymcespellchecker', 'permanentpen', 'powerpaste', 
-        'advtable', 'advcode', 'advtemplate', 'mentions', 
-        'tinycomments', 'tableofcontents', 'footnotes', 'mergetags', 'autocorrect', 
-        'typography', 'inlinecss', 'markdown','importword', 'exportword', 'exportpdf',
+        'media', 'searchreplace', 'table', 'visualblocks', 'wordcount',  
         'image', 'imagetools' // Plugins de imagen
       ],
       
