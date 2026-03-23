@@ -14,11 +14,6 @@ const { $apiRest } = useNuxtApp();
 
 const emit = defineEmits(['on-change-order', 'close']);
 
-enum Direction {
-  UP,
-  DOWN
-}
-
 const props = withDefaults(defineProps<Props>(), {});
 
 const loadingReorder = ref(false);
@@ -42,24 +37,6 @@ const orderTramos = computed(() => {
   })
 })
 
-
-const changeOrder = (direction: Direction) => {
-  const idx = tramos.value.findIndex(t => t.id === props.tramoSelected.id);
-
-  if (idx === -1) return;
-
-  let swapIdx = direction === Direction.UP ? idx - 1 : idx + 1;
-
-  if (swapIdx < 0 || swapIdx >= tramos.value.length) return;
-
-  const tmpOrden = tramos.value[idx].orden;
-
-  const newOrdenTmp = tramos.value[swapIdx].orden;
-  tramos.value[idx].orden = newOrdenTmp;
-  newOrden.value = newOrdenTmp;
-
-  tramos.value[swapIdx].orden = tmpOrden;
-}
 
 // Disable button , si no hay un nuevo orden o el orden es igual al orden que ya tiene entonces disabled;
 const disableBtn = computed(() => {
