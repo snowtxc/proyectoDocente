@@ -82,7 +82,7 @@ watch(()=> props.modelValue ,(newValue: ActividadSecuencia, oldValue: ActividadS
 </script>
 
 <template>
-  <div class="w-full px-2 pb-20">
+  <div class="w-full px-2 pb-20 border-l border-neutral-200">
     <h1 class="font-medium text-xl text-center my-4">
       Actividad {{ props.actividadSecuencia.orden }} 
     </h1>
