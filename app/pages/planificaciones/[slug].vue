@@ -626,253 +626,213 @@ const onUpdateTramo = (tramo: Tramo) => {
         <template #header>
           <UDashboardNavbar :title="grupo.nombre">
             <template #right>
-              <BadgeGrado v-for="grado in planificacion.grupo.grados" :key="grado.id" :grado="grado">
-              </BadgeGrado>
+              <BadgeGrado
+                v-for="grado in planificacion.grupo.grados"
+                :key="grado.id"
+                :grado="grado"
+              />
               <UButton
-                  :icon="isTramosPanelCollapsed ? 'tabler:layout-sidebar-left-expand' : 'tabler:layout-sidebar-left-collapse'"
-                  color="neutral" variant="ghost" class="mr-2"
-                  @click="isTramosPanelCollapsed = !isTramosPanelCollapsed" />
+                :icon="isTramosPanelCollapsed ? 'tabler:layout-sidebar-left-expand' : 'tabler:layout-sidebar-left-collapse'"
+                color="neutral"
+                variant="ghost"
+                class="mr-2"
+                @click="isTramosPanelCollapsed = !isTramosPanelCollapsed"
+              />
             </template>
           </UDashboardNavbar>
         </template>
 
         <template #body>
-          <!-- Tramos -->
-          <div class="overflow-y-auto mb-8 min-h-full" v-if="planificacionFechaSelected">
-            <Stepper :showButtonAddStep="true" titleButtonAddStep="Agregar nuevo tramo" orientation="vertical"
-              descriptionButtonAddStep="Extender un nuevo tramo a la planificación" :currentStep="currentStepTramo"
-              :steps="stepsTramos" @on:add-step="showModalAddTramo = true" :linear="false" ref="tramosStepper"
-              @on:change-step="onChangeTramo" :actionsMenu="actionsMenuTramo"
-              @on:action-menu="handleOnActionMenuTramo" />
+          <div v-if="planificacionFechaSelected" class="overflow-y-auto mb-8 min-h-full">
+            <Stepper
+              :showButtonAddStep="true"
+              titleButtonAddStep="Agregar nuevo tramo"
+              orientation="vertical"
+              descriptionButtonAddStep="Extender un nuevo tramo a la planificación"
+              :currentStep="currentStepTramo"
+              :steps="stepsTramos"
+              @on:add-step="showModalAddTramo = true"
+              :linear="false"
+              ref="tramosStepper"
+              @on:change-step="onChangeTramo"
+              :actionsMenu="actionsMenuTramo"
+              @on:action-menu="handleOnActionMenuTramo"
+            />
           </div>
         </template>
-
       </UDashboardPanel>
     </template>
 
     <template #default>
-
       <UDashboardPanel>
-        <UDashboardNavbar>
-          <template #toggle>
-            <UDashboardNavbarToggle icon="i-heroicons-x-mark" />
+        <template #header>
+          <UDashboardNavbar>
+            <template #toggle>
+              <UDashboardNavbarToggle icon="i-heroicons-x-mark" />
+              <UDivider orientation="vertical" class="lg:hidden" />
+            </template>
 
-            <UDivider orientation="vertical" class="lg:hidden" />
-          </template>
+            <template #left>
+              <div class="flex items-center">
+                <UTooltip :text="isTramosPanelCollapsed ? 'Mostrar tramos' : 'Ocultar tramos'">
+                  <UButton
+                    :icon="isTramosPanelCollapsed ? 'tabler:layout-sidebar-left-expand' : 'tabler:layout-sidebar-left-collapse'"
+                    color="neutral"
+                    variant="ghost"
+                    class="mr-2"
+                    @click="isTramosPanelCollapsed = !isTramosPanelCollapsed"
+                  />
+                </UTooltip>
 
-          <template #left>
+                <UDashboardNavbar :title="planificacion.nombre" />
 
-            <div class="flex items-center">
-              <UTooltip :text="isTramosPanelCollapsed ? 'Mostrar tramos' : 'Ocultar tramos'">
-                <UButton v-if="isTramosPanelCollapsed"
-                  :icon="isTramosPanelCollapsed ? 'tabler:layout-sidebar-left-expand' : 'tabler:layout-sidebar-left-collapse'"
-                  color="neutral" variant="ghost" class="mr-2"
-                  @click="isTramosPanelCollapsed = !isTramosPanelCollapsed" />
-              </UTooltip>
-
-              <UDashboardNavbar :title="planificacion.nombre">
-              </UDashboardNavbar>
-
-              <PlanificacionesPopoverAddPlanificacionFecha :planificacionId="planificacion.id"
-                @on:add="onAddPlanificacionFechas" :showSmallBtn="true"
-                :fechasDisabled="planificacion.fechas.map(pf => pf.fecha)">
-              </PlanificacionesPopoverAddPlanificacionFecha>
-
-              <PlanificacionesPopoverChangePlanificacionFecha :planificacionId="planificacion.id"
-                :planificacionFecha="planificacionFechaSelected"
-                :fechasYaPlanificadas="planificacion.fechas.map(pf => pf.fecha)"
-                @on:change="onChangePlanificacionFecha"></PlanificacionesPopoverChangePlanificacionFecha>
-            </div>
-
-          </template>
-
-          <template #default> 
-
-            <UDashboardPanel
-            >
-            <UDashboardNavbar>
-              <template #toggle>
-                <UDashboardNavbarToggle icon="i-heroicons-x-mark" />
-
-                <UDivider
-                  orientation="vertical"
-                  class="lg:hidden"
-                />
-              </template>
-
-              <template #left>
-
-                <div class="flex items-center">
-                  <UDashboardNavbar
-                  :title="planificacion.nombre"
-                    >
-                    </UDashboardNavbar>
-          
-                  <PlanificacionesPopoverAddPlanificacionFecha 
+                <PlanificacionesPopoverAddPlanificacionFecha
                   :planificacionId="planificacion.id"
                   @on:add="onAddPlanificacionFechas"
                   :showSmallBtn="true"
-                  :fechasDisabled="planificacion.fechas.map(pf => pf.fecha)"></PlanificacionesPopoverAddPlanificacionFecha>
-                </div>
-              
-              </template>
+                  :fechasDisabled="planificacion.fechas.map(pf => pf.fecha)"
+                />
 
-              <template #right>
+                <PlanificacionesPopoverChangePlanificacionFecha
+                  :planificacionId="planificacion.id"
+                  :planificacionFecha="planificacionFechaSelected"
+                  :fechasYaPlanificadas="planificacion.fechas.map(pf => pf.fecha)"
+                  @on:change="onChangePlanificacionFecha"
+                />
+              </div>
+            </template>
 
-                <UTooltip text="Guardar planificación">
-                  <UButton
-                    icon="tabler:device-floppy"
-                    color="neutral"
-                    variant="ghost"
-                    @click="onSavePlanificacionFecha()"
-                  >
-                  <template #leading="{ ui }">
-                                
+            <template #right>
+              <UTooltip text="Guardar planificación">
+                <UButton
+                  icon="tabler:device-floppy"
+                  color="neutral"
+                  variant="ghost"
+                  @click="onSavePlanificacionFecha()"
+                >
+                  <template #leading>
                     <div class="flex flex-col">
-                        <div class="w-2 h-2 rounded-full bg-primary  absolute float-right" v-if="pendingSave"> </div>
-                        <UIcon name="tabler:device-floppy" class="size-5" />
+                      <div v-if="pendingSave" class="w-2 h-2 rounded-full bg-primary absolute float-right" />
+                      <UIcon name="tabler:device-floppy" class="size-5" />
                     </div>
-                
                   </template>
                 </UButton>
-                </UTooltip>
+              </UTooltip>
 
-                <UTooltip text="Exportar a PDF">
-                  <UButton
-                    icon="tabler:pdf"
-                    color="neutral"
-                    variant="ghost"
-                    @click="showModalExportConfirm = true"
-                  />
-                </UTooltip>
-
-                <UTooltip text="Exportar planificación a Google Drive">
-                  <UButton
-                    icon="tabler:brand-google-drive"
-                    color="neutral"
-                    variant="ghost"
-                    @click="showModalSyncGDrive = true"
-                  />
-                </UTooltip>
-
-                <UTooltip text="Eliminar">
-                  <UButton
-                    icon="tabler:trash"
-                    color="neutral"
-                    variant="ghost"
-                    @click="showModalDeleteConfirm = true"
-                  />
-                </UTooltip>
-
-                <UDivider
-                  orientation="vertical"
-                  class="mx-1.5"
+              <UTooltip text="Exportar a PDF">
+                <UButton
+                  icon="tabler:pdf"
+                  color="neutral"
+                  variant="ghost"
+                  @click="showModalExportConfirm = true"
                 />
-              </template>
+              </UTooltip>
 
-            
-            </UDashboardNavbar>
-              <div class="p-2 overflow-y-auto"
-                v-if="planificacionFechaSelected">
+              <UTooltip text="Exportar planificación a Google Drive">
+                <UButton
+                  icon="tabler:brand-google-drive"
+                  color="neutral"
+                  variant="ghost"
+                  @click="showModalSyncGDrive = true"
+                />
+              </UTooltip>
 
-                <TramosTramoForm 
-                  ref="tramoFormRef" 
-                  v-if="tramoSelected"  
-                  v-model="tramoSelected" 
-                  :tramo="tramoSelected"  
-                  :espacios="espacios" 
-                  :gradosIds="grupo.grados.map(g => g.id)"
-                  :ciclosGradosIds="ciclosGradosIds"
-                  :competenciasGenerales="competenciasGenerales"
-                  :nroTramo="currentStepTramo"
-                  :planificacion="planificacion"></TramosTramoForm>
+              <UTooltip text="Eliminar">
+                <UButton
+                  icon="tabler:trash"
+                  color="neutral"
+                  variant="ghost"
+                  @click="showModalDeleteConfirm = true"
+                />
+              </UTooltip>
 
-                <div v-else class="flex flex-col justify-center items-center h-screen">
-                  <UIcon
-                    name="tabler:file-text"
-                    size="60px"
-                  />
-                    <h1 class="mt-1"> {{  tramoNoSelectedText }} </h1>
-                  </div>
+              <UDivider orientation="vertical" class="mx-1.5" />
+            </template>
+          </UDashboardNavbar>
+        </template>
 
-                </template>
-              </UButton>
-            </UTooltip>
-
-            <UTooltip text="Exportar a PDF">
-              <UButton icon="tabler:pdf" color="neutral" variant="ghost" @click="showModalExportConfirm = true" />
-            </UTooltip>
-
-            <UTooltip text="Exportar planificación a Google Drive">
-              <UButton icon="tabler:brand-google-drive" color="neutral" variant="ghost"
-                @click="showModalSyncGDrive = true" />
-            </UTooltip>
-
-            <UTooltip text="Eliminar">
-              <UButton icon="tabler:trash" color="neutral" variant="ghost" @click="showModalDeleteConfirm = true" />
-            </UTooltip>
-
-            <UDivider orientation="vertical" class="mx-1.5" />
-          </template>
-
-
-        </UDashboardNavbar>
-        <div class="p-2 overflow-y-auto" v-if="planificacionFechaSelected">
-
-          <TramosTramoForm ref="tramoFormRef" v-if="tramoSelected" v-model="tramoSelected" :tramo="tramoSelected"
-            :espacios="espacios" :gradosIds="grupo.grados.map(g => g.id)" :ciclosGradosIds="ciclosGradosIds"
-            :competenciasGenerales="competenciasGenerales" :nroTramo="currentStepTramo"></TramosTramoForm>
-
-          <div v-else class="flex flex-col justify-center items-center h-screen">
-            <UIcon name="tabler:file-text" size="60px" />
-            <h1 class="mt-1"> {{ tramoNoSelectedText }} </h1>
+        <template #body>
+          <div v-if="planificacionFechaSelected" class="p-2 overflow-y-auto">
+            <TramosTramoForm
+              v-if="tramoSelected"
+              ref="tramoFormRef"
+              v-model="tramoSelected"
+              :tramo="tramoSelected"
+              :espacios="espacios"
+              :gradosIds="grupo.grados.map(g => g.id)"
+              :ciclosGradosIds="ciclosGradosIds"
+              :competenciasGenerales="competenciasGenerales"
+              :nroTramo="currentStepTramo"
+              :planificacion="planificacion"
+            />
+            <div v-else class="flex flex-col justify-center items-center h-screen">
+              <UIcon name="tabler:file-text" size="60px" />
+              <h1 class="mt-1">{{ tramoNoSelectedText }}</h1>
+            </div>
           </div>
-        </div>
-
-        <div v-else class="flex flex-col justify-center items-center h-screen">
-          <UIcon name="tabler:butterfly-filled" size="60px" />
-          <h1 class="mt-1"> No tienes ningún día planificado aún , prueba creando un nuevo día </h1>
-
-          <PlanificacionesPopoverAddPlanificacionFecha :show="showPopoverAddFecha" :planificacionId="planificacion.id"
-            @on:add="onAddPlanificacionFechas" :fechasDisabled="planificacion.fechas.map(pf => pf.fecha)">
-          </PlanificacionesPopoverAddPlanificacionFecha>
-        </div>
+          <div v-else class="flex flex-col justify-center items-center h-screen">
+            <UIcon name="tabler:butterfly-filled" size="60px" />
+            <h1 class="mt-1">No tienes ningún día planificado aún, prueba creando un nuevo día</h1>
+            <PlanificacionesPopoverAddPlanificacionFecha
+              :show="showPopoverAddFecha"
+              :planificacionId="planificacion.id"
+              @on:add="onAddPlanificacionFechas"
+              :fechasDisabled="planificacion.fechas.map(pf => pf.fecha)"
+            />
+          </div>
+        </template>
       </UDashboardPanel>
     </template>
   </UPage>
 
-
-  <!--Extender tramo-->
-  <UModal v-model:open="showModalAddTramo" title="Agregar nuevo Tramo"
-    description="¿Estás seguro que deseas agregar un siguiente tramo a la planificación?" icon="tabler:butterfly-filled"
-    prevent-close :close-button="null">
+  <!-- Modales -->
+  <UModal
+    v-model:open="showModalAddTramo"
+    title="Agregar nuevo Tramo"
+    description="¿Estás seguro que deseas agregar un siguiente tramo a la planificación?"
+    icon="tabler:butterfly-filled"
+    prevent-close
+    :close-button="null"
+  >
     <template #footer>
       <UButton color="primary" label="Confirmar" :loading="loadingCreatingTramo" @click="onCreateTramo" />
-
       <UButton color="neutral" label="Cancelar" @click="onCancelNuevoTramo" />
     </template>
   </UModal>
 
-  <!--Confirmacion de modal de descargar el archivo de planificacion. -->
-  <ConfirmModal v-show="showModalExportConfirm" v-model="showModalExportConfirm" title="Descargar planificación"
+  <ConfirmModal
+    v-show="showModalExportConfirm"
+    v-model="showModalExportConfirm"
+    title="Descargar planificación"
     description="¿Querés descargar la planificación actual como un archivo? Esto guardará una copia en tu computadora."
-    @onConfirm="onExport" @onClose="showModalExportConfirm = false" />
+    @onConfirm="onExport"
+    @onClose="showModalExportConfirm = false"
+  />
 
-  <!--Confirmacion de modal de sincronizacion de planificacion a google drive-->
-  <ConfirmModal v-if="showModalSyncGDrive" v-model="showModalSyncGDrive"
+  <ConfirmModal
+    v-if="showModalSyncGDrive"
+    v-model="showModalSyncGDrive"
     title="Sincronizar planificación con Google Drive"
     description="¿Deseás sincronizar la planificación actual con tu cuenta de Google Drive? Esto guardará una copia actualizada en la nube."
-    @onConfirm="syncGoogleDrive" @onClose="showModalSyncGDrive = false"></ConfirmModal>
+    @onConfirm="syncGoogleDrive"
+    @onClose="showModalSyncGDrive = false"
+  />
 
-  <!--Confirmacion de modal para eliminar la planificacion -->
-  <ConfirmModal v-model="showModalDeleteConfirm" title="Eliminar planificación"
-    description="¿Deseás eliminar la planificación actual? Esta acción no se puede deshacer." @onConfirm="onDelete"
-    @onClose="showModalDeleteConfirm = false">
-  </ConfirmModal>
+  <ConfirmModal
+    v-model="showModalDeleteConfirm"
+    title="Eliminar planificación"
+    description="¿Deseás eliminar la planificación actual? Esta acción no se puede deshacer."
+    @onConfirm="onDelete"
+    @onClose="showModalDeleteConfirm = false"
+  />
 
-  <PlanificacionDia v-if="planificacionFechaSelected" :planficacionId="planificacion.id"
-    :selectedDay="planificacionFechaSelected" :enableDates="planificacion.fechas.map(pf => pf.fecha)"
-    @changeDate="changeSelectedFecha" @changeDirection="changeFechaDirection"
-    @onDelete="handleOnDeleteFecha(planificacionFechaSelected)" />
-
+  <PlanificacionDia
+    v-if="planificacionFechaSelected"
+    :planficacionId="planificacion.id"
+    :selectedDay="planificacionFechaSelected"
+    :enableDates="planificacion.fechas.map(pf => pf.fecha)"
+    @changeDate="changeSelectedFecha"
+    @changeDirection="changeFechaDirection"
+    @onDelete="handleOnDeleteFecha(planificacionFechaSelected)"
+  />
 </template>
