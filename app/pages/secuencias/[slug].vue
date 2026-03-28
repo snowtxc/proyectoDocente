@@ -666,454 +666,466 @@ const onDelete = async (): Promise<void> => {
 
 <template>
   <div class="w-full flex flex-col overflow-y-auto">
-    <div collapsible grow >
-      <UDashboardNavbar>
-
-        <template #right>
-
-          <UTooltip text="Guardar secuencia">
-            <UButton icon="tabler:device-floppy" color="neutral" variant="ghost" @click="onSaveSecuencia()">
-
-
-              <template #leading="{ ui }">
-
-                <div class="flex flex-col">
-                  <div class="w-2 h-2 rounded-full bg-primary  absolute float-right" v-if="pendingSave"> </div>
-                  <UIcon name="tabler:device-floppy" class="size-5" />
-                </div>
-
-              </template>
-
-            </UButton>
-          </UTooltip>
-
-          <UTooltip text="Exportar a PDF">
-            <UButton icon="tabler:pdf" color="neutral" variant="ghost" @click="showModalExportConfirm = true" />
-          </UTooltip>
-
-          <UTooltip text="Exportar secuencia a Google Drive">
-            <UButton icon="tabler:brand-google-drive" color="neutral" variant="ghost"
-              @click="showModalSyncGDrive = true" />
-          </UTooltip>
-
-          <UTooltip text="Eliminar">
-            <UButton icon="tabler:trash" color="neutral" variant="ghost" @click="showModalDeleteConfirm = true" />
-          </UTooltip>
-        </template>
-
-
-      </UDashboardNavbar>
-
-      <div class="w-full flex flex-col gap-2 justify-center border-b border-neutral-200 p-2">
-        <div class="flex md:flex-row gap-2 ">
-          <USelectMenu
-           :model-value="secuencia.espacio" :items="espacios" option-attribute="id" class="flex-1"
-          @update:model-value="onChangeEspacio">
-            <template #leading="{ modelValue, ui }">
-              <div class="flex items-center" v-if="secuencia.espacio">
-                <span :style="{ backgroundColor: secuencia.espacio?.rgbColor }"
-                  :class="['inline-block h-2 w-2 flex-shrink-0 rounded-full mr-2']" aria-hidden="true" />
-
-                <span class="truncate" v-if="secuencia.espacio">{{ secuencia.espacio?.nombre }}</span>
-              </div>
-
-              <span v-else>Selecciona un espacio.</span>
-            </template>
-
-            <template #item-leading="{ item }">
-              <div class="flex items-center">
-                <span :style="{ backgroundColor: item.rgbColor }"
-                  :class="['inline-block h-2 w-2 flex-shrink-0 rounded-full mr-2']" aria-hidden="true" />
-                <span class="truncate">{{ item.nombre }}</span>
-              </div>
-
-            </template>
-          </USelectMenu>
-
-          <USelectMenu :model-value="secuencia.unidad_curricular" :items="unidadesCurriculares" option-attribute="id"
-            class="flex-1  min-w-[350px]" @update:model-value="onChangeUnidadCurricular">
-            <template #leading="{ modelValue, ui }">
-              <div class="flex items-center" v-if="secuencia.unidad_curricular">
-                <span :style="{ backgroundColor: secuencia.espacio?.rgbColor }"
-                  :class="['inline-block h-2 w-2 flex-shrink-0 rounded-full mr-2']" aria-hidden="true" />
-
-                <span class="truncate" v-if="secuencia.unidad_curricular">{{ secuencia.unidad_curricular?.nombre
-                }}</span>
-              </div>
-
-              <span v-else> Selecciona una unidad curricular.</span>
-            </template>
-
-            <template #item-leading="{ item }">
-              <div class="flex items-center">
-                <span :style="{ backgroundColor: secuencia.espacio?.rgbColor }"
-                  :class="['inline-block h-2 w-2 flex-shrink-0 rounded-full mr-2']" aria-hidden="true" />
-                <span class="truncate">{{ item?.nombre }}</span>
+    <!-- Barra de navegación superior -->
+    <UDashboardNavbar>
+      <template #right>
+        <UTooltip text="Guardar secuencia">
+          <UButton
+            icon="tabler:device-floppy"
+            color="neutral"
+            variant="ghost"
+            @click="onSaveSecuencia()"
+          >
+            <template #leading>
+              <div class="flex flex-col">
+                <div
+                  v-if="pendingSave"
+                  class="w-2 h-2 rounded-full bg-primary absolute float-right"
+                />
+                <UIcon name="tabler:device-floppy" class="size-5" />
               </div>
             </template>
-          </USelectMenu>
-        </div>
+          </UButton>
+        </UTooltip>
 
-        <UCard class="flex-1 flex flex-col">
+        <UTooltip text="Exportar a PDF">
+          <UButton
+            icon="tabler:pdf"
+            color="neutral"
+            variant="ghost"
+            @click="showModalExportConfirm = true"
+          />
+        </UTooltip>
+
+        <UTooltip text="Exportar secuencia a Google Drive">
+          <UButton
+            icon="tabler:brand-google-drive"
+            color="neutral"
+            variant="ghost"
+            @click="showModalSyncGDrive = true"
+          />
+        </UTooltip>
+
+        <UTooltip text="Eliminar">
+          <UButton
+            icon="tabler:trash"
+            color="neutral"
+            variant="ghost"
+            @click="showModalDeleteConfirm = true"
+          />
+        </UTooltip>
+      </template>
+    </UDashboardNavbar>
+
+    <!-- Formulario principal de la secuencia -->
+    <div class="w-full flex flex-col gap-2 justify-center border-b border-neutral-200 p-2">
+      <!-- Espacio y unidad curricular -->
+      <div class="flex md:flex-row gap-2">
+        <USelectMenu
+          :model-value="secuencia.espacio"
+          :items="espacios"
+          option-attribute="id"
+          class="flex-1"
+          @update:model-value="onChangeEspacio"
+        >
+          <template #leading="{ modelValue, ui }">
+            <div v-if="secuencia.espacio" class="flex items-center">
+              <span
+                :style="{ backgroundColor: secuencia.espacio?.rgbColor }"
+                class="inline-block h-2 w-2 flex-shrink-0 rounded-full mr-2"
+                aria-hidden="true"
+              />
+              <span class="truncate">{{ secuencia.espacio?.nombre }}</span>
+            </div>
+            <span v-else>Selecciona un espacio.</span>
+          </template>
+
+          <template #item-leading="{ item }">
+            <div class="flex items-center">
+              <span
+                :style="{ backgroundColor: item.rgbColor }"
+                class="inline-block h-2 w-2 flex-shrink-0 rounded-full mr-2"
+                aria-hidden="true"
+              />
+              <span class="truncate">{{ item.nombre }}</span>
+            </div>
+          </template>
+        </USelectMenu>
+
+        <USelectMenu
+          :model-value="secuencia.unidad_curricular"
+          :items="unidadesCurriculares"
+          option-attribute="id"
+          class="flex-1 min-w-[350px]"
+          @update:model-value="onChangeUnidadCurricular"
+        >
+          <template #leading="{ modelValue, ui }">
+            <div v-if="secuencia.unidad_curricular" class="flex items-center">
+              <span
+                :style="{ backgroundColor: secuencia.espacio?.rgbColor }"
+                class="inline-block h-2 w-2 flex-shrink-0 rounded-full mr-2"
+                aria-hidden="true"
+              />
+              <span class="truncate">{{ secuencia.unidad_curricular?.nombre }}</span>
+            </div>
+            <span v-else>Selecciona una unidad curricular.</span>
+          </template>
+
+          <template #item-leading="{ item }">
+            <div class="flex items-center">
+              <span
+                :style="{ backgroundColor: secuencia.espacio?.rgbColor }"
+                class="inline-block h-2 w-2 flex-shrink-0 rounded-full mr-2"
+                aria-hidden="true"
+              />
+              <span class="truncate">{{ item?.nombre }}</span>
+            </div>
+          </template>
+        </USelectMenu>
+      </div>
+
+      <!-- Contenido -->
+      <UCard class="flex-1 flex flex-col">
         <div class="flex items-center justify-between">
           <span class="font-medium text-xl">Contenido</span>
-          <SelectorContenido 
-            v-model="secuencia.contenido" 
+          <SelectorContenido
+            v-model="secuencia.contenido"
             :contenidos="contenidos"
             :color="secuencia.espacio?.rgbColor"
             :gradosEspecificos="grupo.grados"
-            :unidadCurricular="secuencia.unidad_curricular">
-          </SelectorContenido>
+            :unidadCurricular="secuencia.unidad_curricular"
+          />
         </div>
         <div class="flex justify-between gap-2 items-center">
           <div>
-            <ul class="list-disc" v-if="secuencia.contenido">
+            <ul v-if="secuencia.contenido" class="list-disc">
               <li>{{ secuencia.contenido.descripcion }}</li>
             </ul>
-            <span v-else>
-              No se ha seleccionado ningún contenido.
-            </span>
+            <span v-else>No se ha seleccionado ningún contenido.</span>
+          </div>
+        </div>
+      </UCard>
+
+      <!-- Competencias Generales y Específicas (2 columnas) -->
+      <div class="flex gap-2">
+        <!-- Competencias Generales -->
+        <UCard class="w-2/5 flex flex-col">
+          <div class="flex items-center justify-between">
+            <span class="font-medium text-xl">Competencias Generales</span>
+            <SelectorCompetenciaGeneral
+              v-model:model-value="secuencia.competencias_generales"
+              :competenciasGenerales="competenciasGenerales"
+              :competenciasEspecificasSelected="secuencia.competencias_especificas"
+              :color="secuencia.espacio?.rgbColor"
+            />
           </div>
 
-        </UCard>
-
-        <div class="flex gap-2">
-          <UCard class="w-2/5 flex flex-col">
-            <div class="flex items-center justify-between">
-              <span class="font-medium text-xl">Competencias Generales</span>
-              <SelectorCompetenciaGeneral v-model:model-value="secuencia.competencias_generales"
-                :competenciasGenerales="competenciasGenerales"
-                :competenciasEspecificasSelected="secuencia.competencias_especificas"
-                :color="secuencia.espacio?.rgbColor">
-              </SelectorCompetenciaGeneral>
-            </div>
-
-            <div class="flex flex-col justify-between gap-2 mt-2">
-              <div class="grid grid-cols-2 gap-2" v-if="secuencia.competencias_generales.length > 0">
-                <UCard v-for="competenciaGeneral in competenciasGeneralesSelected" :key="competenciaGeneral.id">
-                  <div class="w-full flex flex-col h-full items-center justify-center">
-                    <div class="w-full flex justify-end relative mb-2">
-                      <UPopover mode="hover" v-if="!competenciaGeneral.recomendado">
-                        <UTooltip>
-                          <UButton icon="tabler:alert-square-rounded" color="error" variant="outline" />
-                        </UTooltip>
-
-                        <template #content>
-                          <div class="p-2 m-4 flex flex-col gap-y-4 max-w-128">
-                            <span class="font-medium"> Competencias especificas relacionadas: </span>
-                            <div class="flex flex-col gap-y-2">
-                              <div
-                                v-for="competenciaEspecifica in competenciaGeneral.competenciasEspecificasRelacionadas"
-                                :key="competenciaEspecifica.id" class="flex gap-2">
-                                <div>
-                                  <div>
-                                    <span class="font-medium">{{ competenciaEspecifica.codificacion }}</span> {{
-                                      competenciaEspecifica.descripcion }}
-                                  </div>
-                                </div>
+          <div class="flex flex-col justify-between gap-2 mt-2">
+            <div v-if="secuencia.competencias_generales.length > 0" class="grid grid-cols-2 gap-2">
+              <UCard
+                v-for="competenciaGeneral in competenciasGeneralesSelected"
+                :key="competenciaGeneral.id"
+              >
+                <div class="w-full flex flex-col h-full items-center justify-center">
+                  <div class="w-full flex justify-end relative mb-2">
+                    <UPopover v-if="!competenciaGeneral.recomendado" mode="hover">
+                      <UTooltip>
+                        <UButton icon="tabler:alert-square-rounded" color="error" variant="outline" />
+                      </UTooltip>
+                      <template #content>
+                        <div class="p-2 m-4 flex flex-col gap-y-4 max-w-128">
+                          <span class="font-medium">Competencias específicas relacionadas:</span>
+                          <div class="flex flex-col gap-y-2">
+                            <div
+                              v-for="competenciaEspecifica in competenciaGeneral.competenciasEspecificasRelacionadas"
+                              :key="competenciaEspecifica.id"
+                              class="flex gap-2"
+                            >
+                              <div>
+                                <span class="font-medium">{{ competenciaEspecifica.codificacion }}</span>
+                                {{ competenciaEspecifica.descripcion }}
                               </div>
                             </div>
                           </div>
-                        </template>
-                      </UPopover>
-                    </div>
-                    <div class="text-sm text-center">{{ competenciaGeneral.nombre }}</div>
-                    <UAvatar :src="competenciaGeneral.url_image" size="xl" class="text-center mt-2" />
+                        </div>
+                      </template>
+                    </UPopover>
                   </div>
-                </UCard>
-              </div>
-
-              <span v-else>
-                No se ha seleccionado ninguna competencia general.
-              </span>
+                  <div class="text-sm text-center">{{ competenciaGeneral.nombre }}</div>
+                  <UAvatar :src="competenciaGeneral.url_image" size="xl" class="text-center mt-2" />
+                </div>
+              </UCard>
             </div>
-          </UCard>
-          <UCard class="w-3/5  flex flex-col">
-            <div class="flex items-center justify-between">
-              <span class="font-medium text-xl">Competencias Especificas</span>
-              <SelectorCompetenciaEspecifica v-model="secuencia.competencias_especificas"
-                :competenciasEspecificas="competenciasEspecificas" :color="secuencia.espacio?.rgbColor"
-                :disabled="secuencia.unidad_curricular == null" :contenidoSelected="secuencia.contenido"
-                :competenciasGeneralesSelected="secuencia.competencias_generales"
-                :criteriosDeLogrosSelected="secuencia.criterios_de_logros"
-                :competenciasGenerales="competenciasGenerales">
-              </SelectorCompetenciaEspecifica>
-            </div>
-
-            <div class="flex justify-between gap-2 items-center">
-              <div>
-                <ul class="list-disc px-2" v-if="secuencia.competencias_especificas.length > 0">
-                  <li v-for="competenciaEspecifica in secuencia.competencias_especificas"
-                    :key="competenciaEspecifica.id" class="my-2">
-                    {{ competenciaEspecifica.codificacion }} {{ competenciaEspecifica.descripcion }}
-                  </li>
-                </ul>
-                <span v-else>
-                  No se ha seleccionado ningún criterio de logro.
-                </span>
-              </div>
-            </div>
-
-          </UCard>
-
-        </div>
-
-        <UCard class="flex-1 flex flex-col">
-          <div class="flex items-center justify-between">
-            <span class="font-medium text-xl">Competencias Especificas</span>
-            <SelectorCompetenciaEspecifica
-              v-model="secuencia.competencias_especificas" 
-              :competenciasEspecificas="competenciasEspecificas" 
-              :color="secuencia.espacio?.rgbColor"
-              :disabled="secuencia.unidad_curricular == null" 
-              :contenidoSelected="secuencia.contenido"
-              :competenciasGeneralesSelected="secuencia.competencias_generales"
-              :criteriosDeLogrosSelected="secuencia.criterios_de_logros" 
-              :competenciasGenerales="competenciasGenerales"
-              :ciclosGradosEspecificos="cicloGradosSelected"
-              :unidadCurricular="secuencia.unidad_curricular">
-            </SelectorCompetenciaEspecifica>
+            <span v-else>No se ha seleccionado ninguna competencia general.</span>
           </div>
-          <div class="flex justify-between gap-2 items-center">
-            <div>
-              <ul class="list-disc" v-if="secuencia.criterios_de_logros.length > 0">
-                <li v-for="criterioDeLogro in secuencia.criterios_de_logros" :key="criterioDeLogro.id">
-                  {{ criterioDeLogro.descripcion }}
-                </li>
-              </ul>
-              <span v-else>
-                No se ha seleccionado ningún criterio de logro.
-              </span>
-            </div>
-          </div>
-
         </UCard>
 
+        <!-- Competencias Específicas -->
+        <UCard class="w-3/5 flex flex-col">
+          <div class="flex items-center justify-between">
+            <span class="font-medium text-xl">Competencias Específicas</span>
+            <SelectorCompetenciaEspecifica
+              v-model="secuencia.competencias_especificas"
+              :competenciasEspecificas="competenciasEspecificas"
+              :color="secuencia.espacio?.rgbColor"
+              :disabled="secuencia.unidad_curricular == null"
+              :contenidoSelected="secuencia.contenido"
+              :competenciasGeneralesSelected="secuencia.competencias_generales"
+              :criteriosDeLogrosSelected="secuencia.criterios_de_logros"
+              :competenciasGenerales="competenciasGenerales"
+              :ciclosGradosEspecificos="cicloGradosSelected"
+              :unidadCurricular="secuencia.unidad_curricular"
+            />
+          </div>
+
+          <div class="flex justify-between gap-2 items-center">
+            <div>
+              <ul v-if="secuencia.competencias_especificas.length > 0" class="list-disc px-2">
+                <li v-for="competenciaEspecifica in secuencia.competencias_especificas" :key="competenciaEspecifica.id" class="my-2">
+                  {{ competenciaEspecifica.codificacion }} {{ competenciaEspecifica.descripcion }}
+                </li>
+              </ul>
+              <span v-else>No se ha seleccionado ninguna competencia específica.</span>
+            </div>
+          </div>
+        </UCard>
       </div>
 
+      <!-- Criterios de Logros -->
       <UCard class="flex-1 flex flex-col">
         <div class="flex items-center justify-between">
           <span class="font-medium text-xl">Criterios de Logros</span>
-          <SelectorCriteriosDeLogros 
+          <SelectorCriteriosDeLogros
             v-model="secuencia.criterios_de_logros"
-            :criteriosDeLogros="criteriosDeLogros" 
-            :color="secuencia.espacio?.rgbColor" 
+            :criteriosDeLogros="criteriosDeLogros"
+            :color="secuencia.espacio?.rgbColor"
             :contenidoSelected="secuencia.contenido"
-            :competenciasEspecificasSelected="secuencia.competencias_especificas" 
+            :competenciasEspecificasSelected="secuencia.competencias_especificas"
             :disabled="secuencia.unidad_curricular == null"
             :gradosEspecificos="grupo.grados"
-            :unidadCurricular="secuencia.unidad_curricular">
-          </SelectorCriteriosDeLogros>
+            :unidadCurricular="secuencia.unidad_curricular"
+          />
         </div>
         <div class="flex justify-between gap-2 items-center">
           <div>
-            <ul class="list-disc" v-if="secuencia.criterios_de_logros.length > 0">
+            <ul v-if="secuencia.criterios_de_logros.length > 0" class="list-disc">
               <li v-for="criterioDeLogro in secuencia.criterios_de_logros" :key="criterioDeLogro.id">
                 {{ criterioDeLogro.descripcion }}
               </li>
             </ul>
-            <span v-else>
-              No se ha especificado ninguna meta general.
-            </span>
+            <span v-else>No se ha especificado ningún criterio de logro.</span>
+          </div>
+        </div>
+      </UCard>
+
+      <!-- Opciones adicionales: recursos, metodología, duración, evaluación -->
+      <UCard>
+        <BaseSwitch
+          v-model="secuencia.detallaRecursos"
+          title="Detallar recursos"
+          description="Activa esta opción si deseas agregar más información sobre los recursos utilizados."
+        />
+
+        <UCard v-if="secuencia.detallaRecursos" class="flex-1 flex flex-col mt-2">
+          <div class="flex items-center justify-between">
+            <span class="font-medium text-xl">Recursos</span>
+            <InputTextModal label="Recursos" v-model="secuencia.recursos" />
+          </div>
+          <div class="flex justify-between gap-2 items-center">
+            <div v-if="secuencia.recursos" class="break-words w-full whitespace-normal">
+              {{ secuencia.recursos }}
+            </div>
+            <span v-else>No se ha especificado ningún recurso.</span>
           </div>
         </UCard>
 
-        <UCard>
-          <BaseSwitch v-model="secuencia.detallaRecursos" title="Detallar recursos"
-            description="Activa esta opción si deseas agregar más información sobre los recursos utilizados.">
-          </BaseSwitch>
+        <USeparator class="my-2" />
 
-          <UCard class="flex-1 flex flex-col mt-2" v-if="secuencia.detallaRecursos">
-            <div class="flex items-center justify-between">
-              <span class="font-medium text-xl">Recursos</span>
-              <InputTextModal label="Recursos" v-model="secuencia.recursos"></InputTextModal>
+        <BaseSwitch
+          v-model="secuencia.detallaMetodologia"
+          title="Detallar metodología"
+          description="Activa esta opción si deseas agregar más información sobre la metodología utilizada."
+        />
+
+        <UCard v-if="secuencia.detallaMetodologia" class="flex-1 flex flex-col mt-2">
+          <div class="flex items-center justify-between">
+            <span class="font-medium text-xl">Metodología</span>
+            <InputTextModal label="Metodología" v-model="secuencia.metodologia" />
+          </div>
+          <div class="flex justify-between gap-2 items-center">
+            <div v-if="secuencia.metodologia" class="break-words w-full whitespace-normal">
+              {{ secuencia.metodologia }}
             </div>
-            <div class="flex justify-between gap-2 items-center">
-              <div class="break-words w-full whitespace-normal" v-if="secuencia.recursos">
-                {{ secuencia.recursos }}
-              </div>
-              <span v-else>
-                No se ha especificado ningun recurso.
-              </span>
-            </div>
-          </UCard>
-
-          <USeparator class="my-2" />
-
-          <BaseSwitch v-model="secuencia.detallaMetodologia" title="Detallar metodología"
-            description="Activa esta opción si deseas agregar más información sobre la metodología utilizada.">
-          </BaseSwitch>
-
-          <UCard class="flex-1 flex flex-col mt-2" v-if="secuencia.detallaMetodologia">
-            <div class="flex items-center justify-between">
-              <span class="font-medium text-xl">Metodología</span>
-              <InputTextModal label="Metodología" v-model="secuencia.metodologia"></InputTextModal>
-            </div>
-            <div class="flex justify-between gap-2 items-center">
-              <div class="break-words w-full whitespace-normal" v-if="secuencia.metodologia">
-                {{ secuencia.metodologia }}
-              </div>
-              <span v-else>
-                No se ha especificado ninguna metodología.
-              </span>
-            </div>
-          </UCard>
-
-          <USeparator class="my-2" />
-
-          <BaseSwitch v-model="secuencia.detallaDuracion" title="Detallar duración"
-            description="Activa esta opción si deseas agregar más información sobre la duración de la secuencia.">
-          </BaseSwitch>
-
-          <UCard class="flex-1 flex flex-col mt-2" v-if="secuencia.detallaDuracion">
-            <div class="flex items-center justify-between">
-              <span class="font-medium text-xl">Duración</span>
-              <InputTextModal label="Duración" v-model="secuencia.duracion" />
-            </div>
-            <div class="flex justify-between gap-2 items-center">
-              <div class="break-words w-full whitespace-normal" v-if="secuencia.duracion">
-                {{ secuencia.duracion }}
-              </div>
-              <span v-else>
-                No se ha especificado ninguna duración.
-              </span>
-            </div>
-          </UCard>
-
-          <USeparator class="my-2" />
-
-          <BaseSwitch v-model="secuencia.detallaEvaluacion" title="Detallar evaluación"
-            description="Activa esta opción si deseas agregar más información sobre la evaluación de la secuencia.">
-          </BaseSwitch>
-
-          <UCard class="flex-1 flex flex-col mt-2" v-if="secuencia.detallaEvaluacion">
-            <div class="flex items-center justify-between">
-              <span class="font-medium text-xl">Evaluación</span>
-              <InputTextModal label="Evaluación" v-model="secuencia.evaluacion" />
-            </div>
-            <div class="flex justify-between gap-2 items-center">
-              <div class="break-words w-full whitespace-normal" v-if="secuencia.evaluacion">
-                {{ secuencia.evaluacion }}
-              </div>
-              <span v-else>
-                No se ha especificado ninguna evaluación.
-              </span>
-            </div>
-          </UCard>
-
+            <span v-else>No se ha especificado ninguna metodología.</span>
+          </div>
         </UCard>
-      </div>
-      <UProgress size="xl" v-if="loadingMoreData" class="mt-2" />
+
+        <USeparator class="my-2" />
+
+        <BaseSwitch
+          v-model="secuencia.detallaDuracion"
+          title="Detallar duración"
+          description="Activa esta opción si deseas agregar más información sobre la duración de la secuencia."
+        />
+
+        <UCard v-if="secuencia.detallaDuracion" class="flex-1 flex flex-col mt-2">
+          <div class="flex items-center justify-between">
+            <span class="font-medium text-xl">Duración</span>
+            <InputTextModal label="Duración" v-model="secuencia.duracion" />
+          </div>
+          <div class="flex justify-between gap-2 items-center">
+            <div v-if="secuencia.duracion" class="break-words w-full whitespace-normal">
+              {{ secuencia.duracion }}
+            </div>
+            <span v-else>No se ha especificado ninguna duración.</span>
+          </div>
+        </UCard>
+
+        <USeparator class="my-2" />
+
+        <BaseSwitch
+          v-model="secuencia.detallaEvaluacion"
+          title="Detallar evaluación"
+          description="Activa esta opción si deseas agregar más información sobre la evaluación de la secuencia."
+        />
+
+        <UCard v-if="secuencia.detallaEvaluacion" class="flex-1 flex flex-col mt-2">
+          <div class="flex items-center justify-between">
+            <span class="font-medium text-xl">Evaluación</span>
+            <InputTextModal label="Evaluación" v-model="secuencia.evaluacion" />
+          </div>
+          <div class="flex justify-between gap-2 items-center">
+            <div v-if="secuencia.evaluacion" class="break-words w-full whitespace-normal">
+              {{ secuencia.evaluacion }}
+            </div>
+            <span v-else>No se ha especificado ninguna evaluación.</span>
+          </div>
+        </UCard>
+      </UCard>
     </div>
 
+    <!-- Panel de actividades (stepper izquierdo + formulario derecho) -->
     <UPage :ui="pageUi">
       <template #left>
-
-        <UDashboardPanel side="left" :width="200" >
-          
-          <div class="overflow-y-auto flex flex-col items-end p-2" >
+        <UDashboardPanel side="left" :width="200">
+          <div class="overflow-y-auto flex flex-col items-end p-2">
             <UButton
-            :icon="isTramosPanelCollapsed ? 'tabler:layout-sidebar-left-expand' : 'tabler:layout-sidebar-left-collapse'"
-            color="neutral" variant="ghost" class="mr-2" @click="isTramosPanelCollapsed = !isTramosPanelCollapsed" />
-            <Stepper :showButtonAddStep="true" buttonAddStep="Agregar nueva actividad" orientation="vertical"
-              descriptionButtonAddStep="Extender una nueva actividad a la secuencia" :currentStep="currentStepActividad"
-              :steps="stepsActividades" @on:add-step="showModalAddActividad = true" :linear="false"
-              ref="actividadesStepper" @on:change-step="onChangeActividad" :actionsMenu="actionsMenuActividad"
-              @on:action-menu="handleOnActionMenuActividad" />
+              :icon="isTramosPanelCollapsed ? 'tabler:layout-sidebar-left-expand' : 'tabler:layout-sidebar-left-collapse'"
+              color="neutral"
+              variant="ghost"
+              class="mr-2"
+              @click="isTramosPanelCollapsed = !isTramosPanelCollapsed"
+            />
+            <Stepper
+              :showButtonAddStep="true"
+              buttonAddStep="Agregar nueva actividad"
+              orientation="vertical"
+              descriptionButtonAddStep="Extender una nueva actividad a la secuencia"
+              :currentStep="currentStepActividad"
+              :steps="stepsActividades"
+              @on:add-step="showModalAddActividad = true"
+              :linear="false"
+              ref="actividadesStepper"
+              @on:change-step="onChangeActividad"
+              :actionsMenu="actionsMenuActividad"
+              @on:action-menu="handleOnActionMenuActividad"
+            />
           </div>
-
         </UDashboardPanel>
       </template>
 
       <template #default>
         <UDashboardPanel collapsible side="right" grow>
-
           <div class="overflow-y-auto flex items-start" v-if="actividadSecuenciaSelected">
             <div v-if="isTramosPanelCollapsed">
-              <UButton 
-              :icon="isTramosPanelCollapsed ? 'tabler:layout-sidebar-left-expand' : 'tabler:layout-sidebar-left-collapse'"
-              color="neutral" variant="ghost" class="mr-2" @click="isTramosPanelCollapsed = !isTramosPanelCollapsed" />
+              <UButton
+                :icon="isTramosPanelCollapsed ? 'tabler:layout-sidebar-left-expand' : 'tabler:layout-sidebar-left-collapse'"
+                color="neutral"
+                variant="ghost"
+                class="mr-2"
+                @click="isTramosPanelCollapsed = !isTramosPanelCollapsed"
+              />
             </div>
-            
-            <ActividadSecuenciaForm v-model="actividadSecuenciaSelected" v-if="actividadSecuenciaSelected"
-              :actividadSecuencia="actividadSecuenciaSelected" :espacios="espacios" :espacio="secuencia.espacio"
-              :unidadCurricular="secuencia.unidad_curricular" :contenido="secuencia.contenido"
-              :gradosIds="grupo.grados.map(g => g.id)" :competenciasGenerales="competenciasGenerales"
-              :nroActividadSecuencia="currentStepActividad" :ciclosGradosIds="ciclosGradosIds"
-              :criteriosDeLogros="criteriosDeLogros" :competenciasEspecificas="competenciasEspecificas">
-            
-            </ActividadSecuenciaForm>
+            <ActividadSecuenciaForm
+              v-model="actividadSecuenciaSelected"
+              v-if="actividadSecuenciaSelected"
+              :actividadSecuencia="actividadSecuenciaSelected"
+              :espacios="espacios"
+              :espacio="secuencia.espacio"
+              :unidadCurricular="secuencia.unidad_curricular"
+              :contenido="secuencia.contenido"
+              :gradosIds="grupo.grados.map(g => g.id)"
+              :competenciasGenerales="competenciasGenerales"
+              :nroActividadSecuencia="currentStepActividad"
+              :ciclosGradosIds="ciclosGradosIds"
+              :criteriosDeLogros="criteriosDeLogros"
+              :competenciasEspecificas="competenciasEspecificas"
+            />
           </div>
-
-          <div v-else class="flex flex-col justify-center items-center h-screen " >
+          <div v-else class="flex flex-col justify-center items-center h-screen">
             <UIcon name="tabler:file-text" size="60px" />
-            <h1 class="mt-1">  {{ actividadNoSelectedText }} </h1>
-            
+            <h1 class="mt-1">{{ actividadNoSelectedText }}</h1>
           </div>
         </UDashboardPanel>
       </template>
     </UPage>
-  </div>
 
-  <!--Extender tramo-->
-  <UModal
-  v-model:open="showModalAddActividad"
-  title="Agregar nueva actividad de secuencia"
-  description="¿Estás seguro que deseas agregar una siguiente actividad la secuencia?"
-  icon="tabler:butterfly-filled"
-  prevent-close
-  :close-button="null"
->
-  <template #footer> 
-    <UButton
-      color="primary"
-      label="Confirmar"
-      :loading="loadingCreatingActividad"
-      @click="onCreateActividad"
+    <!-- Modales -->
+    <UModal
+      v-model:open="showModalAddActividad"
+      title="Agregar nueva actividad de secuencia"
+      description="¿Estás seguro que deseas agregar una siguiente actividad la secuencia?"
+      icon="tabler:butterfly-filled"
+      prevent-close
+      :close-button="null"
+    >
+      <template #footer>
+        <UButton
+          color="primary"
+          label="Confirmar"
+          :loading="loadingCreatingActividad"
+          @click="onCreateActividad"
+        />
+        <UButton
+          color="neutral"
+          label="Cancelar"
+          @click="onCancelNuevaActividad"
+        />
+      </template>
+    </UModal>
+
+    <ConfirmModal
+      v-show="showModalExportConfirm"
+      v-model="showModalExportConfirm"
+      title="Descargar secuencia"
+      description="¿Querés descargar la secuencia actual como un archivo? Esto guardará una copia en tu computadora."
+      @onConfirm="onExport"
+      @onClose="showModalExportConfirm = false"
     />
 
-    <UButton
-        color="neutral"
-        label="Cancelar"
-        @click="onCancelNuevaActividad"
-      />
-  </template>
-</UModal>
+    <ConfirmModal
+      v-if="showModalSyncGDrive"
+      v-model="showModalSyncGDrive"
+      title="Sincronizar secuencia con Google Drive"
+      description="¿Deseás sincronizar la secuencia actual con tu cuenta de Google Drive? Esto guardará una copia actualizada en la nube."
+      @onConfirm="syncGoogleDrive"
+      @onClose="showModalSyncGDrive = false"
+    />
 
-<!--Confirmacion de modal de descargar el archivo de secuencia. -->
-<ConfirmModal 
-  v-show="showModalExportConfirm" 
-  v-model="showModalExportConfirm"
-  title="Descargar secuencia" 
-  description="¿Querés descargar la secuencia actual como un archivo? Esto guardará una copia en tu computadora." 
-  @onConfirm="onExport"
-  @onClose="showModalExportConfirm = false"
-/>
+    <ConfirmModal
+      v-model="showModalDeleteConfirm"
+      title="Eliminar secuencia"
+      description="¿Deseás eliminar la secuencia actual? Esta acción no se puede deshacer."
+      @onConfirm="onDelete"
+      @onClose="showModalDeleteConfirm = false"
+    />
 
-<!--Confirmacion de modal de sincronizacion de planificacion a google drive-->
-<ConfirmModal 
-v-if="showModalSyncGDrive" 
-v-model="showModalSyncGDrive"
-title="Sincronizar secuencia con Google Drive" 
-description="¿Deseás sincronizar la secuencia actual con tu cuenta de Google Drive? Esto guardará una copia actualizada en la nube." 
-@onConfirm="syncGoogleDrive"
-@onClose="showModalSyncGDrive = false"></ConfirmModal>
-
-
-<ConfirmModal 
-  v-model="showModalDeleteConfirm"
-  title="Eliminar secuencia" 
-  description="¿Deseás eliminar la secuencia actual? Esta acción no se puede deshacer." 
-  @onConfirm="onDelete"
-  @onClose="showModalDeleteConfirm = false">
-</ConfirmModal>
-
-<ConfirmModal 
-  v-model="showModalChangeEspacioOrUnidadCurricular" 
-    :title="titleChangeEspacioOrUnidadCurricular"
-  :description="descriptionChangeEspacioOrUnidadCurricular" 
-  @onConfirm="onConfirmChangeEspacioOUnidad"
-  @onClose="showModalChangeEspacioOrUnidadCurricular = false"></ConfirmModal>
-
-  
+    <ConfirmModal
+      v-model="showModalChangeEspacioOrUnidadCurricular"
+      :title="titleChangeEspacioOrUnidadCurricular"
+      :description="descriptionChangeEspacioOrUnidadCurricular"
+      @onConfirm="onConfirmChangeEspacioOUnidad"
+      @onClose="showModalChangeEspacioOrUnidadCurricular = false"
+    />
+  </div>
 </template>
