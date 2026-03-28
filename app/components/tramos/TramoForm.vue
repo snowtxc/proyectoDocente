@@ -341,20 +341,13 @@ const { criteriosDeLogros, competenciasEspecificas, contenido } = form.value;
   }
 })
 
-const disabledMetaAprendizaje = computed(()=>{
-  return  !form.value.unidad_curricular || 
-          form.value.competenciasEspecificas.length == 0 || 
-          form.value.competenciasEspecificas.length == 0 || 
-          !form.value.contenido;
+const disabledFlopiBot = computed(() => {
+  return !form.value.unidad_curricular || 
+         form.value.competenciasGenerales.length == 0 || 
+         form.value.competenciasEspecificas.length == 0 || 
+         form.value.criteriosDeLogros.length == 0 ||
+         !form.value.contenido;
 })
-
-const disabledPlanAprendizaje = computed(()=>{
-  return  !form.value.unidad_curricular || 
-          form.value.competenciasEspecificas.length == 0 || 
-          form.value.competenciasEspecificas.length == 0 || 
-          !form.value.contenido;
-})
-
 
 watch(()=> form.value.noSeDesarrolla, ()=>{
   if(!form.value.noSeDesarrolla){
@@ -362,6 +355,19 @@ watch(()=> form.value.noSeDesarrolla, ()=>{
     onChangeModel();
   }
 })
+
+const handleUseAllMetaYPlan = (value : { meta: string, plan: string})=>{
+    metaAprendizajeContentHtml.value =  value.meta;
+    planAprendizajeContentHtml.value = value.plan;
+}
+
+const handleUseMeta = (meta: string)=>{
+    metaAprendizajeContentHtml.value = meta;
+}
+
+const handleUsePlan = (plan)=>{
+    planAprendizajeContentHtml.value = plan;
+}
 
 </script>
 
@@ -595,39 +601,76 @@ watch(()=> form.value.noSeDesarrolla, ()=>{
 
       </UCard>
       
-      <UCard class="flex-1 flex flex-col">
-        <div class="flex flex-col justify-between">
-          <div class="flex items-center gap-2">
-            <span class="font-medium text-xl my-2">Meta de Aprendizaje</span>
-          </div>
+      <div class="mt-6 p-6 border-2 border-dashed border-primary-200 rounded-2xl bg-primary-50/30">
+  
+  <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+    <div>
+      <h2 class="text-2xl font-bold text-primary-700 flex items-center gap-2">
+        <UIcon name="i-lucide-sparkles" class="text-primary-500" />
+        Generación de Aprendizaje
+      </h2>
+      <p class="text-sm text-gray-500">Define tus metas y planes manualmente o deja que la IA te ayude.</p>
+    </div>
 
-          <EditorSlideOver 
-            v-model="metaAprendizajeContentHtml"
-            @update:model-value="onChangeModel"
-            :promptCategories="[PromptCategory.META_DE_APRENDIZAJE]"
-            title="Meta de Aprendizaje" 
-            :paramsBot="paramsBotMetaAprendizaje"
-            disabledText="Debes seleccionar una unidad curricular ,un contenido, criterios de logros y competencias especificas antes de asignar una meta de aprendizaje"></EditorSlideOver>
+    <FlopiBotGenerarMetaYPlanModal
+    :disabled="disabledFlopiBot"
+    :planificacion="{
+      espacio : form.espacio,
+      unidadCurricular : form.unidad_curricular,
+      contenido: form.contenido,
+      criteriosLogro: form.criteriosDeLogros,
+      competenciasEspecificas: form.competenciasEspecificas,
+      competenciasGenerales: form.competenciasGenerales,
+      grupo: props.planificacion.grupo
+    }"
+    @use-all="handleUseAllMetaYPlan"
+    @update:meta="handleUseMeta"
+    @update:plan="handleUsePlan"
+    ></FlopiBotGenerarMetaYPlanModal>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-1 gap-4">
+    <UCard class="flex-1 flex flex-col hover:shadow-md transition-shadow">
+      <div class="flex flex-col justify-between h-full">
+        <div class="flex items-center gap-2 mb-4">
+          <div class="p-2 bg-orange-100 rounded-lg">
+            <UIcon name="i-lucide-target" class="text-orange-600 w-5 h-5" />
+          </div>
+          <span class="font-bold text-lg text-gray-800">Meta de Aprendizaje</span>
         </div>
-      </UCard>
 
-      <UCard class="flex-1 flex flex-col">
+        <EditorSlideOver 
+          v-model="metaAprendizajeContentHtml"
+          @update:model-value="onChangeModel"
+          :promptCategories="[PromptCategory.META_DE_APRENDIZAJE]"
+          title="Meta de Aprendizaje" 
+          :paramsBot="paramsBotMetaAprendizaje"
+          disabledText="Debes seleccionar una unidad curricular, un contenido, criterios de logros y competencias específicas antes de asignar una meta de aprendizaje"
+        />
+      </div>
+    </UCard>
 
-        <div class="flex flex-col  justify-between">
-          <div class="flex items-center gap-2 my-2">
-            <span class="font-medium text-xl">Plan de Aprendizaje</span>
+    <UCard class="flex-1 flex flex-col hover:shadow-md transition-shadow">
+      <div class="flex flex-col justify-between h-full">
+        <div class="flex items-center gap-2 mb-4">
+          <div class="p-2 bg-blue-100 rounded-lg">
+            <UIcon name="i-lucide-map" class="text-blue-600 w-5 h-5" />
           </div>
+          <span class="font-bold text-lg text-gray-800">Plan de Aprendizaje</span>
+        </div>
 
-           <EditorSlideOver 
-              v-model="planAprendizajeContentHtml"
-              @update:model-value="onChangeModel"
-              :promptCategories="[PromptCategory.OTROS]"
-              title="Plan de aprendizaje" 
-              :paramsBot="{}"
-              disabledText="Debes seleccionar una unidad curricular ,un contenido, criterios de logros y competencias especificas antes de asignar un plan de aprendizaje"></EditorSlideOver>
-          </div>
-         
-      </UCard>
+        <EditorSlideOver 
+          v-model="planAprendizajeContentHtml"
+          @update:model-value="onChangeModel"
+          :promptCategories="[PromptCategory.OTROS]"
+          title="Plan de aprendizaje" 
+          :paramsBot="{}"
+          disabledText="Debes seleccionar una unidad curricular, un contenido, criterios de logros y competencias específicas antes de asignar un plan de aprendizaje"
+        />
+      </div>
+    </UCard>
+  </div>
+</div>
         </div>
     </div>
     </div>

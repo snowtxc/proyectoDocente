@@ -93,7 +93,8 @@ export const apiPromptsRoutes = {
 }
 
 export const apiFlopiBot = {
-    sendPromptMessage : "/flopi-bot/send-prompt-message"
+    sendPromptMessage : "/flopi-bot/send-prompt-message",
+    generarPropuestaPedagogica: "/flopi-bot/generar-propuesta-pedagogica"
 }
 
 export const apiDocumentos = {
