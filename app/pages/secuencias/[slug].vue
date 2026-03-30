@@ -26,8 +26,6 @@ import { TypeItemSyncGoogleDrive } from '~/utils/enums/typeItemSyncGoogleDrive';
 import SelectorCompetenciaGeneral from "~/components/competencia-general/SelectorCompetenciaGeneral.vue";
 
 import SyncGoogleDrive from '~/components/SyncGoogleDrive.vue'
-import type { Actividad } from '~/types/actividad';
-import { page } from '#build/ui';
 import type { CicloGrado } from '~/types/cicloGrado';
 
 const { $apiRest } = useNuxtApp();
@@ -198,7 +196,6 @@ const stepsActividades = computed(() => {
   })
 })
 
-const showModalAddActividad = ref(false);
 const loadingCreatingActividad = ref(false);
 
 const currentStepActividad = computed(() => {
@@ -251,8 +248,6 @@ onBeforeMount(() => {
 })
 
 const onCreateActividad = async () => {
-
-  showModalAddActividad.value = false;
 
   const newActividadSecuencia: ActividadSecuencia = {
     id: 0,
@@ -382,12 +377,6 @@ watch(() => actividadSecuenciaSelected.value, () => {
   pendingSave.value = true;
 })
 
-const onCancelNuevaActividad = () => {
-  showModalAddActividad.value = false;
-
-  // ToDo implementar
-  // actividadesStepper.value.changeStep(currentStepTramo.value);
-}
 
 const actionsMenuActividad = ref([
   {
@@ -1023,7 +1012,7 @@ const onDelete = async (): Promise<void> => {
               descriptionButtonAddStep="Extender una nueva actividad a la secuencia"
               :currentStep="currentStepActividad"
               :steps="stepsActividades"
-              @on:add-step="showModalAddActividad = true"
+              @on:add-step="onCreateActividad"
               :linear="false"
               ref="actividadesStepper"
               @on:change-step="onChangeActividad"
@@ -1055,11 +1044,12 @@ const onDelete = async (): Promise<void> => {
               :unidadCurricular="secuencia.unidad_curricular"
               :contenido="secuencia.contenido"
               :gradosIds="grupo.grados.map(g => g.id)"
-              :competenciasGenerales="competenciasGenerales"
+              :competenciasGenerales="secuencia.competencias_generales"
               :nroActividadSecuencia="currentStepActividad"
               :ciclosGradosIds="ciclosGradosIds"
-              :criteriosDeLogros="criteriosDeLogros"
-              :competenciasEspecificas="competenciasEspecificas"
+              :criteriosDeLogros="secuencia.criterios_de_logros"
+              :competenciasEspecificas="secuencia.competencias_especificas"
+              :grupo="secuencia.grupo"
             />
           </div>
           <div v-else class="flex flex-col justify-center items-center h-screen">
@@ -1071,29 +1061,6 @@ const onDelete = async (): Promise<void> => {
     </UPage>
 
     <!-- Modales -->
-    <UModal
-      v-model:open="showModalAddActividad"
-      title="Agregar nueva actividad de secuencia"
-      description="¿Estás seguro que deseas agregar una siguiente actividad la secuencia?"
-      icon="tabler:butterfly-filled"
-      prevent-close
-      :close-button="null"
-    >
-      <template #footer>
-        <UButton
-          color="primary"
-          label="Confirmar"
-          :loading="loadingCreatingActividad"
-          @click="onCreateActividad"
-        />
-        <UButton
-          color="neutral"
-          label="Cancelar"
-          @click="onCancelNuevaActividad"
-        />
-      </template>
-    </UModal>
-
     <ConfirmModal
       v-show="showModalExportConfirm"
       v-model="showModalExportConfirm"
@@ -1110,7 +1077,7 @@ const onDelete = async (): Promise<void> => {
       description="¿Deseás sincronizar la secuencia actual con tu cuenta de Google Drive? Esto guardará una copia actualizada en la nube."
       @onConfirm="syncGoogleDrive"
       @onClose="showModalSyncGDrive = false"
-    />
+    /> 
 
     <ConfirmModal
       v-model="showModalDeleteConfirm"

@@ -144,13 +144,12 @@ const getMenuItems : any = (value:any) => {
       icon="tabler:circle-dashed-plus"
       :step="stepAdd"
     >
-      <div @click="emit('on:add-step')">
+      <div>
         <StepperTrigger class="inline-flex border-2 shadow-sm items-center hover:text-white hover:bg-primary  justify-center rounded-full w-10 h-10 shrink-0 focus:shadow-[0_0_0_2px]">
           <StepperIndicator>
             <Icon
               icon="tabler:circle-dashed-plus"
               class="w-5 h-5 hover:cursor-pointer"
-              @click="emit('on:add-step')"
             />
           </StepperIndicator>
         </StepperTrigger>

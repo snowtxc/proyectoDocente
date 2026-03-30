@@ -144,7 +144,6 @@ const stepsTramos = computed(() => {
     });
 })
 
-const showModalAddTramo = ref(false);
 const loadingCreatingTramo = ref(false);
 
 const currentStepTramo = computed(() => {
@@ -155,8 +154,6 @@ const currentStepTramo = computed(() => {
 })
 
 const onCreateTramo = async () => {
-
-  showModalAddTramo.value = false;
 
   const newTramo: Tramo = {
     id: 0,
@@ -347,10 +344,7 @@ watch(() => tramoSelected.value, () => {
   pendingSave.value = true;
 })
 
-const onCancelNuevoTramo = () => {
-  showModalAddTramo.value = false;
-  tramosStepper.value.changeStep(currentStepTramo.value);
-}
+
 
 const actionsMenuTramo = ref([
   {
@@ -651,7 +645,7 @@ const onUpdateTramo = (tramo: Tramo) => {
               descriptionButtonAddStep="Extender un nuevo tramo a la planificación"
               :currentStep="currentStepTramo"
               :steps="stepsTramos"
-              @on:add-step="showModalAddTramo = true"
+              @on:add-step="onCreateTramo"
               :linear="false"
               ref="tramosStepper"
               @on:change-step="onChangeTramo"
@@ -785,20 +779,6 @@ const onUpdateTramo = (tramo: Tramo) => {
     </template>
   </UPage>
 
-  <!-- Modales -->
-  <UModal
-    v-model:open="showModalAddTramo"
-    title="Agregar nuevo Tramo"
-    description="¿Estás seguro que deseas agregar un siguiente tramo a la planificación?"
-    icon="tabler:butterfly-filled"
-    prevent-close
-    :close-button="null"
-  >
-    <template #footer>
-      <UButton color="primary" label="Confirmar" :loading="loadingCreatingTramo" @click="onCreateTramo" />
-      <UButton color="neutral" label="Cancelar" @click="onCancelNuevoTramo" />
-    </template>
-  </UModal>
 
   <ConfirmModal
     v-show="showModalExportConfirm"

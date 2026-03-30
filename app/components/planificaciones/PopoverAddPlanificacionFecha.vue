@@ -15,7 +15,6 @@ import { HttpMethodEnum } from '~/utils/enums/HttpMethodEnum';
     const emit = defineEmits(['on:add']);
     
     const show = ref<boolean>(false);
-    const showModalConfirm = ref<boolean>(false);
 
     const fecha =  ref(null);
     const multipleFecha = ref(false);
@@ -52,24 +51,23 @@ import { HttpMethodEnum } from '~/utils/enums/HttpMethodEnum';
         return true;
     })
 
-    const onShowModalConfirm = ()=>{
+
+
+    const onSubmit = async()=>{
+
+        show.value = false;
+
         let fechas: string[] = multipleFecha.value ? getArrayDatesStrBetweenDates(fecha.value.start, fecha.value.end) : getArrayDatesStrBetweenDates(fecha.value, fecha.value) 
 
         planificacionFechaACrear.value  = {
             planificacion_id: props.planificacionId,
             fechas
         } 
-        
-        showModalConfirm.value = true;
-    }
 
-    const onSubmit = async()=>{
-
-        showModalConfirm.value = false;
-        
         try{
             const body: CreateMultiplePlanificacionFecha = planificacionFechaACrear.value;
             const fechasCreated = await $apiRest<PlanificacionFecha[]>(apiPlanificacionesFechaRoutes.create, HttpMethodEnum.POST, body);
+
             if(fechasCreated.length <= 0)
                 return;
 
@@ -114,18 +112,11 @@ import { HttpMethodEnum } from '~/utils/enums/HttpMethodEnum';
                 <DatePicker locale="es" v-model="fecha"  :disableWeekends="true" :range="multipleFecha" :disabledDates="fechasDisabled"/>
                 
                 <div class="w-full flex justify-end">
-                    <UButton color="primary" icon="tabler:calendar-plus" :disabled="!validForm" @click="onShowModalConfirm"> 
+                    <UButton color="primary" icon="tabler:calendar-plus" :disabled="!validForm" @click="onSubmit"> 
                         Agregar
                     </UButton>
                 </div>
             </div>
         </template>
   </UPopover>
-
-  <ConfirmModal 
-  v-model="showModalConfirm" 
-  title="Confirmar nuevos días" 
-  description="¿Seguro deseas generar estos nuevos días a la planificación?" 
-  @onConfirm="onSubmit"
-  @onClose="showModalConfirm = false"></ConfirmModal>
 </template>
