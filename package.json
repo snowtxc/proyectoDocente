@@ -6,9 +6,9 @@
     "node": "20.x"
   },
   "scripts": {
-    "build": "npm run copy-webviewer && nuxt build",
-    "dev": "npm run copy-webviewer && nuxt dev",
-    "generate": "npm run copy-webviewer && nuxt generate",
+    "build": "nuxt build",
+    "dev": "nuxt dev",
+    "generate": "nuxt generate",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
     "lint": "eslint .",
