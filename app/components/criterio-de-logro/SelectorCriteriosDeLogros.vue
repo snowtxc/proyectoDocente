@@ -58,7 +58,7 @@ const scrollToNewGroup = (gradoId: number) => {
   }, 100);
 };
 
-// ==================== FUNCIÓN PARA ENRIQUECER CRITERIOS (RELACIONES Y CHECKED) ====================
+// ==================== FUNCIÓN PARA ENRIQUECER CRITERIOS ====================
 function enrichCriterios(criterios: CriterioDeLogro[]): (CriterioDeLogroItemSelector & { gradoId: number })[] {
   const modelIds = new Set(props.modelValue.map(c => c.id));
 
@@ -93,8 +93,7 @@ function enrichCriterios(criterios: CriterioDeLogro[]): (CriterioDeLogroItemSele
       contenidoRelacionado,
       competenciasEspecificasRelacionadas,
       nroRelaciones,
-      // Placeholder para gradoId – se asignará más tarde según el grupo
-      gradoId: -1,
+      gradoId: -1, // temporal, se reasigna después
     };
   }).sort((a, b) => {
     if (a.recomendado && a.nroRelaciones > b.nroRelaciones) return -1;
@@ -103,30 +102,24 @@ function enrichCriterios(criterios: CriterioDeLogro[]): (CriterioDeLogroItemSele
   });
 }
 
-// ==================== ESTADO INTERNO: TODOS LOS CRITERIOS CON SU GRUPO ====================
-// Usamos una única fuente de verdad: un array plano de criterios enriquecidos,
-// cada uno con su gradoId (-1 para el grupo por defecto, o el id real para adicionales)
+// ==================== ESTADO INTERNO ====================
 const criteriosInternos = ref<(CriterioDeLogroItemSelector & { gradoId: number })[]>([]);
 
-// Función que reconstruye criteriosInternos a partir de los criterios base y los adicionales
 function reconstruirCriterios() {
   const base = enrichCriterios(props.criteriosDeLogros).map(c => ({ ...c, gradoId: -1 }));
-
   const adicionales = criteriosXGradoAdiccionales.value.flatMap(item =>
     enrichCriterios(item.criterios).map(c => ({ ...c, gradoId: item.grado.id }))
   );
-
   criteriosInternos.value = [...base, ...adicionales];
 }
 
-// Inicializar y actualizar cuando cambien las props relevantes o los adicionales
 watch(
   [
     () => props.criteriosDeLogros,
     () => props.modelValue,
     () => props.contenidoSelected,
     () => props.competenciasEspecificasSelected,
-    criteriosXGradoAdiccionales, // cuando se agregan nuevos grupos
+    criteriosXGradoAdiccionales,
   ],
   () => {
     reconstruirCriterios();
@@ -134,7 +127,7 @@ watch(
   { deep: true, immediate: true }
 );
 
-// ==================== AGRUPACIÓN PARA EL TEMPLATE ====================
+// ==================== AGRUPACIÓN ====================
 interface ContentGroup {
   title: string;
   gradoId: number;
@@ -145,12 +138,16 @@ interface ContentGroup {
 const groups = computed<ContentGroup[]>(() => {
   const gruposMap = new Map<number, ContentGroup>();
 
-  // Agrupar por gradoId
   for (const criterio of criteriosInternos.value) {
     if (!gruposMap.has(criterio.gradoId)) {
-      const title = criterio.gradoId === -1
-        ? `Criterios de logro de ${gradosText.value}`
-        : `Criterios de logro de ${props.gradosEspecificos.find(g => g.id === criterio.gradoId)?.nombre ?? 'Otro grado'}`;
+      let title = '';
+      if (criterio.gradoId === -1) {
+        title = `Criterios de logro de ${gradosText.value}`;
+      } else {
+        const gradoEncontrado = props.gradosEspecificos.find(g => g.id === criterio.gradoId) ||
+                                criteriosXGradoAdiccionales.value.find(c => c.grado.id === criterio.gradoId)?.grado;
+        title = gradoEncontrado ? `Criterios de logro de ${gradoEncontrado.nombre}` : 'Criterios de logro';
+      }
       gruposMap.set(criterio.gradoId, {
         title,
         gradoId: criterio.gradoId,
@@ -161,15 +158,11 @@ const groups = computed<ContentGroup[]>(() => {
     gruposMap.get(criterio.gradoId)!.contents.push(criterio);
   }
 
-  // Convertir a array y ordenar: primero el grupo por defecto (-1), luego el resto por título
-  const gruposArray = Array.from(gruposMap.values());
-  gruposArray.sort((a, b) => {
+  return Array.from(gruposMap.values()).sort((a, b) => {
     if (a.gradoId === -1) return -1;
     if (b.gradoId === -1) return 1;
     return a.title.localeCompare(b.title);
   });
-
-  return gruposArray;
 });
 
 // Filtrado por búsqueda
@@ -186,7 +179,7 @@ const filteredGroups = computed(() => {
 
 const emptyFiltered = computed(() => filteredGroups.value.every(g => g.filteredContents.length === 0));
 
-// ==================== SELECCIÓN MÚLTIPLE ====================
+// ==================== SELECCIÓN ====================
 const onToggleCriterio = (criterioId: number) => {
   const index = criteriosInternos.value.findIndex(c => c.id === criterioId);
   if (index !== -1) {
@@ -203,9 +196,8 @@ const onSave = () => {
   isOpen.value = false;
 };
 
-// ==================== CARGA DE CRITERIOS DE OTROS GRADOS ====================
+// ==================== CARGA DE OTROS GRADOS ====================
 const handleLoadCriteriosAnotherGrado = async (grado: Grado) => {
-
   if (gradosSelected.value.some(g => g.id === grado.id)) {
     showTemporalMessage(`⚠️ El grado ${grado.nombre} ya está cargado`, 2000);
     return;
@@ -226,7 +218,6 @@ const handleLoadCriteriosAnotherGrado = async (grado: Grado) => {
   };
 
   try {
-    // Asume que existe apiCriteriosDeLogroRoutes.getPaginate (ajusta según tu rutas)
     const response = await $apiRest(apiCriteriosDeLogrosRoutes.getPaginate, HttpMethodEnum.POST, listReq);
     const nuevosCriterios = response.list || [];
 
@@ -262,10 +253,10 @@ const handleLoadCriteriosAnotherGrado = async (grado: Grado) => {
 
   <UModal v-model:open="isOpen" fullscreen>
     <template #content>
-      <UCard class="flex flex-col flex-1 overflow-hidden min-w-0">
-        <!-- HEADER: búsqueda y cerrar -->
+      <UCard class="flex flex-col h-screen overflow-hidden">
+        <!-- HEADER -->
         <template #header>
-          <div class="flex gap-2 items-center mt-2">
+          <div class="flex gap-2 items-center">
             <UInput
               v-model="q"
               icon="i-heroicons-magnifying-glass"
@@ -284,7 +275,7 @@ const handleLoadCriteriosAnotherGrado = async (grado: Grado) => {
           </div>
         </template>
 
-        <!-- MENSAJE FLOTANTE DE FEEDBACK -->
+        <!-- MENSAJE FLOTANTE -->
         <Transition
           enter-active-class="transition duration-300 ease-out"
           enter-from-class="transform -translate-y-2 opacity-0"
@@ -302,58 +293,50 @@ const handleLoadCriteriosAnotherGrado = async (grado: Grado) => {
           </div>
         </Transition>
 
-        <!-- CUERPO SCROLLABLE CON GRUPOS -->
-        <div class="flex-1 overflow-y-auto min-h-0 max-h-[60vh] px-2">
+        <!-- CONTENIDO PRINCIPAL (altura dinámica) -->
+        <div class="contenido-scrollable overflow-y-auto p-4 space-y-6">
           <div
             v-if="emptyFiltered"
-            class="flex flex-col justify-center items-center mt-5 text-center"
+            class="flex flex-col justify-center items-center py-10 text-gray-500"
           >
-            <UIcon name="tabler:search" class="w-8 h-8" />
-            <span>No pudimos encontrar ningún criterio de logro.</span>
+            <UIcon name="tabler:search" class="w-10 h-10 mb-2 opacity-20" />
+            <p>No se encontraron criterios de logro.</p>
           </div>
 
           <div v-else v-for="group in filteredGroups" :key="group.gradoId" class="mb-6">
-            <!-- Título del grupo con badge de cantidad -->
+            <!-- Título sticky con badge -->
             <h3
               :id="`grado-group-${group.gradoId}`"
-              class="text-lg font-semibold mb-2 flex items-center gap-2"
+              class="text-sm font-bold uppercase tracking-wider text-gray-500 mb-3 sticky top-0 bg-white dark:bg-gray-900 py-1 z-10"
             >
-              <span>{{ group.title }}</span>
-              <UBadge
-                v-if="group.contents.length > 0"
-                color="primary"
-                variant="soft"
-                size="sm"
-              >
-                {{ group.contents.length }} criterio{{ group.contents.length !== 1 ? 's' : '' }}
+              {{ group.title }}
+              <UBadge v-if="group.contents.length > 0" size="xs" variant="subtle" class="ml-2">
+                {{ group.contents.length }}
               </UBadge>
             </h3>
 
-            <!-- Lista de criterios del grupo -->
-            <ul role="list" class="divide-y divide-gray-200 dark:divide-gray-800">
+            <!-- Lista de criterios -->
+            <ul class="divide-y divide-gray-100 dark:divide-gray-800  border border-primary rounded-lg overflow-hidden">
               <li
                 v-for="criterio in group.filteredContents"
                 :key="criterio.id"
-                class="w-full flex items-center justify-between gap-3 py-3 px-4 sm:px-6 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors duration-150"
+                @click="onToggleCriterio(criterio.id)"
+                class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 hover:bg-gray-50 dark:hover:bg-gray-800/50 cursor-pointer transition-colors"
+                :class="{'bg-primary-50/50 dark:bg-primary-900/10': criterio.checked}"
               >
-                <div
-                  class="flex items-center gap-3 w-full hover:cursor-pointer"
-                  @click="onToggleCriterio(criterio.id)"
-                >
-                  <div class="text-sm min-w-0 flex gap-2 items-center flex-1">
-                    <UCheckbox
-                      :model-value="criterio.checked"
-                      @update:model-value="onToggleCriterio(criterio.id)"
-                      color="primary"
-                      variant="list"
-                    />
-                    <p class="text-gray-900 dark:text-white font-medium">
-                      {{ criterio.descripcion }}
-                    </p>
-                  </div>
+                <div class="flex items-start gap-3 flex-1">
+                  <UCheckbox
+                    :model-value="criterio.checked"
+                    @click.stop
+                    color="primary"
+                    class="mt-1"
+                  />
+                  <p class="text-sm font-medium leading-snug">
+                    {{ criterio.descripcion }}
+                  </p>
                 </div>
 
-                <div class="flex items-center gap-3">
+                <div class="flex items-center gap-2 shrink-0 self-end sm:self-center">
                   <UPopover
                     v-if="criterio.recomendado"
                     :popper="{ placement: 'bottom-start' }"
@@ -370,29 +353,26 @@ const handleLoadCriteriosAnotherGrado = async (grado: Grado) => {
                     </UTooltip>
 
                     <template #content>
-                      <div class="p-4 flex flex-col gap-y-4 max-w-128">
+                      <div class="p-4 flex flex-col gap-y-4 max-w-96">
                         <div v-if="criterio.contenidoRelacionado">
                           <span class="font-medium">
                             Se relaciona al contenido seleccionado:
                           </span>
-                          <ul class="list-disc ml-4">
-                            <li class="my-2">
-                              {{ criterio.contenidoRelacionado.descripcion }}
-                            </li>
+                          <ul class="list-disc ml-4 mt-1">
+                            <li>{{ criterio.contenidoRelacionado.descripcion }}</li>
                           </ul>
                         </div>
 
-                        <USeparator v-if="criterio.contenidoRelacionado && criterio.competenciasEspecificasRelacionadas?.length" color="primary" type="solid" />
+                        <USeparator v-if="criterio.contenidoRelacionado && criterio.competenciasEspecificasRelacionadas?.length" color="primary" />
 
                         <div v-if="criterio.competenciasEspecificasRelacionadas?.length">
                           <span class="font-medium">
                             Se relaciona a las competencias específicas seleccionadas:
                           </span>
-                          <ul class="list-disc ml-4">
+                          <ul class="list-disc ml-4 mt-1">
                             <li
                               v-for="ce in criterio.competenciasEspecificasRelacionadas"
                               :key="ce.id"
-                              class="my-2"
                             >
                               {{ ce.codificacion }} {{ ce.descripcion }}
                             </li>
@@ -407,48 +387,79 @@ const handleLoadCriteriosAnotherGrado = async (grado: Grado) => {
           </div>
         </div>
 
-        <!-- BOTÓN PARA AGREGAR MÁS GRADOS (con indicador de carga) -->
-        <div class="flex justify-center items-center py-4 gap-3">
-          <ButtonSelectGradoPopup
-            :gradosSelected="gradosSelected"
-            :disabled="loadingGrados.size > 0"
-            @onSelect="handleLoadCriteriosAnotherGrado"
-           label="Usar criterios de logros de otro grado."
-          />
-
-          <div
-            v-if="loadingGrados.size > 0"
-            class="flex items-center gap-2 text-sm text-gray-500"
-          >
-            <UIcon name="tabler:loader-2" class="w-4 h-4 animate-spin" />
-            <span>Cargando criterios...</span>
+        <!-- FOOTER UNIFICADO -->
+        <div class="border-t border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 shrink-0">
+          <!-- Sección de cargar más grados -->
+          <div class="p-4 bg-gray-50 dark:bg-gray-800/30">
+            <div class="flex flex-wrap items-center justify-center gap-4">
+              <ButtonSelectGradoPopup
+                :gradosSelected="gradosSelected"
+                :disabled="loadingGrados.size > 0"
+                @onSelect="handleLoadCriteriosAnotherGrado"
+                label="Usar criterios de logro de otro grado"
+              />
+              <div
+                v-if="loadingGrados.size > 0"
+                class="flex items-center gap-2 text-xs text-primary-500"
+              >
+                <UIcon name="tabler:loader-2" class="w-4 h-4 animate-spin" />
+                <span>Cargando criterios...</span>
+              </div>
+            </div>
           </div>
-        </div>
 
-        <!-- FOOTER -->
-        <template #footer>
-          <div class="flex justify-end gap-3 py-4">
+          <!-- Botones de acción -->
+          <div class="p-4 flex flex-col-reverse sm:flex-row justify-end gap-3">
             <UButton
               label="Cancelar"
               color="neutral"
               variant="ghost"
+              class="w-full sm:w-auto"
               @click="isOpen = false"
             />
             <UButton
-              type="button"
               label="Guardar"
               color="primary"
+              class="w-full sm:w-auto px-8"
               :disabled="loadingGrados.size > 0"
               @click="onSave"
             />
           </div>
-        </template>
+        </div>
       </UCard>
     </template>
   </UModal>
 </template>
 
 <style scoped>
+.contenido-scrollable {
+  height: 70svh; /* valor base */
+}
+
+@media (min-height: 1200px) {
+    .contenido-scrollable {
+        height: 70svh;
+    }
+}
+
+@media (min-height: 900px) and (max-height: 1199px) {
+    .contenido-scrollable {
+        height: 70svh;
+    }
+}
+
+@media (min-height: 700px) and (max-height: 899px) {
+    .contenido-scrollable {
+        height: 70svh;
+    }
+}
+
+@media (min-height: 600px) and (max-height: 699px) {
+    .contenido-scrollable {
+        height: 70svh;
+    }
+}
+
 /* Animación para nuevos grupos */
 .mb-6 {
   animation: slideIn 0.3s ease-out;

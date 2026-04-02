@@ -289,229 +289,232 @@ const handleLoadCompetenciasAnotherCicloGrado = async (cicloGrado: CicloGrado) =
 
   <UModal v-model:open="isOpen" fullscreen>
     <template #content>
-      <div class="w-full h-[90vh] flex flex-col">
-        <UCard class="flex flex-col flex-1 overflow-hidden">
-          <!-- ================= HEADER ================= -->
-          <template #header>
-            <div class="flex gap-2 items-center shrink-0">
-              <UInput
-                v-model="q"
-                icon="i-heroicons-magnifying-glass"
-                placeholder="Buscar competencia específica"
-                autofocus
-                class="flex-1"
-              />
-
-              <UPopover :popper="{ placement: 'bottom-start' }" mode="click">
-                <UTooltip>
-                  <UButton
-                    size="sm"
-                    color="primary"
-                    square
-                    variant="outline"
-                  >
-                    <div class="relative flex">
-                      <div
-                        v-if="filters.competenciasGenerales.length > 0"
-                        class="w-2 h-2 rounded-full bg-green-500 absolute -top-1 -right-1"
-                      />
-                      <UIcon name="tabler:filter-cog" class="size-5" />
-                    </div>
-                  </UButton>
-                </UTooltip>
-
-                <template #content>
-                  <div class="p-4 flex flex-col gap-y-4 max-w-64">
-                    <FormsCompetenciasGenerales
-                      v-model="filters.competenciasGenerales"
-                      :competenciasGenerales="props.competenciasGenerales"
-                    />
-                  </div>
-                </template>
-              </UPopover>
-
-              <UButton
-                icon="tabler:x"
-                size="sm"
-                color="primary"
-                square
-                variant="solid"
-                @click="isOpen = false"
-              />
-            </div>
-          </template>
-
-          <!-- MENSAJE FLOTANTE DE FEEDBACK -->
-          <Transition
-            enter-active-class="transition duration-300 ease-out"
-            enter-from-class="transform -translate-y-2 opacity-0"
-            enter-to-class="transform translate-y-0 opacity-100"
-            leave-active-class="transition duration-200 ease-in"
-            leave-from-class="transform translate-y-0 opacity-100"
-            leave-to-class="transform -translate-y-2 opacity-0"
-          >
-            <div
-              v-if="showSuccessMessage"
-              class="absolute top-20 left-1/2 transform -translate-x-1/2 z-50 bg-primary-500 text-white px-4 py-2 rounded-lg shadow-lg flex items-center gap-2"
-            >
-              <UIcon name="tabler:info-circle" class="w-5 h-5" />
-              <span>{{ successMessage }}</span>
-            </div>
-          </Transition>
-
-          <!-- ================= BODY CON GRUPOS ================= -->
-          <div class="flex-1 overflow-y-auto px-4 py-2 max-h-[60vh]">
-            <div
-              v-if="emptyFiltered"
-              class="flex flex-col justify-center items-center mt-10 text-center"
-            >
-              <UIcon name="tabler:search" class="w-8 h-8" />
-              <span>No pudimos encontrar ninguna competencia específica.</span>
-            </div>
-
-            <div v-else v-for="group in filteredGroups" :key="group.cicloGradoId" class="mb-6">
-              <!-- Título del grupo con badge de cantidad -->
-              <h3
-                :id="`ciclGrado-group-${group.cicloGradoId}`"
-                class="text-lg font-semibold mb-2 flex items-center gap-2"
-              >
-                <span>{{ group.title }}</span>
-                <UBadge
-                  v-if="group.contents.length > 0"
-                  color="primary"
-                  variant="soft"
-                  size="sm"
-                >
-                  {{ group.contents.length }} competencia{{ group.contents.length !== 1 ? 's' : '' }}
-                </UBadge>
-              </h3>
-
-              <!-- Lista de competencias del grupo -->
-              <ul role="list" class="divide-y divide-gray-200 dark:divide-gray-800">
-                <li
-                  v-for="item in group.filteredContents"
-                  :key="item.id"
-                  @click="onToggleCompetenciaEspecifica(item)"
-                  class="w-full flex justify-between gap-3 py-3 px-2 sm:px-4 hover:cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors duration-150"
-                >
-                  <div class="flex items-center gap-3 w-full">
-                    <div class="text-sm min-w-0 flex gap-2 items-center">
-                      <UCheckbox
-                        size="xl"
-                        :model-value="item.checked"
-                        @update:model-value="onToggleCompetenciaEspecifica(item)"
-                      />
-                      <p class="text-gray-900 dark:text-white font-medium break-words">
-                        {{ item.codificacion }} {{ item.descripcion }}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div class="flex items-start gap-3 shrink-0">
-                    <UPopover
-                      v-if="item.recomendado"
-                      :popper="{ placement: 'bottom-start' }"
-                      mode="hover"
-                    >
-                      <UTooltip>
-                        <UButton
-                          label="Recomendado"
-                          icon="tabler:butterfly-filled"
-                          :color="getColorBadgeComponente(props.color)"
-                          variant="outline"
-                          size="sm"
-                        />
-                      </UTooltip>
-
-                      <template #content>
-                        <div class="p-4 flex flex-col gap-y-4 max-w-64">
-                          <div v-if="item.contenidoRelacionado">
-                            <span class="font-medium">
-                              Se relaciona al contenido seleccionado:
-                            </span>
-                            <ul class="list-disc ml-4">
-                              <li>{{ item.contenidoRelacionado.descripcion }}</li>
-                            </ul>
-                          </div>
-
-                          <div v-if="item.competenciasGeneralesRelacionadas?.length">
-                            <USeparator v-if="item.contenidoRelacionado" color="primary" />
-                            <span class="font-medium">
-                              Competencias generales relacionadas:
-                            </span>
-                            <ul class="list-disc ml-4">
-                              <li
-                                v-for="cg in item.competenciasGeneralesRelacionadas"
-                                :key="cg.id"
-                              >
-                                {{ cg.nombre }}
-                              </li>
-                            </ul>
-                          </div>
-
-                          <div v-if="item.criteriosDeLogrosRelacionados?.length">
-                            <USeparator
-                              v-if="item.contenidoRelacionado || item.competenciasGeneralesRelacionadas?.length"
-                              color="primary"
-                            />
-                            <span class="font-medium">
-                              Criterios de logro relacionados:
-                            </span>
-                            <ul class="list-disc ml-4">
-                              <li
-                                v-for="cdl in item.criteriosDeLogrosRelacionados"
-                                :key="cdl.id"
-                              >
-                                {{ cdl.descripcion }}
-                              </li>
-                            </ul>
-                          </div>
-                        </div>
-                      </template>
-                    </UPopover>
-                  </div>
-                </li>
-              </ul>
-            </div>
-          </div>
-
-          <!-- BOTÓN PARA AGREGAR MÁS TRAMOS (con indicador de carga) -->
-          <div class="flex justify-center items-center py-4 gap-3">
-            <ButtonSelectCicloGradoPopup
-              :ciclosGradosSelected="ciclosGradosSelected"
-              :disabled="loadingCiclosGrados.size > 0"
-              @onSelect="handleLoadCompetenciasAnotherCicloGrado"
-              label="Usar competencias específicas de otros tramos"
+      <UCard class="flex flex-col h-screen overflow-hidden">
+        <!-- ================= HEADER ================= -->
+        <template #header>
+          <div class="flex gap-2 items-center">
+            <UInput
+              v-model="q"
+              icon="i-heroicons-magnifying-glass"
+              placeholder="Buscar competencia específica"
+              autofocus
+              class="flex-1"
             />
 
-            <div
-              v-if="loadingCiclosGrados.size > 0"
-              class="flex items-center gap-2 text-sm text-gray-500"
+            <UPopover :popper="{ placement: 'bottom-start' }" mode="click">
+              <UTooltip>
+                <UButton
+                  size="sm"
+                  color="primary"
+                  square
+                  variant="outline"
+                >
+                  <div class="relative flex">
+                    <div
+                      v-if="filters.competenciasGenerales.length > 0"
+                      class="w-2 h-2 rounded-full bg-green-500 absolute -top-1 -right-1"
+                    />
+                    <UIcon name="tabler:filter-cog" class="size-5" />
+                  </div>
+                </UButton>
+              </UTooltip>
+
+              <template #content>
+                <div class="p-4 flex flex-col gap-y-4 max-w-64">
+                  <FormsCompetenciasGenerales
+                    v-model="filters.competenciasGenerales"
+                    :competenciasGenerales="props.competenciasGenerales"
+                  />
+                </div>
+              </template>
+            </UPopover>
+
+            <UButton
+              icon="tabler:x"
+              size="sm"
+              color="primary"
+              square
+              variant="solid"
+              @click="isOpen = false"
+            />
+          </div>
+        </template>
+
+        <!-- MENSAJE FLOTANTE DE FEEDBACK -->
+        <Transition
+          enter-active-class="transition duration-300 ease-out"
+          enter-from-class="transform -translate-y-2 opacity-0"
+          enter-to-class="transform translate-y-0 opacity-100"
+          leave-active-class="transition duration-200 ease-in"
+          leave-from-class="transform translate-y-0 opacity-100"
+          leave-to-class="transform -translate-y-2 opacity-0"
+        >
+          <div
+            v-if="showSuccessMessage"
+            class="absolute top-20 left-1/2 transform -translate-x-1/2 z-50 bg-primary-500 text-white px-4 py-2 rounded-lg shadow-lg flex items-center gap-2"
+          >
+            <UIcon name="tabler:info-circle" class="w-5 h-5" />
+            <span>{{ successMessage }}</span>
+          </div>
+        </Transition>
+
+        <!-- ================= BODY CON GRUPOS (altura dinámica por media queries) ================= -->
+        <div class="contenido-scrollable overflow-y-auto p-4 space-y-6">
+          <div
+            v-if="emptyFiltered"
+            class="flex flex-col justify-center items-center mt-10 text-center"
+          >
+            <UIcon name="tabler:search" class="w-8 h-8" />
+            <span>No pudimos encontrar ninguna competencia específica.</span>
+          </div>
+
+          <div v-else v-for="group in filteredGroups" :key="group.cicloGradoId" class="mb-6">
+            <!-- Título del grupo con badge de cantidad -->
+            <h3
+              :id="`ciclGrado-group-${group.cicloGradoId}`"
+              class="text-lg font-semibold mb-2 flex items-center gap-2 sticky top-0 bg-white dark:bg-gray-900 py-1 z-10"
             >
-              <UIcon name="tabler:loader-2" class="w-4 h-4 animate-spin" />
-              <span>Cargando competencias...</span>
+              <span>{{ group.title }}</span>
+              <UBadge
+                v-if="group.contents.length > 0"
+                color="primary"
+                variant="soft"
+                size="sm"
+              >
+                {{ group.contents.length }} competencia{{ group.contents.length !== 1 ? 's' : '' }}
+              </UBadge>
+            </h3>
+
+            <!-- Lista de competencias del grupo -->
+            <ul role="list" class="divide-y divide-gray-200 dark:divide-gray-800 border border-primary rounded-lg overflow-hidden">
+              <li
+                v-for="item in group.filteredContents"
+                :key="item.id"
+                @click="onToggleCompetenciaEspecifica(item)"
+                class="w-full flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 hover:cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors duration-150"
+                :class="{'bg-primary-50/50 dark:bg-primary-900/10': item.checked}"
+              >
+                <div class="flex items-start gap-3 flex-1">
+                  <UCheckbox
+                    size="xl"
+                    :model-value="item.checked"
+                    @update:model-value="onToggleCompetenciaEspecifica(item)"
+                    class="mt-1"
+                  />
+                  <p class="text-sm font-medium leading-snug text-gray-900 dark:text-white">
+                    {{ item.codificacion }} {{ item.descripcion }}
+                  </p>
+                </div>
+
+                <div class="flex items-center gap-2 shrink-0 self-end sm:self-center">
+                  <UPopover
+                    v-if="item.recomendado"
+                    :popper="{ placement: 'bottom-start' }"
+                    mode="hover"
+                  >
+                    <UTooltip>
+                      <UButton
+                        label="Recomendado"
+                        icon="tabler:butterfly-filled"
+                        :color="getColorBadgeComponente(props.color)"
+                        variant="outline"
+                        size="sm"
+                      />
+                    </UTooltip>
+
+                    <template #content>
+                      <div class="p-4 flex flex-col gap-y-4 max-w-64">
+                        <div v-if="item.contenidoRelacionado">
+                          <span class="font-medium">
+                            Se relaciona al contenido seleccionado:
+                          </span>
+                          <ul class="list-disc ml-4">
+                            <li>{{ item.contenidoRelacionado.descripcion }}</li>
+                          </ul>
+                        </div>
+
+                        <div v-if="item.competenciasGeneralesRelacionadas?.length">
+                          <USeparator v-if="item.contenidoRelacionado" color="primary" />
+                          <span class="font-medium">
+                            Competencias generales relacionadas:
+                          </span>
+                          <ul class="list-disc ml-4">
+                            <li
+                              v-for="cg in item.competenciasGeneralesRelacionadas"
+                              :key="cg.id"
+                            >
+                              {{ cg.nombre }}
+                            </li>
+                          </ul>
+                        </div>
+
+                        <div v-if="item.criteriosDeLogrosRelacionados?.length">
+                          <USeparator
+                            v-if="item.contenidoRelacionado || item.competenciasGeneralesRelacionadas?.length"
+                            color="primary"
+                          />
+                          <span class="font-medium">
+                            Criterios de logro relacionados:
+                          </span>
+                          <ul class="list-disc ml-4">
+                            <li
+                              v-for="cdl in item.criteriosDeLogrosRelacionados"
+                              :key="cdl.id"
+                            >
+                              {{ cdl.descripcion }}
+                            </li>
+                          </ul>
+                        </div>
+                      </div>
+                    </template>
+                  </UPopover>
+                </div>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- ================= FOOTER UNIFICADO (cargar más tramos + botones) ================= -->
+        <div class="border-t border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 shrink-0">
+          <!-- Sección de cargar más tramos -->
+          <div class="p-4 bg-gray-50 dark:bg-gray-800/30">
+            <div class="flex flex-wrap items-center justify-center gap-4">
+              <ButtonSelectCicloGradoPopup
+                :ciclosGradosSelected="ciclosGradosSelected"
+                :disabled="loadingCiclosGrados.size > 0"
+                @onSelect="handleLoadCompetenciasAnotherCicloGrado"
+                label="Usar competencias específicas de otros tramos"
+              />
+
+              <div
+                v-if="loadingCiclosGrados.size > 0"
+                class="flex items-center gap-2 text-xs text-primary-500"
+              >
+                <UIcon name="tabler:loader-2" class="w-4 h-4 animate-spin" />
+                <span>Cargando competencias...</span>
+              </div>
             </div>
           </div>
 
-          <!-- ================= FOOTER ================= -->
-          <template #footer>
-            <div class="flex justify-end gap-3 pb-2">
-              <UButton
-                label="Cancelar"
-                color="neutral"
-                variant="ghost"
-                @click="isOpen = false"
-              />
-              <UButton
-                label="Guardar"
-                color="primary"
-                :disabled="loadingCiclosGrados.size > 0"
-                @click="onSave"
-              />
-            </div>
-          </template>
-        </UCard>
-      </div>
+          <!-- Botones de acción -->
+          <div class="p-4 flex flex-col-reverse sm:flex-row justify-end gap-3">
+            <UButton
+              label="Cancelar"
+              color="neutral"
+              variant="ghost"
+              class="w-full sm:w-auto"
+              @click="isOpen = false"
+            />
+            <UButton
+              label="Guardar"
+              color="primary"
+              class="w-full sm:w-auto px-8"
+              :disabled="loadingCiclosGrados.size > 0"
+              @click="onSave"
+            />
+          </div>
+        </div>
+      </UCard>
     </template>
   </UModal>
 </template>
@@ -531,5 +534,40 @@ const handleLoadCompetenciasAnotherCicloGrado = async (cicloGrado: CicloGrado) =
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+/* ================= MEDIA QUERIES PARA ALTURA DINÁMICA ================= */
+.contenido-scrollable {
+  height: 70svh; /* valor base */
+}
+
+@media (min-height: 1200px) {
+    .contenido-scrollable {
+        height: 70svh;
+    }
+}
+
+@media (min-height: 900px) and (max-height: 1199px) {
+    .contenido-scrollable {
+        height: 70svh;
+    }
+}
+
+@media (min-height: 700px) and (max-height: 899px) {
+    .contenido-scrollable {
+        height: 65svh;
+    }
+}
+
+@media (min-height: 600px) and (max-height: 699px) {
+    .contenido-scrollable {
+        height: 65svh;
+    }
+}
+
+@media (max-height: 599px) {
+    .contenido-scrollable {
+        height: 50svh;
+    }
 }
 </style>

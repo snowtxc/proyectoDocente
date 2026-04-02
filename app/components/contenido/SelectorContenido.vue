@@ -50,7 +50,6 @@ const showTemporalMessage = (message: string, duration = 3000) => {
     }, duration);
 };
 
-// Scroll automático al nuevo grupo
 const scrollToNewGroup = (gradoId: number) => {
     setTimeout(() => {
         const element = document.getElementById(`grado-group-${gradoId}`);
@@ -60,7 +59,6 @@ const scrollToNewGroup = (gradoId: number) => {
     }, 100);
 };
 
-// Función que enriquece un array de Contenido con los campos calculados
 function enrichContents(contents: Contenido[]): ContenidoItemSelector[] {
     return contents.map(contenido => {
         let recomendado = false;
@@ -238,191 +236,98 @@ watch(
 
     <UModal v-model:open="isOpen" fullscreen>
         <template #content>
-            <UCard class="min-w-1/2 flex flex-col max-h-[90vh]">
-                <!-- HEADER: búsqueda y botón cerrar -->
+          
+            <UCard 
+                class="flex flex-col h-screen overflow-hidden"
+            >
                 <template #header>
-                    <div class="flex gap-2 items-center mt-2">
+                    <div class="flex gap-2 items-center">
                         <UInput
                             v-model="q"
                             icon="i-heroicons-magnifying-glass"
-                            placeholder="Buscar Contenido"
+                            placeholder="Buscar Contenido..."
                             autofocus
                             class="flex-1"
                         />
                         <UButton
                             icon="tabler:x"
                             size="sm"
-                            color="primary"
-                            square
-                            variant="solid"
+                            color="neutral"
+                            variant="ghost"
                             @click="isOpen = false"
                         />
                     </div>
                 </template>
 
-                <!-- MENSAJE FLOTANTE DE FEEDBACK -->
-                <Transition
-                    enter-active-class="transition duration-300 ease-out"
-                    enter-from-class="transform -translate-y-2 opacity-0"
-                    enter-to-class="transform translate-y-0 opacity-100"
-                    leave-active-class="transition duration-200 ease-in"
-                    leave-from-class="transform translate-y-0 opacity-100"
-                    leave-to-class="transform -translate-y-2 opacity-0"
-                >
-                    <div
-                        v-if="showSuccessMessage"
-                        class="absolute top-20 left-1/2 transform -translate-x-1/2 z-50 bg-primary-500 text-white px-4 py-2 rounded-lg shadow-lg flex items-center gap-2"
-                    >
-                        <UIcon name="tabler:info-circle" class="w-5 h-5" />
-                        <span>{{ successMessage }}</span>
-                    </div>
-                </Transition>
-
-                <!-- CUERPO SCROLLABLE CON GRUPOS -->
-<div class="flex-1 overflow-y-auto max-h-[60vh] px-2">
-    <div
-        v-if="emptyFiltered"
-        class="flex flex-col justify-center items-center mt-5 text-center"
-    >
-        <UIcon name="tabler:search" class="w-8 h-8" />
-        <span>No pudimos encontrar ningún contenido.</span>
-    </div>
-
-    <div v-else v-for="(group, idx) in filteredGroups" :key="idx" class="mb-6">
-        <!-- Título del grupo con badge de cantidad -->
-        <h3 
-            :id="`grado-group-${group.gradoId}`"
-            class="text-lg font-semibold mb-2 flex items-center gap-2"
-        >
-            <span>{{ group.title }}</span>
-            <UBadge 
-                v-if="group.contents.length > 0"
-                color="primary" 
-                variant="soft"
-                size="sm"
-            >
-                {{ group.contents.length }} contenido{{ group.contents.length !== 1 ? 's' : '' }}
-            </UBadge>
-        </h3>
-
-        <!-- Lista de contenidos del grupo -->
-        <ul role="list" class="divide-y divide-gray-200 dark:divide-gray-800">
-            <li
-                v-for="contenido in group.filteredContents"
-                :key="contenido.id"
-                class="w-full flex items-center justify-between gap-3 py-3 px-4 sm:px-6 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors duration-150"
-            >
-                <div
-                    class="flex items-center gap-3 w-full hover:cursor-pointer"
-                    @click="handleCheckboxChange(contenido.id)"
-                >
-                    <div class="text-sm min-w-0 flex gap-2 items-center flex-1">
-                        <UCheckbox
-                            :model-value="contenidoIdSelected === contenido.id"
-                            @update:model-value="handleCheckboxChange(contenido.id)"
-                            color="primary"
-                            variant="list"
-                        />
-                        <p class="text-gray-900 dark:text-white font-medium">
-                            {{ contenido.descripcion }}
-                        </p>
-                    </div>
-                </div>
-
-                <div class="flex items-center gap-3">
-                    <!-- Contenido estructurante con diseño mejorado -->
-                    <div 
-                        class="flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-primary-50 to-primary-100 dark:from-primary-900/30 dark:to-primary-800/30 rounded-lg border border-primary-200 dark:border-primary-800"
-                    >
-                        <UIcon 
-                            name="tabler:building-arch" 
-                            class="w-4 h-4 text-primary-600 dark:text-primary-400"
-                        />
-                        <span class="text-sm font-medium text-primary-700 dark:text-primary-300">
-                            {{ contenido.contenido_estructurante.titulo }}
-                        </span>
+                <div class="flex-1 overflow-y-auto p-4 space-y-6 contenido-scrollable">
+                    <div v-if="emptyFiltered" class="flex flex-col justify-center items-center py-10 text-gray-500">
+                        <UIcon name="tabler:search" class="w-10 h-10 mb-2 opacity-20" />
+                        <p>No se encontraron contenidos.</p>
                     </div>
 
-                    <UPopover
-                        v-if="contenido.recomendado"
-                        :popper="{ placement: 'bottom-start' }"
-                        mode="hover"
-                    >
-                        <UTooltip>
-                            <UButton
-                                label="Recomendado"
-                                icon="tabler:butterfly-filled"
-                                :color="getColorBadgeComponente(props.color)"
-                                variant="outline"
-                                size="sm"
-                                class="ml-1"
-                            />
-                        </UTooltip>
+                    <div v-else v-for="(group, idx) in filteredGroups" :key="idx">
+                        <h3 :id="`grado-group-${group.gradoId}`" class="text-sm font-bold uppercase tracking-wider text-gray-500 mb-3 sticky top-0 bg-white dark:bg-gray-900 py-1 z-10">
+                            {{ group.title }}
+                            <UBadge v-if="group.contents.length > 0" size="xs" variant="subtle" class="ml-2">
+                                {{ group.contents.length }}
+                            </UBadge>
+                        </h3>
 
-                        <template #content>
-                            <div class="p-4 flex flex-col gap-y-4 max-w-128">
-                                <div v-if="contenido.competenciasEspecificasRelacionadas?.length">
-                                    <span class="font-medium">
-                                        Se relaciona a las competencias específicas seleccionadas:
-                                    </span>
-                                    <ul class="list-disc ml-4">
-                                        <li
-                                            v-for="ce in contenido.competenciasEspecificasRelacionadas"
-                                            :key="ce.id"
-                                            class="my-1"
-                                        >
-                                            {{ ce.codificacion }} {{ ce.descripcion }}
-                                        </li>
-                                    </ul>
+                        <ul class="divide-y divide-gray-100 dark:divide-gray-800 border border-primary rounded-lg overflow-hidden">
+                            <li
+                                v-for="contenido in group.filteredContents"
+                                :key="contenido.id"
+                                @click="handleCheckboxChange(contenido.id)"
+                                class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 hover:bg-gray-50 dark:hover:bg-gray-800/50 cursor-pointer transition-colors"
+                                :class="{'bg-primary-50/50 dark:bg-primary-900/10': contenidoIdSelected === contenido.id}"
+                            >
+                                <div class="flex items-start gap-3 flex-1">
+                                    <UCheckbox
+                                        :model-value="contenidoIdSelected === contenido.id"
+                                        @click.stop="handleCheckboxChange(contenido.id)"
+                                        color="primary"
+                                        class="mt-1"
+                                    />
+                                    <p class="text-sm font-medium leading-snug">
+                                        {{ contenido.descripcion }}
+                                    </p>
                                 </div>
 
-                                <USeparator color="primary" type="solid" />
+                                <div class="flex items-center gap-2 shrink-0 self-end sm:self-center">
+                                    <div class="text-[10px] font-bold px-2 py-0.5 rounded bg-gray-100 dark:bg-gray-800 text-gray-500 uppercase">
+                                        {{ contenido.contenido_estructurante.titulo }}
+                                    </div>
 
-                                <div v-if="contenido.criteriosDeLogrosRelacionados?.length">
-                                    <span class="font-medium">
-                                        Se relaciona a los criterios de logros seleccionados:
-                                    </span>
-                                    <ul class="list-disc ml-4">
-                                        <li
-                                            v-for="cdl in contenido.criteriosDeLogrosRelacionados"
-                                            :key="cdl.id"
-                                            class="my-1"
-                                        >
-                                            {{ cdl.descripcion }}
-                                        </li>
-                                    </ul>
+                                    <UPopover v-if="contenido.recomendado" mode="hover">
+                                        <UIcon name="tabler:butterfly-filled" class="text-orange-500 w-5 h-5" />
+                                        <template #content>
+                                            <div class="p-3 text-xs max-w-xs">Contenido recomendado</div>
+                                        </template>
+                                    </UPopover>
                                 </div>
-                            </div>
-                        </template>
-                    </UPopover>
-                </div>
-            </li>
-        </ul>
-    </div>
-</div>
-
-                <!-- BOTÓN PARA AGREGAR MÁS GRADOS (con indicador de carga) -->
-                <div class="flex justify-center items-center py-4 gap-3">
-                    <ButtonSelectGradoPopup
-                        :gradosSelected="gradosSelected"
-                        :disabled="loadingGrados.size > 0"
-                        @onSelect="handleLoadContenidosAnotherGrado"
-                        label="Usar contenido de otro grado."
-                    />
-                    
-                    <!-- Indicador de carga mientras se procesa -->
-                    <div 
-                        v-if="loadingGrados.size > 0"
-                        class="flex items-center gap-2 text-sm text-gray-500"
-                    >
-                        <UIcon name="tabler:loader-2" class="w-4 h-4 animate-spin" />
-                        <span>Cargando contenidos...</span>
+                            </li>
+                        </ul>
                     </div>
                 </div>
 
-                <!-- FOOTER -->
+                <!-- SECCIÓN DE CARGAR MÁS (Encima del footer) -->
+                <div class="p-4 bg-gray-50 dark:bg-gray-800/30 border-t border-gray-100 dark:border-gray-800 shrink-0">
+                    <div class="flex flex-wrap items-center justify-center gap-4">
+                        <ButtonSelectGradoPopup
+                            :gradosSelected="gradosSelected"
+                            :disabled="loadingGrados.size > 0"
+                            @onSelect="handleLoadContenidosAnotherGrado"
+                            label="Usar otro grado"
+                        />
+                        <div v-if="loadingGrados.size > 0" class="flex items-center gap-2 text-xs text-primary-500">
+                            <UIcon name="tabler:loader-2" class="animate-spin w-4 h-4" />
+                            Cargando contenidos...
+                        </div>
+                    </div>
+                </div>
+
                 <template #footer>
-                    <div class="flex justify-end gap-3 py-4">
+                    <div class="flex justify-end gap-3 w-full">
                         <UButton
                             label="Cancelar"
                             color="neutral"
@@ -430,9 +335,10 @@ watch(
                             @click="isOpen = false"
                         />
                         <UButton
-                            type="button"
                             label="Guardar"
                             color="primary"
+                            icon="tabler:check"
+                            class="px-8"
                             :disabled="contenidoIdSelected == null || loadingGrados.size > 0"
                             @click="onSelectContenido"
                         />
@@ -444,7 +350,6 @@ watch(
 </template>
 
 <style scoped>
-/* Animación para nuevos grupos */
 .mb-6 {
     animation: slideIn 0.3s ease-out;
 }
@@ -459,4 +364,35 @@ watch(
         transform: translateY(0);
     }
 }
+
+@media (min-height: 1200px) {
+    .contenido-scrollable {
+        height: 70svh;
+    }
+}
+
+@media (min-height: 900px) and (max-height: 1199px) {
+    .contenido-scrollable {
+        height: 70svh;
+    }
+}
+
+@media (min-height: 700px) and (max-height: 899px) {
+    .contenido-scrollable {
+        height: 65svh;
+    }
+}
+
+@media (min-height: 600px) and (max-height: 699px) {
+    .contenido-scrollable {
+        height: 65svh;
+    }
+}
+
+@media (max-height: 599px) {
+    .contenido-scrollable {
+        height: 50svh;
+    }
+}
+
 </style>
