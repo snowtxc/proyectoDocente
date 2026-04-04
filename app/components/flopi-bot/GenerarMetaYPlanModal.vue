@@ -30,13 +30,13 @@ const props = withDefaults(defineProps<Props>(), {
   disabled: false,
 });
 
+const attachedFile = ref<{ name: string, data: string, type: string } | null>(null);
 const emit = defineEmits(['update:meta', 'update:plan', 'use-all']);
 
 const isOpen = ref(false);
 const loading = ref(false);
 const userContext = ref('');
 
-// --- ESTADOS PARA REDEFINICIÓN INDIVIDUAL ---
 const redefiningType = ref<'meta' | 'plan' | null>(null);
 const redefineContext = ref('');
 const isRedefining = ref(false);
@@ -59,7 +59,38 @@ const handleGeneration = () => {
   isOpen.value = true;
 };
 
-// --- LÓGICA DE GENERACIÓN PRINCIPAL ---
+const handleFileUpload = async (event: Event) => {
+  const target = event.target as HTMLInputElement;
+  const file = target.files?.[0];
+
+  if (!file) return;
+
+  if (file.size > 5 * 1024 * 1024) {
+    toast.error({ title: "Archivo demasiado grande", message: "El máximo es 5MB", color: "red" });
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = () => {
+    attachedFile.value = {
+      name: file.name,
+      type: file.type,
+      data: (reader.result as string).split(',')[1] 
+    };
+    toast.success({ title: "Archivo cargado", message: file.name, color: "green" });
+  };
+  
+  reader.onerror = () => {
+    toast.error({ title: "Error", message: "No se pudo leer el archivo", color: "red" });
+  };
+
+  reader.readAsDataURL(file);
+};
+
+const removeFile = () => {
+  attachedFile.value = null;
+};
+
 const generatePlan = async () => {
   if (!canGenerate.value) return;
   
@@ -78,12 +109,15 @@ const generatePlan = async () => {
         unidad_curricular: props.planificacion.unidadCurricular.nombre,
         contenido: props.planificacion.contenido.descripcion,
         competencias_generales: props.planificacion.competenciasGenerales.map(cg => cg.nombre),
-        competencias_especificas: props.planificacion.competenciasEspecificas.map(ce =>  { 
-          return  `${ce.codificacion} ${ce.descripcion}`;
-        }),
+        competencias_especificas: props.planificacion.competenciasEspecificas.map(ce => `${ce.codificacion} ${ce.descripcion}`),
         criterios_logro: props.planificacion.criteriosLogro.map(cl => cl.descripcion)
       },
-      contexto_adicional: userContext.value
+      contexto_adicional: userContext.value,
+      archivo_adjunto: attachedFile.value ? {
+        contenido: attachedFile.value.data,
+        mimetype: attachedFile.value.type,
+        nombre: attachedFile.value.name
+      } : null
     }
 
     const result: GeneracionPlanResponse = await $apiRest<GeneracionPlanResponse>(apiFlopiBot.generarPropuestaPedagogica, HttpMethodEnum.POST, body);
@@ -98,7 +132,6 @@ const generatePlan = async () => {
   }
 };
 
-// --- LÓGICA PARA REDEFINIR RESULTADOS (FEEDBACK ESPECÍFICO) ---
 const openRedefineModal = (type: 'meta' | 'plan') => {
   redefiningType.value = type;
   redefineContext.value = '';
@@ -125,7 +158,6 @@ const redefineResult = async () => {
         competencias_especificas: props.planificacion.competenciasEspecificas.map(ce => `${ce.codificacion} ${ce.descripcion}`),
         criterios_logro: props.planificacion.criteriosLogro.map(cl => cl.descripcion)
       },
-      // Enviamos el contexto original + el resultado actual + la instrucción de mejora
       contexto_adicional: `
         CONTEXTO ORIGINAL: ${userContext.value}
         RESULTADO ACTUAL A MEJORAR: ${aiResults.value[type]}
@@ -169,7 +201,6 @@ const useBothResults = () => {
   toast.success({ title: "Meta y Plan aplicados correctamente",  color: "green", icon: "i-lucide-check-circle" });
   isOpen.value = false;
 };
-
 </script>
 
 <template>
@@ -207,7 +238,6 @@ const useBothResults = () => {
         </template>
 
         <div class="mx-auto w-full space-y-8 p-4">
-          
           <section class="bg-primary-50 dark:bg-primary-950/20 p-5 rounded-2xl border border-primary-100 dark:border-primary-900/50">
             <p class="text-sm font-bold text-primary mb-4 uppercase tracking-wider flex items-center gap-2">
               <UIcon name="i-lucide-settings-2" />
@@ -226,16 +256,13 @@ const useBothResults = () => {
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="space-y-1">
-                <span class="text-[10px] uppercase font-black text-gray-400 tracking-widest">
-                  Espacio y Unidad
-                </span>
+              <div class="space-y-1">
+                <span class="text-[10px] uppercase font-black text-gray-400 tracking-widest">Espacio y Unidad</span>
                 <div class="flex items-center">
                   <span 
                     v-if="props.planificacion.espacio" 
                     :style="{ backgroundColor: props.planificacion.espacio.rgbColor }"
                     class="inline-block h-3 w-3 flex-shrink-0 rounded-full mr-2 shadow-sm border border-black/5" 
-                    aria-hidden="true" 
                   />
                   <p class="text-sm text-gray-700 dark:text-gray-300">
                     {{ props.planificacion.espacio.nombre }} / {{ props.planificacion.unidadCurricular.nombre }}
@@ -256,15 +283,8 @@ const useBothResults = () => {
                     :key="compGen.id"
                     class="flex items-center gap-3 p-2 rounded-lg bg-white/50 dark:bg-gray-900/50 border border-gray-100 dark:border-gray-700"
                   >
-                    <p class="text-xs text-gray-900 dark:text-white font-medium truncate flex-1">
-                      {{ compGen.nombre }}
-                    </p>
-                    <UAvatar
-                      v-if="compGen.url_image"
-                      :src="compGen.url_image"
-                      size="xs"
-                      class="flex-shrink-0"
-                    />
+                    <p class="text-xs text-gray-900 dark:text-white font-medium truncate flex-1">{{ compGen.nombre }}</p>
+                    <UAvatar v-if="compGen.url_image" :src="compGen.url_image" size="xs" class="flex-shrink-0" />
                   </div>
                 </div>
               </div>
@@ -291,12 +311,8 @@ const useBothResults = () => {
 
           <section class="space-y-4">
             <div class="flex flex-col gap-1 border-l-4 border-primary-500 pl-4">
-              <p class="font-bold text-gray-800 dark:text-gray-100">
-                Información adicional para personalizar la propuesta
-              </p>
-              <p class="text-xs text-gray-500 dark:text-gray-400">
-                Detallá intereses del grupo, materiales disponibles o dinámicas de aula específicas.
-              </p>
+              <p class="font-bold text-gray-800 dark:text-gray-100">Información adicional para personalizar la propuesta</p>
+              <p class="text-xs text-gray-500 dark:text-gray-400">Detallá intereses del grupo, materiales disponibles o dinámicas de aula específicas.</p>
             </div>
 
             <UTextarea
@@ -310,8 +326,46 @@ const useBothResults = () => {
               color="primary"
             />
 
+            <section class="bg-blue-50 dark:bg-blue-900/20 p-5 rounded-2xl border border-primary/20 mt-4">
+              <div class="flex items-center justify-between mb-3">
+                <p class="text-xs font-bold text-primary uppercase flex items-center gap-2">
+                  <UIcon name="i-lucide-file-up" />
+                  Materiales de apoyo (PDF o Imágenes)
+                </p>
+                <UButton
+                  v-if="attachedFile"
+                  icon="i-lucide-trash-2"
+                  color="error"
+                  variant="ghost"
+                  size="xs"
+                  label="Quitar archivo"
+                  @click="removeFile"
+                />
+              </div>
+
+              <UInput 
+                v-if="!attachedFile"
+                type="file" 
+                size="sm" 
+                color="neutral" 
+                icon="i-lucide-paperclip"
+                accept=".pdf, .jpg, .png"
+                @change="handleFileUpload"
+              />
+
+              <div v-else class="flex items-center gap-3 p-3 bg-white dark:bg-gray-900 rounded-xl border border-primary/30 shadow-sm">
+                <div class="bg-primary/10 p-2 rounded-lg">
+                  <UIcon :name="attachedFile.type.includes('pdf') ? 'i-lucide-file-text' : 'i-lucide-image'" class="w-5 h-5 text-primary" />
+                </div>
+                <div class="flex-1 min-w-0">
+                  <p class="text-sm font-medium text-gray-900 dark:text-white truncate">{{ attachedFile.name }}</p>
+                  <p class="text-[10px] text-gray-500 uppercase">Archivo cargado exitosamente</p>
+                </div>
+                <UIcon name="i-lucide-check-circle-2" class="text-green-500 w-5 h-5" />
+              </div>
+            </section>
+
             <div class="flex justify-end gap-3">
-              
               <UButton 
                 label="Generar con Flopi bot" 
                 icon="i-lucide-wand-2" 
@@ -328,13 +382,10 @@ const useBothResults = () => {
 
           <div v-if="loading" class="flex flex-col items-center justify-center py-12">
             <LottieAnimation :animationData="flyingBeeAnimation" class="w-1/2 max-w-[280px] m-auto" />
-            <p class="text-center font-medium italic animate-pulse mt-4 text-primary">
-              Flopi bot está procesando el contexto del grupo...
-            </p>
+            <p class="text-center font-medium italic animate-pulse mt-4 text-primary">Flopi bot está procesando el contexto del grupo...</p>
           </div>
 
           <div v-else-if="aiResults.meta || aiResults.plan" class="space-y-6 pb-10">
-            
             <div v-if="aiResults.meta && aiResults.plan" class="flex justify-center">
               <UButton 
                 label="Usar Meta y Plan en mi planificación" 
@@ -395,30 +446,14 @@ const useBothResults = () => {
             <h3 class="font-bold text-lg">Ajustar {{ redefiningType === 'meta' ? 'Meta' : 'Plan' }}</h3>
           </div>
         </template>
-
         <div class="space-y-4">
           <p class="text-sm text-gray-500">¿Qué te gustaría cambiar o mejorar específicamente en este resultado?</p>
-          <UTextarea
-            v-model="redefineContext"
-            placeholder="Ej: Hazlo más breve, enfócate en lo tecnológico, añade más dinámicas grupales..."
-            :rows="3"
-            autoresize
-            color="primary"
-            class="w-full"
-          />
+          <UTextarea v-model="redefineContext" placeholder="Ej: Hazlo más breve, enfócate en lo tecnológico..." :rows="3" autoresize color="primary" class="w-full" />
         </div>
-
         <template #footer>
           <div class="flex justify-end gap-2">
             <UButton label="Cancelar" color="neutral" variant="ghost" @click="redefiningType = null" />
-            <UButton 
-              label="Actualizar" 
-              color="primary" 
-              icon="i-lucide-wand-2" 
-              :loading="isRedefining"
-              :disabled="!redefineContext.trim()"
-              @click="redefineResult"
-            />
+            <UButton label="Actualizar" color="primary" icon="i-lucide-wand-2" :loading="isRedefining" :disabled="!redefineContext.trim()" @click="redefineResult" />
           </div>
         </template>
       </UCard>
@@ -427,25 +462,9 @@ const useBothResults = () => {
 </template>
 
 <style scoped>
-:deep(table) {
-  width: 100%;
-  border-collapse: collapse;
-  margin: 1rem 0;
-  font-size: 0.875rem;
-}
-:deep(th), :deep(td) {
-  border: 1px solid #e5e7eb;
-  padding: 0.5rem;
-  text-align: left;
-}
-:deep(th) {
-  background-color: #f9fafb;
-}
-:deep(ul), :deep(ol) {
-  padding-left: 1.5rem;
-  margin-bottom: 1rem;
-}
-:deep(li) {
-  margin-bottom: 0.25rem;
-}
+:deep(table) { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.875rem; }
+:deep(th), :deep(td) { border: 1px solid #e5e7eb; padding: 0.5rem; text-align: left; }
+:deep(th) { background-color: #f9fafb; }
+:deep(ul), :deep(ol) { padding-left: 1.5rem; margin-bottom: 1rem; }
+:deep(li) { margin-bottom: 0.25rem; }
 </style>

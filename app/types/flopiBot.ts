@@ -8,6 +8,11 @@ export interface FlopiBotGeneracionPlanRequest {
   contexto_adicional?: string;
   opciones_generacion: OpcionesGeneracion;
   datos_planificacion: DatosPlanificacion;
+  archivo_adjunto?: {
+    contenido: string; 
+    mimetype: string; 
+    nombre: string;   
+  }
 }
 
 export interface OpcionesGeneracion {
