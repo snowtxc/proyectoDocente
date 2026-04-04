@@ -7,6 +7,7 @@ export interface CompetenciaGeneral extends BaseModel{
     nombre: string;
     fundamentacion: string;
     url_image : string;
+    competencias_especificas?: CompetenciaEspecifica[];
 }
 
 export type CompetenciaGeneralItemSelector = CompetenciaGeneral & {

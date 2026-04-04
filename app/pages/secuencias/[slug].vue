@@ -776,7 +776,6 @@ const onDelete = async (): Promise<void> => {
       <!-- Contenido -->
       <UCard class="flex-1 flex flex-col">
         <div class="flex items-center justify-between">
-          <span class="font-medium text-xl">Contenido</span>
           <SelectorContenido
             v-model="secuencia.contenido"
             :contenidos="contenidos"
@@ -785,14 +784,6 @@ const onDelete = async (): Promise<void> => {
             :unidadCurricular="secuencia.unidad_curricular"
           />
         </div>
-        <div class="flex justify-between gap-2 items-center">
-          <div>
-            <ul v-if="secuencia.contenido" class="list-disc">
-              <li>{{ secuencia.contenido.descripcion }}</li>
-            </ul>
-            <span v-else>No se ha seleccionado ningún contenido.</span>
-          </div>
-        </div>
       </UCard>
 
       <!-- Competencias Generales y Específicas (2 columnas) -->
@@ -800,7 +791,6 @@ const onDelete = async (): Promise<void> => {
         <!-- Competencias Generales -->
         <UCard class="w-2/5 flex flex-col">
           <div class="flex items-center justify-between">
-            <span class="font-medium text-xl">Competencias Generales</span>
             <SelectorCompetenciaGeneral
               v-model:model-value="secuencia.competencias_generales"
               :competenciasGenerales="competenciasGenerales"
@@ -808,51 +798,11 @@ const onDelete = async (): Promise<void> => {
               :color="secuencia.espacio?.rgbColor"
             />
           </div>
-
-          <div class="flex flex-col justify-between gap-2 mt-2">
-            <div v-if="secuencia.competencias_generales.length > 0" class="grid grid-cols-2 gap-2">
-              <UCard
-                v-for="competenciaGeneral in competenciasGeneralesSelected"
-                :key="competenciaGeneral.id"
-              >
-                <div class="w-full flex flex-col h-full items-center justify-center">
-                  <div class="w-full flex justify-end relative mb-2">
-                    <UPopover v-if="!competenciaGeneral.recomendado" mode="hover">
-                      <UTooltip>
-                        <UButton icon="tabler:alert-square-rounded" color="error" variant="outline" />
-                      </UTooltip>
-                      <template #content>
-                        <div class="p-2 m-4 flex flex-col gap-y-4 max-w-128">
-                          <span class="font-medium">Competencias específicas relacionadas:</span>
-                          <div class="flex flex-col gap-y-2">
-                            <div
-                              v-for="competenciaEspecifica in competenciaGeneral.competenciasEspecificasRelacionadas"
-                              :key="competenciaEspecifica.id"
-                              class="flex gap-2"
-                            >
-                              <div>
-                                <span class="font-medium">{{ competenciaEspecifica.codificacion }}</span>
-                                {{ competenciaEspecifica.descripcion }}
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </template>
-                    </UPopover>
-                  </div>
-                  <div class="text-sm text-center">{{ competenciaGeneral.nombre }}</div>
-                  <UAvatar :src="competenciaGeneral.url_image" size="xl" class="text-center mt-2" />
-                </div>
-              </UCard>
-            </div>
-            <span v-else>No se ha seleccionado ninguna competencia general.</span>
-          </div>
         </UCard>
 
         <!-- Competencias Específicas -->
         <UCard class="w-3/5 flex flex-col">
           <div class="flex items-center justify-between">
-            <span class="font-medium text-xl">Competencias Específicas</span>
             <SelectorCompetenciaEspecifica
               v-model="secuencia.competencias_especificas"
               :competenciasEspecificas="competenciasEspecificas"
@@ -866,27 +816,15 @@ const onDelete = async (): Promise<void> => {
               :unidadCurricular="secuencia.unidad_curricular"
             />
           </div>
-
-          <div class="flex justify-between gap-2 items-center">
-            <div>
-              <ul v-if="secuencia.competencias_especificas.length > 0" class="list-disc px-2">
-                <li v-for="competenciaEspecifica in secuencia.competencias_especificas" :key="competenciaEspecifica.id" class="my-2">
-                  {{ competenciaEspecifica.codificacion }} {{ competenciaEspecifica.descripcion }}
-                </li>
-              </ul>
-              <span v-else>No se ha seleccionado ninguna competencia específica.</span>
-            </div>
-          </div>
         </UCard>
       </div>
 
       <!-- Criterios de Logros -->
       <UCard class="flex-1 flex flex-col">
         <div class="flex items-center justify-between">
-          <span class="font-medium text-xl">Criterios de Logros</span>
           <SelectorCriteriosDeLogros
             v-model="secuencia.criterios_de_logros"
-            :criteriosDeLogros="criteriosDeLogros"
+            :criteriosDeLogro="criteriosDeLogros"
             :color="secuencia.espacio?.rgbColor"
             :contenidoSelected="secuencia.contenido"
             :competenciasEspecificasSelected="secuencia.competencias_especificas"
@@ -895,16 +833,7 @@ const onDelete = async (): Promise<void> => {
             :unidadCurricular="secuencia.unidad_curricular"
           />
         </div>
-        <div class="flex justify-between gap-2 items-center">
-          <div>
-            <ul v-if="secuencia.criterios_de_logros.length > 0" class="list-disc">
-              <li v-for="criterioDeLogro in secuencia.criterios_de_logros" :key="criterioDeLogro.id">
-                {{ criterioDeLogro.descripcion }}
-              </li>
-            </ul>
-            <span v-else>No se ha especificado ningún criterio de logro.</span>
-          </div>
-        </div>
+
       </UCard>
 
       <!-- Opciones adicionales: recursos, metodología, duración, evaluación -->

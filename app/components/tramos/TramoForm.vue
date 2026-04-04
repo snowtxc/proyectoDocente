@@ -454,7 +454,6 @@ const handleUsePlan = (plan)=>{
         <div  v-else class="w-full flex flex-col gap-2 mt-2" >
           <UCard class="flex-1 flex flex-col mt-2">
         <div class="flex items-center justify-between">
-          <span class="font-medium text-xl">Contenido</span>
 
           <SelectorContenido 
             v-model="form.contenido" 
@@ -470,23 +469,12 @@ const handleUsePlan = (plan)=>{
             :unidadCurricular="form.unidad_curricular"></SelectorContenido>
           
         </div>
-        <div class="flex justify-between gap-2 items-center">
-          <div>
-            <ul class="list-disc" v-if="form.contenido">
-              <li>{{ form.contenido.descripcion }}</li>
-            </ul>
-            <span v-else>
-              No se ha seleccionado ningún contenido.
-            </span>
-          </div>
-        </div>
 
       </UCard>
       
       <div class="flex gap-2">
         <UCard class="w-2/5 flex flex-col">
           <div class="flex items-center justify-between">
-            <span class="font-medium text-xl">Competencias Generales</span>
              <SelectorCompetenciaGeneral  
               v-model:model-value="form.competenciasGenerales" 
               @update:model-value="onChangeModel" 
@@ -494,49 +482,10 @@ const handleUsePlan = (plan)=>{
               :competenciasEspecificasSelected="form.competenciasEspecificas"
                :color="form.espacio?.rgbColor"></SelectorCompetenciaGeneral>
           </div>
-
-          <div class="flex flex-col justify-between gap-2 items-center mt-2">
-            <div class="grid grid-cols-2 gap-2" v-if="form.competenciasGenerales.length > 0">
-              <UCard v-for="competenciaGeneral in competenciasGeneralesSelected" :key="competenciaGeneral.id">
-                <div class="w-full flex flex-col h-full items-center justify-center">
-                  <div class="w-full flex justify-end relative mb-2"> 
-                  <UPopover mode="hover" v-if="!competenciaGeneral.recomendado">
-                      <UTooltip
-                      >
-                          <UButton icon="tabler:alert-square-rounded"  color="error" variant="outline" />
-                      </UTooltip>
-  
-                    <template #content>
-                        <div class="p-2 m-4 flex flex-col gap-y-4 max-w-128">
-                              <span class="font-medium"> Competencias especificas relacionadas: </span>  
-                              <div class="flex flex-col gap-y-2">
-                                <div v-for="competenciaEspecifica in competenciaGeneral.competenciasEspecificasRelacionadas" :key="competenciaEspecifica.id" class="flex gap-2">
-                                  <div>
-                                    <div>
-                                      <span class="font-medium">{{ competenciaEspecifica.codificacion }}</span> {{ competenciaEspecifica.descripcion }}
-                                    </div>
-                                  </div>
-                                </div>     
-                          </div>                      
-                        </div>
-                    </template>
-                  </UPopover>
-                  </div>
-                  <div class="text-sm text-center">{{ competenciaGeneral.nombre }}</div>
-                  <UAvatar :src="competenciaGeneral.url_image" size="xl" class="text-center mt-2" />
-                </div>
-              </UCard>
-            </div>
-
-            <span v-else>
-              No se ha seleccionado ninguna competencia general.
-            </span>
-          </div>
         </UCard>
 
         <UCard class="w-3/5  flex flex-col">
           <div class="flex items-center justify-between">
-            <span class="font-medium text-xl">Competencias Especificas</span>
             <SelectorCompetenciaEspecifica 
                v-model="form.competenciasEspecificas" 
               :competenciasEspecificas="competenciasEspecificas" 
@@ -552,53 +501,24 @@ const handleUsePlan = (plan)=>{
               :unidadCurricular="form.unidad_curricular">
             </SelectorCompetenciaEspecifica>
           </div>
-
-          <div class="flex justify-between gap-2 items-center">
-            <div>
-              <ul class="list-disc px-2" v-if="form.competenciasEspecificas.length > 0">
-                <li v-for="competenciaEspecifica in form.competenciasEspecificas" :key="competenciaEspecifica.id"
-                  class="my-2">
-                  {{ competenciaEspecifica.codificacion }} {{ competenciaEspecifica.descripcion }}
-                </li>
-              </ul>
-              <span v-else>
-                No se ha seleccionado ningún criterio de logro.
-              </span>
-            </div>
-          </div>
-
         </UCard>
 
       </div>
 
       <UCard class="flex-1 flex flex-col">
         <div class="flex items-center justify-between">
-          <span class="font-medium text-xl">Criterios de Logros</span>
           <SelectorCriteriosDeLogros 
            v-model="form.criteriosDeLogros" 
            @update:model-value="onChangeModel"
-            :criteriosDeLogros="criteriosDeLogros" 
-            :color="form.espacio?.rgbColor"
-             :contenidoSelected="form.contenido"
-            :competenciasEspecificasSelected="form.competenciasEspecificas" 
-            :disabled="form.unidad_curricular == null"
-            :gradosEspecificos="props.planificacion.grupo.grados"
-            :unidadCurricular="form.unidad_curricular">
+          :criteriosDeLogro="criteriosDeLogros" 
+          :color="form.espacio?.rgbColor"
+          :contenidoSelected="form.contenido"
+          :competenciasEspecificasSelected="form.competenciasEspecificas" 
+          :disabled="form.unidad_curricular == null"
+          :gradosEspecificos="props.planificacion.grupo.grados"
+          :unidadCurricular="form.unidad_curricular">
           </SelectorCriteriosDeLogros>
         </div>
-        <div class="flex justify-between gap-2 items-center">
-          <div>
-            <ul class="list-disc" v-if="form.criteriosDeLogros.length > 0">
-              <li v-for="criterioDeLogro in form.criteriosDeLogros" :key="criterioDeLogro.id">
-                {{ criterioDeLogro.descripcion }}
-              </li>
-            </ul>
-            <span v-else>
-              No se ha seleccionado ningún criterio de logro.
-            </span>
-          </div>
-        </div>
-
       </UCard>
       
       <div class="mt-6 p-6 border-2 border-dashed border-primary-200 rounded-2xl bg-primary-50/30">

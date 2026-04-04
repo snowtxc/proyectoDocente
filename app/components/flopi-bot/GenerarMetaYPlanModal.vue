@@ -171,7 +171,7 @@ const redefineResult = async () => {
     if (type === 'plan' && result.plan) aiResults.value.plan = result.plan;
 
     redefiningType.value = null;
-    toast.success({ title: "Ajuste aplicado correctamente", color: "primary" });
+    toast.success({ title: "Ajuste aplicado correctamente", color: "green" });
 
   } catch (errorMessage) {
     toast.error({ title: "Error al ajustar", message: errorMessage as string, color: "red" });
