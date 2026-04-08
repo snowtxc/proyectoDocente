@@ -163,7 +163,6 @@ const handleLoadAnotherGrado = async (grado: Grado) => {
             <div class="absolute right-3 top-3 opacity-0 group-hover:opacity-100 transition-opacity"><UButton icon="tabler:pencil" size="xs" color="primary" variant="ghost" /></div>
         </div>
 
-        <!-- BOTÓN VACÍO -->
         <button v-else type="button" class="w-full group flex flex-col items-center justify-center py-10 px-6 border-2 border-dashed border-gray-300 rounded-2xl bg-gray-50/30 hover:border-primary-400 hover:bg-primary-50/20 transition-all" @click="isOpen = true" :disabled="disabled">
             <div class="relative mb-4">
                 <div class="w-14 h-14 rounded-2xl bg-white border border-gray-200 flex items-center justify-center shadow-sm text-gray-400 group-hover:text-primary-500 transition-colors"><UIcon name="tabler:list-check" class="w-7 h-7" /></div>
@@ -173,7 +172,6 @@ const handleLoadAnotherGrado = async (grado: Grado) => {
         </button>
     </div>
 
-    <!-- MODAL -->
     <UModal v-model:open="isOpen" fullscreen>
         <template #content>
             <UCard class="flex flex-col h-screen overflow-hidden">
@@ -186,7 +184,7 @@ const handleLoadAnotherGrado = async (grado: Grado) => {
 
                 <div class="contenido-scrollable overflow-y-auto p-4 space-y-6 bg-gray-50/50 dark:bg-gray-950">
                     <Transition name="fade">
-                        <div v-if="showSuccessMessage" class="sticky top-0 z-50 flex justify-center"><UBadge color="green" variant="solid" class="shadow-lg px-4 py-1">{{ successMessage }}</UBadge></div>
+                        <div v-if="showSuccessMessage" class="sticky top-0 z-50 flex justify-center"><UBadge color="success" variant="solid" class="shadow-lg px-4 py-1">{{ successMessage }}</UBadge></div>
                     </Transition>
 
                     <div v-for="group in filteredGroups" :key="group.gradoId" :id="`grado-group-${group.gradoId}`" class="space-y-3">
@@ -203,10 +201,8 @@ const handleLoadAnotherGrado = async (grado: Grado) => {
                     </div>
                 </div>
 
-                <!-- SELECTOR DE GRADOS EN EL FOOTER -->
                 <div class="border-t border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900">
                     <div class="p-4 bg-gray-50 dark:bg-gray-800/30 flex flex-col items-center gap-2">
-                        <!-- AQUÍ ESTÁ EL BOTÓN QUE FALTABA -->
                         <ButtonSelectGradoPopup 
                             :gradosSelected="gradosSelected" 
                             :disabled="loadingGrados.size > 0" 
@@ -234,4 +230,16 @@ const handleLoadAnotherGrado = async (grado: Grado) => {
 .contenido-scrollable { height: 70svh; }
 .fade-enter-active, .fade-leave-active { transition: opacity 0.3s ease; }
 .fade-enter-from, .fade-leave-to { opacity: 0; }
+
+@media (min-height: 600px) and (max-height: 699px) {
+    .contenido-scrollable {
+        height: 60svh;
+    }
+}
+
+@media (max-height: 599px) {
+    .contenido-scrollable {
+        height: 50svh;
+    }
+}
 </style>

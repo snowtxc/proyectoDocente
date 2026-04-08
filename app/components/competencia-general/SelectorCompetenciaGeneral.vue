@@ -81,7 +81,6 @@ watch([() => props.modelValue, () => props.competenciasEspecificasSelected], () 
 
 <template>
     <div class="w-full space-y-2">
-        <!-- CABECERA -->
         <div class="flex items-center justify-between px-1">
             <span class="text-[10px] uppercase font-black text-gray-400 tracking-widest italic">Competencias Generales (MCN)</span>
             <UBadge v-if="props.modelValue.length > 0" size="xs" variant="subtle" color="primary">
@@ -89,7 +88,6 @@ watch([() => props.modelValue, () => props.competenciasEspecificasSelected], () 
             </UBadge>
         </div>
 
-        <!-- ESTADO: SELECCIONADO (Lista Completa) -->
         <div 
             v-if="props.modelValue.length > 0" 
             @click="isOpen = true"
@@ -209,5 +207,36 @@ watch([() => props.modelValue, () => props.competenciasEspecificasSelected], () 
 .contenido-scrollable {
   height: 75svh;
   scrollbar-width: thin;
+}
+
+
+@media (min-height: 1200px) {
+    .contenido-scrollable {
+        height: 70svh;
+    }
+}
+
+@media (min-height: 900px) and (max-height: 1199px) {
+    .contenido-scrollable {
+        height: 70svh;
+    }
+}
+
+@media (min-height: 700px) and (max-height: 899px) {
+    .contenido-scrollable {
+        height: 70svh;
+    }
+}
+
+@media (min-height: 600px) and (max-height: 699px) {
+    .contenido-scrollable {
+        height: 60svh;
+    }
+}
+
+@media (max-height: 599px) {
+    .contenido-scrollable {
+        height: 60svh;
+    }
 }
 </style>

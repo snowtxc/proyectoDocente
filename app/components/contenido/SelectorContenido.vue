@@ -356,13 +356,13 @@ watch(
 
 @media (min-height: 600px) and (max-height: 699px) {
     .contenido-scrollable {
-        height: 70svh;
+        height: 60svh;
     }
 }
 
 @media (max-height: 599px) {
     .contenido-scrollable {
-        height: 70svh;
+        height: 50svh;
     }
 }
 </style>
