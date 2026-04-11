@@ -1,8 +1,8 @@
 
 <script lang="ts" setup>
-import { ActividadSecuenciasCambiarOrdenActividadSecuencia } from '#components';
 import type { ActividadSecuencia, ReordenarActividadSecuenciaDTO } from '~/types/actividadSecuencia';
 import { HttpMethodEnum } from '~/utils/enums/HttpMethodEnum';
+import draggable from 'vuedraggable';
 
 interface Props {
     secuenciaId: number;
@@ -13,11 +13,6 @@ interface Props {
 const { $apiRest  } = useNuxtApp();
 
 const emit = defineEmits(['on-change-order','onClose']);
-
-enum Direction {
-    UP,
-    DOWN
-}
 const props = withDefaults(defineProps<Props>() , {});
 
 const loadingReorder = ref(false);
@@ -26,40 +21,11 @@ const newOrden = ref(null);
 
 const actividadesSecuencias = ref([...props.actividadesSecuencias]);
 
-const isOpen = true;
 const toast = useToast()
 
 const emptyActividades = computed(()=>{
   return actividadesSecuencias.value.length == 0
 })
-
-// TRAMOS ORDENADOS POR ORDEN.
-const orderActividades = computed(()=>{
-  return actividadesSecuencias.value.sort((a,b) =>{
-    if(a.orden <= b.orden)
-      return -1;
-    return 1;
-  })
-})
-
-
-const changeOrder = (direction: Direction) =>{
-  const idx = actividadesSecuencias.value.findIndex(t => t.id === props.actividadSecuenciaSelected.id);
-
-  if (idx === -1) return;
-
-  let swapIdx = direction === Direction.UP ? idx - 1 : idx + 1;
-
-  if (swapIdx < 0 || swapIdx >= actividadesSecuencias.value.length) return;
-
-  const tmpOrden = actividadesSecuencias.value[idx].orden;
-
-  const newOrdenTmp = actividadesSecuencias.value[swapIdx].orden;
-  actividadesSecuencias.value[idx].orden = newOrdenTmp;
-  newOrden.value = newOrdenTmp;
-
-  actividadesSecuencias.value[swapIdx].orden = tmpOrden;
-}
 
 // Disable button , si no hay un nuevo orden o el orden es igual al orden que ya tiene entonces disabled;
 const disableBtn = computed(()=>{
@@ -71,6 +37,17 @@ const disableBtn = computed(()=>{
   
   return false;
 });
+
+const onDragEnd = () => {
+  actividadesSecuencias.value.forEach((actividad, index) => {
+    actividad.orden = index + 1;
+  });
+
+  const selected = actividadesSecuencias.value.find(
+    actividad => actividad.id === props.actividadSecuenciaSelected.id
+  );
+  newOrden.value = selected?.orden ?? null;
+};
 
 const reorder = async()=>{
   if(newOrden.value === null)
@@ -131,30 +108,31 @@ const reorder = async()=>{
             No pudimos encontrar ninguna actividad.
           </span>
         </div>
-        <ul v-else role="list" class="divide-y divide-gray-200 dark:divide-gray-800 overflow-y-auto">
-          <li v-for="(actividad, index) in orderActividades" :key="actividad.id"
-            class="flex items-center justify-between gap-3 py-3 px-4 sm:px-6">
-            <div class="flex items-center gap-3 w-full hover:cursor-pointer">
-
-              <div class="text-sm min-w-0 flex gap-2">
-                <!-- <URadio v-model="folderIdSelected"  :value="folder.id"/> -->
-                <UIcon name="tabler:file-text" class="w-5 h-5" :class="{'text-primary' : actividad.id == props.actividadSecuenciaSelected.id}"/>
-                <p class="truncate" :class="{
-                 'text-gray-900' : actividad.id != props.actividadSecuenciaSelected.id ,
-                 'text-primary' : actividad.id == props.actividadSecuenciaSelected.id}">
-                  Actividad {{ actividad.orden }}
-                </p>
+        <draggable
+          v-else
+          v-model="actividadesSecuencias"
+          item-key="id"
+          class="divide-y divide-gray-200 dark:divide-gray-800 overflow-y-auto"
+          @end="onDragEnd">
+          <template #item="{ element: actividad, index }">
+            <li class="flex items-center justify-between gap-3 py-3 px-4 sm:px-6">
+              <div class="flex items-center justify-between w-full cursor-grab active:cursor-grabbing">
+                <div class="text-sm min-w-0 flex gap-2">
+                  <UIcon
+                    name="tabler:file-text"
+                    class="w-5 h-5"
+                    :class="{ 'text-primary': actividad.id == props.actividadSecuenciaSelected.id }" />
+                  <p
+                    class="truncate"
+                    :class="actividad.id == props.actividadSecuenciaSelected.id ? 'text-primary' : 'text-gray-900'">
+                    Actividad {{ index + 1 }}
+                  </p>
+                </div>
+                <UIcon name="tabler:grip-vertical" class="w-5 h-5 text-gray-400" />
               </div>
-            </div>
-
-            <div class="flex items-center gap-3" v-if="actividad.id == props.actividadSecuenciaSelected.id">
-              <UDropdown position="bottom-end">                
-                <UButton icon="tabler:arrow-up" color="neutral" variant="ghost" @click="changeOrder(Direction.UP)" v-if="index > 0"/>
-                <UButton icon="tabler:arrow-down" color="neutral" variant="ghost" @click="changeOrder(Direction.DOWN)" v-if="(index + 1) < actividadesSecuencias.length"/>
-              </UDropdown>
-            </div>
-          </li>
-        </ul>
+            </li>
+          </template>
+        </draggable>
       </div>
 
       <template #footer>
