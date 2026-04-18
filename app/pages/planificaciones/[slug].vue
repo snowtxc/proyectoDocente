@@ -10,10 +10,9 @@ import CambiarOrden from '~/components/tramos/CambiarOrden.vue';
 import { cloneDeep } from 'lodash';
 import { ActionMenuTramo } from '~/utils/enums/actionMenuTramo.enum';
 import ConfirmModal from '~/components/ConfirmModal.vue';
-import SyncGoogleDrive from '~/components/SyncGoogleDrive.vue';
-import { TypeItemSyncGoogleDrive } from '~/utils/enums/typeItemSyncGoogleDrive';
-import { apiCompetenciasGeneralesRoutes, apiEspaciosRoutes, apiPlanificacionesFechaRoutes, apiPlanificacionesRoutes, apiTramosRoutes, computed, downloadBlob, navigateTo, ref, useAsyncData, useRoute, useToast, watch } from '#imports';
+import { apiCompetenciasGeneralesRoutes, apiEspaciosRoutes, apiPlanificacionesFechaRoutes, apiPlanificacionesRoutes, apiTramosRoutes, computed,  navigateTo, ref, useAsyncData, useRoute, useToast, watch } from '#imports';
 import ModalTramoDesdeSecuencia from '~/components/tramos/ModalTramoDesdeSecuencia.vue';
+import PlanificacionVisor from '~/components/planificaciones/PlanificacionVisor.vue';
 
 const { $apiRest } = useNuxtApp();
 
@@ -23,9 +22,13 @@ const slug = route.params.slug as string;
 
 const pendingSave = ref<boolean>(false);
 const isSaving = ref<boolean>(true);
-const showModalSyncGDrive = ref<boolean>(false);
-const showModalExportConfirm = ref<boolean>(false);
 const showModalDeleteConfirm = ref<boolean>(false);
+const isSlideoverOpen = ref(false);
+const titleModal = computed(() => `Vista completa: ${planificacion.value?.nombre}`);
+
+const openFullView = () => {
+  isSlideoverOpen.value = true;
+};
 
 const tramoFormRef = ref(null)
 
@@ -237,27 +240,6 @@ const changeFechaDirection = (direction: "prev" | "next") => {
   loadPlanificacionFecha(newCurrentFecha.fecha);
 }
 
-const onChangePlanificacionFecha = async (planificacionFechaUpdated: PlanificacionFecha) => {
-
-  const idxToReplace = planificacion.value.fechas.findIndex(x => x.fecha == planificacionFechaUpdated.fecha);
-
-  const idx = planificacion.value.fechas.findIndex(x => x.id == planificacionFechaUpdated.id);
-
-  if (idxToReplace >= 0) {
-    // Se elimina la fecha si es sustituida.
-    planificacion.value.fechas.splice(idxToReplace, 1);
-  }
-
-  if (idx >= 0) {
-    // La fecha actualizada cambia
-    planificacion.value.fechas[idx].fecha = planificacionFechaUpdated.fecha;
-  }
-
-  planificacionFechaSelected.value.fecha = planificacionFechaUpdated.fecha;
-  planificacion.value.fechas = ordenarFechasPlanificacion();
-
-  loadPlanificacionFecha(planificacionFechaUpdated.fecha);
-}
 
 const loadPlanificacionFecha = async (fecha: string): Promise<void> => {
   try {
@@ -353,12 +335,12 @@ const actionsMenuTramo = ref([
     color: null,
     actionName: ActionMenuTramo.CHANGE_ORDER
   },
-  {
-    title: 'Desde secuencia',
-    icon: 'tabler:list-letters',
-    color: null,
-    actionName: ActionMenuTramo.LOAD_FROM_SECUENCIA
-  },
+  // {
+  //   title: 'Desde secuencia',
+  //   icon: 'tabler:list-letters',
+  //   color: null,
+  //   actionName: ActionMenuTramo.LOAD_FROM_SECUENCIA
+  // },
   {
     title: 'Eliminar tramo',
     icon: 'tabler:trash',
@@ -485,56 +467,6 @@ const updateOrdersTramos = (tramosUpdated: Tramo[]) => {
 
   planificacionFechaSelected.value.tramos = planificacionFechaSelected.value.tramos.sort((a, b) => a.orden - b.orden);
 };
-
-
-const onExport = async () => {
-
-  if (!planificacion.value)
-    return;
-
-  try {
-
-    showModalExportConfirm.value = false;
-
-    const responseFile = await $apiRest(apiPlanificacionesRoutes.exportar(planificacion.value.id), HttpMethodEnum.POST, { responseType: 'blob' });
-
-    if (responseFile) {
-      const fileName = `${planificacion.value.slug}.pdf`;
-      downloadBlob(responseFile, fileName);
-
-      toast.success({
-        title: "Planificacion exportada",
-        message: 'Se ha exportado la planificación con exito.',
-        color: "green"
-      })
-    }
-
-  } catch (message) {
-    toast.error({
-      title: "Error",
-      message: message ? message : 'Error al intentar exportar la planificacion',
-      color: "red"
-    })
-  }
-}
-
-const syncGoogleDrive = async () => {
-
-  showModalSyncGDrive.value = false;
-
-  // Si la planificacion se encuentra pendiente de guardar, se manda a aplicar los cambios.
-  if (pendingSave.value)
-    await onSavePlanificacionFecha(false)
-
-  const modal = overlay.create(SyncGoogleDrive);
-  modal.open(
-    {
-      key: `sync-${Date.now()}`,
-      id: planificacion.value.id,
-      type: TypeItemSyncGoogleDrive.PLANIFICACION
-    });
-}
-
 
 const onDelete = async (): Promise<void> => {
 
@@ -679,6 +611,11 @@ const onUpdateTramo = (tramo: Tramo) => {
                 </UTooltip>
 
                 <UDashboardNavbar :title="planificacion.nombre" />
+              </div>
+            </template>
+            
+
+            <template #right>
 
                 <PlanificacionesPopoverAddPlanificacionFecha
                   :planificacionId="planificacion.id"
@@ -687,16 +624,6 @@ const onUpdateTramo = (tramo: Tramo) => {
                   :fechasDisabled="planificacion.fechas.map(pf => pf.fecha)"
                 />
 
-                <PlanificacionesPopoverChangePlanificacionFecha
-                  :planificacionId="planificacion.id"
-                  :planificacionFecha="planificacionFechaSelected"
-                  :fechasYaPlanificadas="planificacion.fechas.map(pf => pf.fecha)"
-                  @on:change="onChangePlanificacionFecha"
-                />
-              </div>
-            </template>
-
-            <template #right>
               <UTooltip text="Guardar planificación">
                 <UButton
                   icon="tabler:device-floppy"
@@ -713,23 +640,15 @@ const onUpdateTramo = (tramo: Tramo) => {
                 </UButton>
               </UTooltip>
 
-              <UTooltip text="Exportar a PDF">
+              <UTooltip text="Ver planificación completa">
                 <UButton
-                  icon="tabler:pdf"
+                  icon="tabler:eye"
                   color="neutral"
                   variant="ghost"
-                  @click="showModalExportConfirm = true"
+                  @click="openFullView"
                 />
               </UTooltip>
 
-              <UTooltip text="Exportar planificación a Google Drive">
-                <UButton
-                  icon="tabler:brand-google-drive"
-                  color="neutral"
-                  variant="ghost"
-                  @click="showModalSyncGDrive = true"
-                />
-              </UTooltip>
 
               <UTooltip text="Eliminar">
                 <UButton
@@ -780,23 +699,26 @@ const onUpdateTramo = (tramo: Tramo) => {
   </UPage>
 
 
-  <ConfirmModal
-    v-show="showModalExportConfirm"
-    v-model="showModalExportConfirm"
-    title="Descargar planificación"
-    description="¿Querés descargar la planificación actual como un archivo? Esto guardará una copia en tu computadora."
-    @onConfirm="onExport"
-    @onClose="showModalExportConfirm = false"
-  />
-
-  <ConfirmModal
-    v-if="showModalSyncGDrive"
-    v-model="showModalSyncGDrive"
-    title="Sincronizar planificación con Google Drive"
-    description="¿Deseás sincronizar la planificación actual con tu cuenta de Google Drive? Esto guardará una copia actualizada en la nube."
-    @onConfirm="syncGoogleDrive"
-    @onClose="showModalSyncGDrive = false"
-  />
+  <USlideover v-model:open="isSlideoverOpen" title="Planificación Detallada" class="min-w-[80%]">
+    <template #header>
+      <div class="w-full flex items-center justify-between">
+        <div class="flex flex-col">
+           <h2 class="text-xl font-semibold text-gray-900 dark:text-white">
+            {{ titleModal }}
+          </h2>
+          <p class="text-xs text-gray-500">Cronograma de tramos y actividades</p>
+        </div>
+        <UButton color="neutral" variant="ghost" icon="tabler:x" @click="isSlideoverOpen = false"/>
+      </div>
+    </template>
+    
+    <template #body>
+      <PlanificacionVisor
+        v-if="isSlideoverOpen"
+        :planificacion="planificacion"
+      />
+    </template>
+  </USlideover>
 
   <ConfirmModal
     v-model="showModalDeleteConfirm"

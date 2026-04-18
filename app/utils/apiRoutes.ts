@@ -54,6 +54,7 @@ export const apiPlanificacionesRoutes = {
 }
 
 export const apiPlanificacionesFechaRoutes = {
+    getPaginate:  '/planificaciones-fecha/paged',
     create: "/planificaciones-fecha",
     find : (id: number) => `/planificaciones-fecha/${id}`,
     cambiarFecha : '/planificaciones-fecha/cambiar-fecha',

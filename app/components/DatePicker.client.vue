@@ -141,7 +141,12 @@ const date = computed({
   get: () => props.modelValue,
   set: (value) => {
     emit('update:model-value', value)
-    emit('close')
+    
+    if (!props.range) {
+        emit('close')
+    } else if (value && value.start && value.end) {
+        // Opcional: emit('close') si quieres que se cierre al terminar el rango
+    }
   }
 })
 
@@ -176,54 +181,52 @@ const  attributes = computed(() => {
 </script>
 
 <template>
-  <VCalendarDatePicker v-if="props.range"
+  <VCalendarDatePicker 
+    v-if="props.range"
+    :key="'range-mode'"
     :locale="calendarLocale"
-    v-model.range="date" :columns="smallerThanSm ? 1 : 2" :rows="smallerThanSm ? 2 : 1" v-bind="{ ...attrs, ...$attrs }"
+    v-model.range="date" 
+    :columns="1" 
+    v-bind="{ ...attrs, ...$attrs }"
     :disabled-dates="disabledDates"
-    color="primary" 
-    :attributes="attributes"/>
-  <VCalendarDatePicker v-else v-model="date" v-bind="{ ...attrs, ...$attrs }" :disabled-dates="disabledDates"  :attributes="attributes"/>
-
+    color="yellow" 
+    :attributes="attributes"
+  />
+  
+  <VCalendarDatePicker 
+    v-else 
+    :key="'single-mode'"
+    v-model="date" 
+    v-bind="{ ...attrs, ...$attrs }" 
+    :disabled-dates="disabledDates"  
+    :attributes="attributes"
+  />
 </template>
 
 <style scoped>
-/* DÍA SELECCIONADO */
-:deep(.vc-day.is-selected),
-:deep(.vc-day.is-selected .vc-day-content) {
-  background-color: rgb(var(--color-primary-600)) !important;
+/* IMPORTANTE: V-Calendar usa clases específicas para el color. 
+   Si pusiste color="primary" en el componente pero tu CSS busca clases genéricas, 
+   puede haber conflicto. 
+*/
+
+:deep(.vc-yellow) {
+  --vc-accent-600: rgb(var(--color-primary-600));
+  --vc-accent-200: rgb(var(--color-primary-200));
+}
+
+/* Forzar visualización de los estilos de selección */
+:deep(.vc-day-content.vc-focusable.vc-highlight-content-outline) {
   color: white !important;
 }
 
-/* RANGO ENTRE FECHAS */
-:deep(.vc-day.is-between),
-:deep(.vc-day.is-between .vc-day-content) {
+/* Estilo del "caminito" entre fechas */
+:deep(.vc-highlight.vc-highlight-base-middle) {
   background-color: rgb(var(--color-primary-200)) !important;
-  color: rgb(var(--color-primary-900)) !important;
+  opacity: 1;
 }
 
-/* INICIO Y FIN DEL RANGO */
-:deep(.vc-day.is-start),
-:deep(.vc-day.is-end),
-:deep(.vc-day.is-start .vc-day-content),
-:deep(.vc-day.is-end .vc-day-content) {
+:deep(.vc-highlight.vc-highlight-base-start),
+:deep(.vc-highlight.vc-highlight-base-end) {
   background-color: rgb(var(--color-primary-600)) !important;
-  color: white !important;
 }
-
-/* DARK MODE */
-:deep(.dark .vc-day.is-selected),
-:deep(.dark .vc-day.is-selected .vc-day-content),
-:deep(.dark .vc-day.is-start),
-:deep(.dark .vc-day.is-end) {
-  background-color: rgb(var(--color-primary-700)) !important;
-  color: white !important;
-}
-
-:deep(.dark .vc-day.is-between),
-:deep(.dark .vc-day.is-between .vc-day-content) {
-  background-color: rgb(var(--color-primary-900)) !important;
-  color: rgb(var(--color-primary-100)) !important;
-}
-
-
 </style>

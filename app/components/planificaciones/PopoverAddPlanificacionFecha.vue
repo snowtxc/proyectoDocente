@@ -57,7 +57,18 @@ import { HttpMethodEnum } from '~/utils/enums/HttpMethodEnum';
 
         show.value = false;
 
-        let fechas: string[] = multipleFecha.value ? getArrayDatesStrBetweenDates(fecha.value.start, fecha.value.end) : getArrayDatesStrBetweenDates(fecha.value, fecha.value) 
+        let fechas: string[] = [];
+    
+        if (multipleFecha.value) {
+            // Validamos que existan ambos puntos del rango
+            if (fecha.value?.start && fecha.value?.end) {
+                fechas = getArrayDatesStrBetweenDates(fecha.value.start, fecha.value.end);
+            }
+        } else {
+            fechas = getArrayDatesStrBetweenDates(fecha.value, fecha.value);
+        }
+
+    if (fechas.length === 0) return;
 
         planificacionFechaACrear.value  = {
             planificacion_id: props.planificacionId,
@@ -104,10 +115,9 @@ import { HttpMethodEnum } from '~/utils/enums/HttpMethodEnum';
                 <UDashboardSection title="Agregar nuevo día" description="Agrega un nuevo día a la planificación y empieza a planificar sobre ese día.">
                 </UDashboardSection>
                 
-                <!--ToDo queda pendiente resolver por que no se ve los estilos cuando cambia a multiples dias de seleccion-->
-                <!-- <div class="w-full">
-                    <UCheckbox size="xl" v-model="multipleFecha" label="Elegir más de 1 día" />
-                </div> -->
+                <div class="w-full">
+                      <USwitch size="xl" v-model="multipleFecha" label="Elegir más de 1 día" />
+                </div>
 
                 <DatePicker locale="es" v-model="fecha"  :disableWeekends="true" :range="multipleFecha" :disabledDates="fechasDisabled"/>
                 

@@ -43,12 +43,12 @@ const links = [
     icon: 'i-tabler-calendar-event',
     to: '/planificaciones',
   },
-  {
-    id: 'secuencias',
-    label: 'Secuencias',
-    icon: 'i-tabler-list-letters',
-    to: '/secuencias',
-  },
+  // {
+  //   id: 'secuencias',
+  //   label: 'Secuencias',
+  //   icon: 'i-tabler-list-letters',
+  //   to: '/secuencias',
+  // },
   {
     id: 'asistentes',
     label: 'Asistentes virtuales',
