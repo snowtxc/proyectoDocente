@@ -520,6 +520,40 @@ const handleUsePlan = (plan)=>{
           </SelectorCriteriosDeLogros>
         </div>
       </UCard>
+
+      <UCard v-if="props.planificacion.llevaAntecedentes" class="flex-1 flex flex-col">
+        <div class="flex flex-col gap-3">
+          <div>
+            <span class="font-medium text-xl">Antecedentes</span>
+            <p class="text-sm text-gray-500">
+              Agrega el contexto previo relevante para esta planificación.
+            </p>
+          </div>
+          <UTextarea
+            v-model="props.planificacion.antecedentes"
+            :rows="5"
+            autoresize
+            placeholder="Escribe aquí los antecedentes de la planificación"
+          />
+        </div>
+      </UCard>
+
+      <UCard v-if="props.planificacion.llevaProyecciones" class="flex-1 flex flex-col">
+        <div class="flex flex-col gap-3">
+          <div>
+            <span class="font-medium text-xl">Proyecciones</span>
+            <p class="text-sm text-gray-500">
+              Describe las proyecciones o continuidad esperada de esta planificación.
+            </p>
+          </div>
+          <UTextarea
+            v-model="props.planificacion.proyecciones"
+            :rows="5"
+            autoresize
+            placeholder="Escribe aquí las proyecciones de la planificación"
+          />
+        </div>
+      </UCard>
       
       <div class="mt-6 p-6 border-2 border-dashed border-primary-200 rounded-2xl bg-primary-50/30">
   

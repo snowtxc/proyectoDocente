@@ -5,6 +5,8 @@ import type { Tramo } from "./tramo";
 export interface CreatePlanificacionDTO {
   groupId: any;
   name: string;
+  llevaAntecedentes?: boolean;
+  llevaProyecciones?: boolean;
 }
 
 type Grado = {
@@ -29,5 +31,9 @@ export type Planificacion = {
   slug: string;
   fechas: SimplePlanificacionFecha[];
   last_planning_access_at?: Date;
-  readonly url?: string
+  readonly url?: string;
+  llevaAntecedentes?: boolean;
+  llevaProyecciones?: boolean;
+  antecedentes?: string | null;
+  proyecciones?: string | null;
 };

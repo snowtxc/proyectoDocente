@@ -6,6 +6,10 @@ const links = [[{
   icon: 'i-lucide-user',
   to: '/configuracion',
   exact: true
+}, {
+  label: 'Parámetros de Planificación',
+  icon: 'i-lucide-sliders-horizontal',
+  to: '/configuracion/parametros-planificacion'
 }]] satisfies NavigationMenuItem[][]
 </script>
 

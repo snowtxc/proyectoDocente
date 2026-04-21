@@ -22,6 +22,7 @@ const toast = useToast();
 const slug = route.params.slug as string;
 
 const pendingSave = ref<boolean>(false);
+const pendingSavePlanificacion = ref<boolean>(false);
 const isSaving = ref<boolean>(true);
 const showModalSyncGDrive = ref<boolean>(false);
 const showModalExportConfirm = ref<boolean>(false);
@@ -66,6 +67,12 @@ const pageUi = computed(() => ({
   left: isTramosPanelCollapsed.value ? 'hidden' : '',
   center: isTramosPanelCollapsed.value ? 'lg:col-start-1 lg:col-span-10' : ''
 }));
+const hasPendingSave = computed(() => pendingSave.value || pendingSavePlanificacion.value);
+
+planificacion.value.llevaAntecedentes = !!planificacion.value.llevaAntecedentes;
+planificacion.value.llevaProyecciones = !!planificacion.value.llevaProyecciones;
+planificacion.value.antecedentes = planificacion.value.antecedentes ?? null;
+planificacion.value.proyecciones = planificacion.value.proyecciones ?? null;
 
 const ordenarFechasPlanificacion = (): SimplePlanificacionFecha[] => {
   const fechas: SimplePlanificacionFecha[] = [...planificacion.value.fechas];
@@ -329,6 +336,64 @@ const onSavePlanificacionFecha = async (showMessage: boolean = true) => {
   }
 }
 
+const onSavePlanificacion = async (showMessage: boolean = true) => {
+  if (!planificacion.value)
+    return;
+
+  try {
+    const response = await $apiRest<Planificacion>(
+      apiPlanificacionesRoutes.update(planificacion.value.id),
+      HttpMethodEnum.POST,
+      planificacion.value
+    );
+
+    if (response) {
+      planificacion.value = {
+        ...planificacion.value,
+        ...response,
+        llevaAntecedentes: !!response.llevaAntecedentes,
+        llevaProyecciones: !!response.llevaProyecciones,
+        antecedentes: response.llevaAntecedentes ? (response.antecedentes ?? null) : null,
+        proyecciones: response.llevaProyecciones ? (response.proyecciones ?? null) : null
+      };
+    }
+
+    pendingSavePlanificacion.value = false;
+
+    if (showMessage) {
+      toast.success({
+        title: 'Se ha guardado con exito',
+        message: 'Los componentes de la planificación se guardaron correctamente.',
+        color: 'green'
+      });
+    }
+  } catch (message) {
+    toast.error({
+      title: 'Error',
+      message: message ? message : 'Error al guardar la planificación. Por favor vuelve a intentarlo más tarde.',
+      color: 'red'
+    });
+  }
+}
+
+const onSaveAll = async () => {
+  if (pendingSavePlanificacion.value) {
+    await onSavePlanificacion(false);
+  }
+
+  if (pendingSave.value) {
+    await onSavePlanificacionFecha(false);
+  }
+
+  if (!hasPendingSave.value) {
+    toast.success({
+      title: 'Se ha guardado con exito',
+      message: 'Los cambios de la planificación fueron guardados correctamente.',
+      color: 'green'
+    });
+  }
+}
+
 watch(() => tramoSelected.value, () => {
 
   if (!tramoSelected.value)
@@ -342,6 +407,30 @@ watch(() => tramoSelected.value, () => {
 
   // Se activa el pending save.
   pendingSave.value = true;
+})
+
+watch(
+  () => [
+    planificacion.value.llevaAntecedentes,
+    planificacion.value.llevaProyecciones,
+    planificacion.value.antecedentes,
+    planificacion.value.proyecciones
+  ],
+  () => {
+    pendingSavePlanificacion.value = true;
+  }
+)
+
+watch(() => planificacion.value.llevaAntecedentes, (enabled) => {
+  if (!enabled) {
+    planificacion.value.antecedentes = null;
+  }
+})
+
+watch(() => planificacion.value.llevaProyecciones, (enabled) => {
+  if (!enabled) {
+    planificacion.value.proyecciones = null;
+  }
 })
 
 
@@ -523,8 +612,8 @@ const syncGoogleDrive = async () => {
   showModalSyncGDrive.value = false;
 
   // Si la planificacion se encuentra pendiente de guardar, se manda a aplicar los cambios.
-  if (pendingSave.value)
-    await onSavePlanificacionFecha(false)
+  if (hasPendingSave.value)
+    await onSaveAll()
 
   const modal = overlay.create(SyncGoogleDrive);
   modal.open(
@@ -693,6 +782,13 @@ const onUpdateTramo = (tramo: Tramo) => {
                   :fechasYaPlanificadas="planificacion.fechas.map(pf => pf.fecha)"
                   @on:change="onChangePlanificacionFecha"
                 />
+
+                <PlanificacionesPopoverConfigurarComponentes
+                  :llevaAntecedentes="planificacion.llevaAntecedentes"
+                  :llevaProyecciones="planificacion.llevaProyecciones"
+                  @update:llevaAntecedentes="planificacion.llevaAntecedentes = $event"
+                  @update:llevaProyecciones="planificacion.llevaProyecciones = $event"
+                />
               </div>
             </template>
 
@@ -702,11 +798,11 @@ const onUpdateTramo = (tramo: Tramo) => {
                   icon="tabler:device-floppy"
                   color="neutral"
                   variant="ghost"
-                  @click="onSavePlanificacionFecha()"
+                  @click="onSaveAll()"
                 >
                   <template #leading>
                     <div class="flex flex-col">
-                      <div v-if="pendingSave" class="w-2 h-2 rounded-full bg-primary absolute float-right" />
+                      <div v-if="hasPendingSave" class="w-2 h-2 rounded-full bg-primary absolute float-right" />
                       <UIcon name="tabler:device-floppy" class="size-5" />
                     </div>
                   </template>
