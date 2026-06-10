@@ -1,18 +1,19 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { useAuthStore } from '~/utils/authStore'
 import { HttpMethodEnum } from '~/utils/enums/HttpMethodEnum'
 import { apiAuthRoutes, apiPlanUsuarioRoutes } from '~/utils/apiRoutes' // FIX: Agregar apiPlanUsuarioRoutes
 import FlopiBot from '~/components/flopi-bot/FlopiBot.vue'
 import { PromptCategory } from '~/utils/enums/PromptCategory.enum'
 import type { EstadoPlanUsuario } from '~/types/estadoPlanUsuario'
+import { getAuthUser, hasUserRole, mergeUserPreservingRoles } from '~/utils/authRoles'
 
 const { $apiRest } = useNuxtApp()
 const authStore = useAuthStore()
 
 const user = await $apiRest(apiAuthRoutes.user,HttpMethodEnum.GET);
 
-authStore.setUser(user);
+authStore.setUser(mergeUserPreservingRoles(user, authStore.user));
 
 const { data: response, error, refresh } = await useAsyncData('planUsuarioEstado', async () => {
   const estadoPlan = await $apiRest<EstadoPlanUsuario>(apiPlanUsuarioRoutes.getEstadoPeriodoPrueba, HttpMethodEnum.GET);
@@ -24,7 +25,19 @@ const route = useRoute();
 
 const estadoPlan = ref<EstadoPlanUsuario>(response.value.estadoPlan);
 
-const links = [
+interface SidebarLink {
+  id: string
+  label: string
+  icon: string
+  to?: string
+  onSelect?: () => void
+  adminOnly?: boolean
+}
+
+const currentUser = computed(() => getAuthUser(authStore.user))
+const isAdmin = computed(() => hasUserRole(currentUser.value, 'administrador'))
+
+const baseLinks: SidebarLink[] = [
   {
     id: 'home',
     label: 'Inicio',
@@ -55,6 +68,13 @@ const links = [
     icon: 'i-tabler-message-chatbot',
     to: '/asistentes-virtuales',
   },
+  {
+    id: 'users',
+    label: 'Usuarios',
+    icon: 'i-tabler-users',
+    to: '/users',
+    adminOnly: true,
+  },
   // {
   //   id: 'flopi-bot',
   //   label: 'Flopi Bot',
@@ -64,6 +84,10 @@ const links = [
   //   },
   // },
 ]
+
+const links = computed<SidebarLink[]>(() => {
+  return baseLinks.filter(link => !link.adminOnly || isAdmin.value)
+})
 </script>
 
 <template>
@@ -88,7 +112,7 @@ const links = [
           :to="link.to ? link.to : null"
           class="flex items-center gap-3 px-4 py-2 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition"
           :class="{ 'bg-primary text-white font-bold hover:bg-primary': route.path === link.to }"
-          @click="link.onSelect"
+          @click="link.onSelect?.()"
         >
           <UIcon :name="link.icon" class="w-5 h-5" />
           <span>{{ link.label }}</span>
@@ -96,7 +120,7 @@ const links = [
       </nav>
 
       <div class="p-4 border-t border-gray-200 dark:border-gray-700">
-        <UserDropdown v-if="user" />
+        <UserDropdown v-if="currentUser" />
       </div>
     </aside>
 
