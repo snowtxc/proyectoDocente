@@ -24,6 +24,13 @@ export const apiUserConfigRoutes = {
     getConfig : '/config/getConfig'
 }
 
+export const apiUserRoutes = {
+    getPaginate: '/users/paged',
+    roles: '/users/roles',
+    renewPlan: (id:number) => `/users/${id}/renew-plan`,
+    updateRoles: (id:number) => `/users/${id}/roles`
+}
+
 export const apiGrupoRoutes = {
     getSecuenciasRelacionadas : (id:number) => `/grupos/${id}/secuencias/relacionadas`,
     listAll: '/grupos',
