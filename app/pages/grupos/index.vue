@@ -6,10 +6,10 @@ import { ModeEnum } from '~/utils/enums/ModeEnum'
 import { HttpMethodEnum } from '~/utils/enums/HttpMethodEnum'
 import { apiGrupoRoutes, apiGradoRoutes } from '~/utils/apiRoutes'
 import type { ListResponse } from '~/types/list-response'
+import GrupoCard from '~/components/grupos/GrupoCard.vue'
 
 const { $apiRest } = useNuxtApp()
 const toast = useToast()
-const router = useRouter()
 
 // Paginación
 const page = ref(1)
@@ -32,45 +32,6 @@ const filters = ref({
 })
 const searchTimeOut = ref<NodeJS.Timeout | null>(null)
 
-// Columnas de la tabla
-const defaultColumns = [
-  {
-    id: 'nombre',
-    accessorKey: 'nombre',
-    header: 'Nombre',
-    key: 'nombre',
-    label: 'Nombre',
-    sortable: true,
-  },
-  {  
-    id: 'grados',
-    key: 'grados',
-    accessorKey: 'Grados',
-    header: 'Grados',
-    label: 'Grados',
-  },
-  {
-    id: 'year',
-    key: 'year',
-    label: 'Año Escolar',
-    accessorKey: 'Año Escolar',
-    sortable: true,
-  },
-  {
-    accessorKey: 'Acciones',
-    id: 'actions',
-    key: 'actions',
-    label: 'Acciones',
-  },
-]
-
-const selectedColumns = ref(defaultColumns.map(col => col.key))
-const columns = computed(() => {
-  return defaultColumns.filter(column => 
-    selectedColumns.value.includes(column.key)
-  )
-})
-
 // Estados del modal
 const isSlideoverOpen = ref(false)
 const mode = ref<ModeEnum | null>(null)
@@ -82,11 +43,6 @@ const grupos = ref<Grupo[]>([])
 const grados = ref<Grado[]>([])
 const isLoading = ref(false)
 const input = ref<HTMLInputElement>()
-
-// Helper para tipar las filas
-const asGrupo = (row: unknown): Grupo => {
-  return row as Grupo
-}
 
 // Request para la API
 const listReq = computed(() => ({
@@ -121,41 +77,28 @@ const loadGrupos = async () => {
   }
 }
 
-// Cargar grados
-const loadGrados = async () => {
-  try {
-    const gradosList = await $apiRest<Grado[]>(
-      apiGradoRoutes.listAll, 
-      HttpMethodEnum.GET
-    )
-    grados.value = gradosList || []
-  } catch (error: any) {
-    console.error('Error loading grados:', error)
-    toast.error({
-      message: error.message || 'Error cargando grados',
-      color: 'red',
-    })
-  }
-}
-
-const { data: response, error } = await useAsyncData('grupos', async() => { 
-     return await  $apiRest<ListResponse<Grupo[]>>(apiGrupoRoutes.getPaginate, HttpMethodEnum.POST, listReq.value);
-});
+// Carga inicial (SSR): grupos + grados en paralelo.
+// El callback debe RETORNAR los datos; asignarlos como side-effect dentro del callback
+// no se hidrata correctamente en el cliente (el cliente arranca con los refs vacíos).
+const { data: initData, error } = await useAsyncData('grupos-init', async () => {
+  const [gruposResponse, gradosResponse] = await Promise.all([
+    $apiRest<ListResponse<Grupo[]>>(apiGrupoRoutes.getPaginate, HttpMethodEnum.POST, listReq.value),
+    $apiRest<Grado[]>(apiGradoRoutes.listAll, HttpMethodEnum.GET)
+  ])
+  return { gruposResponse, gradosResponse }
+})
 
 if (error.value) {
-    console.error('Error loading grupos:', error.value);
+  console.error('Error loading grupos:', error.value)
 }
 
-if (response.value) {
-    grupos.value = response.value.list;
-    console.log(grupos.value);
-    changeTotalRows(response.value.totalCount);
+if (initData.value) {
+  grupos.value = initData.value.gruposResponse.list || []
+  changeTotalRows(initData.value.gruposResponse.totalCount || 0)
+  grados.value = initData.value.gradosResponse || []
 }
 
-// Cargar datos iniciales
-onMounted(async () => {
-  await Promise.all([loadGrados()])
-  
+onMounted(() => {
   // Shortcut para buscar
   const handleKeyPress = (event: KeyboardEvent) => {
     if (event.key === '/' && input.value) {
@@ -186,7 +129,7 @@ watch(
 )
 
 function onSelect(row: Grupo) {
-  titleModal.value = 'Editar Grupo'
+  titleModal.value = 'Editar grupo'
   mode.value = ModeEnum.UPDATE
   grupoSelected.value = { ...row }
   isSlideoverOpen.value = true
@@ -203,159 +146,115 @@ const onSearch = () => {
 }
 
 const openSlideOverNuevoGrupo = () => {
-  console.log('Abrir slideover') // Para debug
   isSlideoverOpen.value = true
   mode.value = ModeEnum.CREATE
-  titleModal.value = 'Nuevo Grupo'
+  titleModal.value = 'Nuevo grupo'
   grupoSelected.value = null
-}
-
-const verPlanificaciones = async (row: Grupo) => {
-  await router.push({
-    path: '/planificaciones',
-    query: {
-      grupoId: row.id,
-      grupoNombre: row.nombre,
-    },
-  })
 }
 </script>
 
 <template>
-  <UDasboardPage>
-     <UDashboardPanel grow>
-            <UDashboardNavbar title="Grupos">
+  <div class="min-h-full px-4 sm:px-8 py-6 sm:py-8">
+    <div class="max-w-6xl mx-auto">
+      <!-- Encabezado -->
+      <header class="flex flex-wrap items-end justify-between gap-4 mb-6">
+        <div>
+          <h1 class="font-display text-4xl font-bold text-mona-900 leading-none">Mis grupos</h1>
+          <p class="text-mona-800/75 mt-2">
+            <template v-if="totalRows > 0">
+              Tenés <strong class="text-mona-900">{{ totalRows }}</strong> {{ totalRows === 1 ? 'grupo' : 'grupos' }}.
+              Flopi usa el grado de cada uno para buscar en el programa.
+            </template>
+            <template v-else>Acá van tus clases. Flopi las usa para saber con qué grado trabajás.</template>
+          </p>
+        </div>
+        <button
+          type="button"
+          class="boton-miel inline-flex items-center gap-2 px-5 py-3 rounded-2xl font-display text-lg font-semibold"
+          @click="openSlideOverNuevoGrupo"
+        >
+          <UIcon name="i-tabler-plus" class="w-5 h-5" />
+          Nuevo grupo
+        </button>
+      </header>
 
-                 <template #trailing>
-                    <UBadge :label="totalRows" variant="subtle" />
-                </template>
-
-                <template #right>
-                    <UInput
+      <!-- Filtros -->
+      <div class="flex flex-wrap items-center gap-3 mb-6 p-3 bg-white rounded-2xl border-2 border-mona-100">
+        <UInput
           ref="input"
           v-model="filters.nombre"
-          icon="i-heroicons-funnel"
+          icon="i-tabler-search"
           autocomplete="off"
-          placeholder="Filtrar Grupos..."
-          class="hidden lg:block"
+          placeholder="Buscar por nombre…"
+          size="lg"
+          class="flex-1 min-w-48"
           @input="onSearch"
           @keydown.esc="($event.target as HTMLInputElement).blur()"
         />
-
-                  <UButton
-          label="Nuevo Grupo"
-          trailing-icon="i-heroicons-plus"
-          color="primary"
-          @click="openSlideOverNuevoGrupo"
+        <SelectYear v-model="filters.year" class="w-full sm:w-44" @update:model-value="loadGrupos" />
+        <SelectGrado
+          v-model="filters.grado"
+          :grados="grados"
+          :multiple="false"
+          class="w-full sm:w-52"
+          @update:model-value="loadGrupos"
         />
-                </template>
-            </UDashboardNavbar>
+      </div>
 
-            <UDashboardToolbar>
-                <template #default>
-                  <!-- Toolbar / Filters -->
-                  <div class="w-full border-b border-gray-200 dark:border-gray-700 flex gap-3 items-center flex-wrap">
-                    <SelectYear 
-                      v-model="filters.year" 
-                      class="flex-1 max-w-72" 
-                      @update:model-value="loadGrupos" 
-                    />
+      <!-- Cargando -->
+      <div v-if="isLoading" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        <USkeleton v-for="n in 6" :key="n" class="h-56 rounded-3xl" />
+      </div>
 
-                    <SelectGrado
-                      v-model="filters.grado"
-                      :grados="grados"
-                      :multiple="false"
-                      class="flex-1 max-w-72"
-                      @update:model-value="loadGrupos"
-                    />
-                  </div>
-                </template>
-            </UDashboardToolbar>
-
-      <UTable
-        :data="grupos"
-        :columns="columns"
-        :loading="isLoading"
-        class="w-full"
-        empty="No se encontró ningún grupo."
+      <!-- Sin grupos -->
+      <div
+        v-else-if="grupos.length === 0"
+        class="flex flex-col items-center text-center bg-white border-2 border-dashed border-miel-300 rounded-3xl px-6 py-12"
       >
-        <!-- USAR el helper asGrupo() o cast directo -->
-        <template #nombre-cell="{ row }">
-          <div class="flex items-center gap-3">
-            <UAvatar 
-              :src="row.original.url_image" 
-              :alt="row.original.nombre" 
-              size="xs" 
-            />
-            <span class="text-gray-900 dark:text-white font-medium">
-              {{ row.original.nombre }}
-            </span>
-          </div>
-        </template>
+        <FlopiBee :size="110" />
+        <h2 class="font-display text-2xl font-bold text-mona-900 mt-4">Todavía no hay grupos por acá</h2>
+        <p class="text-mona-800/75 mt-1.5 max-w-sm">
+          Creá tu primer grupo con su grado y ya podés pedirle a Flopi una planificación.
+        </p>
+        <button
+          type="button"
+          class="boton-miel inline-flex items-center gap-2 px-5 py-3 mt-6 rounded-2xl font-display text-lg font-semibold"
+          @click="openSlideOverNuevoGrupo"
+        >
+          <UIcon name="i-tabler-plus" class="w-5 h-5" />
+          Nuevo grupo
+        </button>
+      </div>
 
-        <template #grados-cell="{ row }">
-            <BadgeGrado 
-              v-for="grado in asGrupo(row.original).grados" 
-              :key="grado.id" 
-              :grado="grado" 
-            />
-        </template>
+      <!-- Grupos -->
+      <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        <GrupoCard
+          v-for="grupo in grupos"
+          :key="grupo.id"
+          :grupo="grupo"
+          @editar="onSelect"
+        />
+      </div>
 
-         <template #year-cell="{ row }">
-          <span>
-             {{  row.original.year }}
-          </span>
-        </template>
-
-        <template #actions-cell="{ row }">
-          <div class="flex flex-wrap items-center gap-2">
-            <UButton
-              icon="i-heroicons-pencil-square"
-              size="sm"
-              color="primary"
-              variant="outline"
-              @click="onSelect(asGrupo(row.original))"
-              title="Editar grupo"
-            />
-            <UButton
-              icon="i-tabler-calendar-event"
-              size="sm"
-              color="primary"
-              variant="outline"
-              @click="verPlanificaciones(asGrupo(row.original))"
-              title="Ver planificaciones"
-            />
-          </div>
-        </template>
-      </UTable>
-
-    <!-- Pagination -->
-    <div 
-      class="flex justify-end px-4 py-3 border-t border-gray-200 dark:border-gray-700"
-    >
-      <UPagination 
-        v-model:page="page" 
-        :items-per-page="rowsPerPage"
-        :total="totalRows" 
-      />
+      <!-- Paginación -->
+      <div v-if="totalRows > rowsPerPage" class="flex justify-center mt-8">
+        <UPagination v-model:page="page" :items-per-page="rowsPerPage" :total="totalRows" />
+      </div>
     </div>
-      </UDashboardPanel>
-  
-    <!-- Slideover / Modal -->
-    <USlideover v-model:open="isSlideoverOpen">
 
+    <!-- Formulario de grupo -->
+    <USlideover v-model:open="isSlideoverOpen">
         <template #header>
           <div class="w-full flex items-center justify-between">
-            <h2 class="text-xl font-semibold text-gray-900 dark:text-white">
+            <h2 class="font-display text-2xl font-bold text-mona-900">
               {{ titleModal }}
             </h2>
 
-            <UButton color="primary" variant="subtle" :icon="'tabler:x'"  @click="isSlideoverOpen = false"/>
+            <UButton color="neutral" variant="ghost" :icon="'tabler:x'" aria-label="Cerrar" @click="isSlideoverOpen = false"/>
           </div>
         </template>
-        
+
         <template #body>
-          
            <GruposForm
             v-if="isSlideoverOpen"
             :mode="mode"
@@ -364,8 +263,6 @@ const verPlanificaciones = async (row: Grupo) => {
             @on:update="loadGrupos"
           />
         </template>
-            
     </USlideover>
-  </UDasboardPage>
- 
+  </div>
 </template>

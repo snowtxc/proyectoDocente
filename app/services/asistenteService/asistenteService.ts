@@ -1,0 +1,70 @@
+import { useNuxtApp } from '#app'
+import { HttpMethodEnum } from '~/utils/enums/HttpMethodEnum'
+import { apiAsistenteRoutes, apiDescripcionesFundadasRoutes, apiPlanificacionesRoutes } from '~/utils/apiRoutes'
+import type { ContenidoPlanificacion, DescripcionFundada, EnvioMensaje, EstadoSesion, FormatoDescarga, Planificacion } from '~/types/asistente'
+
+export const useAsistenteService = () => {
+  const { $apiRest } = useNuxtApp()
+
+  const iniciar = async (): Promise<EstadoSesion> => {
+    return $apiRest<EstadoSesion>(apiAsistenteRoutes.iniciar, HttpMethodEnum.POST)
+  }
+
+  const obtenerEstado = async (id: number): Promise<EstadoSesion> => {
+    return $apiRest<EstadoSesion>(apiAsistenteRoutes.estado(id), HttpMethodEnum.GET)
+  }
+
+  const enviar = async (id: number, envio: EnvioMensaje): Promise<EstadoSesion> => {
+    return $apiRest<EstadoSesion>(apiAsistenteRoutes.enviar(id), HttpMethodEnum.POST, envio)
+  }
+
+  const guardarPlanificacion = async (id: number, contenido: ContenidoPlanificacion): Promise<Planificacion> => {
+    return $apiRest<Planificacion>(apiPlanificacionesRoutes.update(id), HttpMethodEnum.PUT, { contenido })
+  }
+
+  const confirmarPlanificacion = async (id: number): Promise<Planificacion> => {
+    return $apiRest<Planificacion>(apiPlanificacionesRoutes.confirmar(id), HttpMethodEnum.POST)
+  }
+
+  const guardarDescripcion = async (id: number, texto: string): Promise<DescripcionFundada> => {
+    return $apiRest<DescripcionFundada>(apiDescripcionesFundadasRoutes.update(id), HttpMethodEnum.PUT, { texto })
+  }
+
+  // Baja un archivo del backend con la sesión del docente.
+  const bajarArchivo = async (ruta: string, nombre: string): Promise<void> => {
+    const config = useRuntimeConfig()
+
+    const response = await fetch(`${config.public.apiBaseUrl}${ruta}`, {
+      method: 'GET',
+      credentials: 'include',
+      headers: {
+        Authorization: `Bearer ${useAuthStore().token}`,
+        Accept: 'application/json',
+      },
+    })
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => null)
+      throw new Error(error?.message ?? 'No se pudo descargar el archivo')
+    }
+
+    const blob = await response.blob()
+    const link = document.createElement('a')
+    link.href = URL.createObjectURL(blob)
+    link.download = nombre
+    link.click()
+    URL.revokeObjectURL(link.href)
+  }
+
+  const descargar = async (planificacion: Planificacion, formato: FormatoDescarga): Promise<void> => {
+    const nombre = planificacion.titulo.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+
+    await bajarArchivo(apiPlanificacionesRoutes.exportar(planificacion.id, formato), `${nombre || 'planificacion'}.${formato}`)
+  }
+
+  const descargarDescripcion = async (descripcion: DescripcionFundada, formato: FormatoDescarga): Promise<void> => {
+    await bajarArchivo(apiDescripcionesFundadasRoutes.exportar(descripcion.id, formato), `descripcion-fundada.${formato}`)
+  }
+
+  return { iniciar, obtenerEstado, enviar, guardarPlanificacion, confirmarPlanificacion, descargar, guardarDescripcion, descargarDescripcion }
+}

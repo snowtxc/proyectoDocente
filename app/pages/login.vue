@@ -53,15 +53,17 @@ const authStore = useAuthStore();
 const fields = [{
   name: 'email',
   type: 'email',
+  size: 'xl',
   label: 'Email',
-  placeholder: 'Ingresar correo',
+  placeholder: 'tu@correo.com',
       required: true
 
 }, {
   name: 'password',
   label: 'Contraseña',
   type: 'password',
-  placeholder: 'Ingresar contraseña',
+  size: 'xl',
+  placeholder: 'Tu contraseña',
       required: true
 
 }];
@@ -71,6 +73,10 @@ const { isReady, login: loginWithGoogle } = useCodeClient(googleSignInOptions);
 const providers = [{
   label: 'Continuar con Google',
   icon: 'i-simple-icons-google',
+  size: 'xl',
+  color: 'neutral',
+  variant: 'outline',
+  class: 'justify-center rounded-2xl font-bold',
   
   onClick: () => {
     loginWithGoogle();
@@ -112,84 +118,46 @@ async function onSubmit(payload: FormSubmitEvent<Schema>) {
 </script>
 
 <template>
-  <div class="flex bg-gray-50 dark:bg-gray-900 min-h-screen">
-    <div class="w-full bg-transparent rounded-lg overflow-hidden grid grid-cols-1 md:grid-cols-12 h-full">
-      <!-- Left: Full image panel -->
-      <div class="hidden md:flex relative h-full min-h-screen md:col-span-7">
-        <img
-          src="/wallpaper-login.png"
-          alt="Docentes"
-          class="w-full h-full object-cover"
-          loading="lazy"
-        />
-        <div class="absolute inset-0 flex flex-col justify-center items-start px-16 bg-black/20">
-          <h1 class="text-6xl font-bold text-white drop-shadow-lg">
-            Bienvenido a Flopi Docentes
-          </h1>
-          <p class="text-xl text-white/90 mt-4 max-w-xl drop-shadow">
-            Planificaciones, secuencias y recursos en un solo lugar.
-          </p>
-        </div>
-      </div>
+  <AuthShell
+    saludo="¡Qué bueno verte de nuevo!"
+    detalle="Entrá y seguimos con tus planificaciones donde las dejaste."
+  >
+    <UAuthForm
+      :fields="fields"
+      :schema="schema"
+      title="Entrá a tu cuenta"
+      align="top"
+      :ui="{ title: 'font-display text-3xl font-bold text-mona-900', description: 'text-mona-800/80' }"
+      separator="o"
+      :providers="providers"
+      :submit-button="{ label: 'Iniciar sesión', trailingIcon: 'i-heroicons-arrow-right-20-solid' }"
+      @submit="onSubmit"
+      :submit="{
+        label: 'Entrar',
+        color: 'primary',
+        size: 'xl',
+        class: 'justify-center font-display text-lg font-semibold text-mona-950 rounded-2xl',
+      }"
+    >
+      <template #description>
+        ¿No tenés cuenta?
+        <NuxtLink to="/signup" class="text-mona-700 font-bold underline underline-offset-2">
+          Crear cuenta
+        </NuxtLink>.
+      </template>
 
-      <!-- Right: Login box -->
-      <div class="flex items-center justify-center p-8 bg-transparent dark:bg-slate-800 relative md:col-span-5">
-        <div class="w-full max-w-sm relative">
-          <!-- floating brand icon above the card -->
-           <div class="absolute -top-10 left-1/2 transform -translate-x-1/2">
-            <!-- mismo SVG del login -->
-            <svg width="100" height="100" viewBox="0 0 100 100">
-              <g>
-                <polygon points="28.66,25 20,30 11.34,25 11.34,15 20,10 28.66,15" fill="#F6C84C"/>
-                <polygon points="45.91,25 37.25,30 28.59,25 28.59,15 37.25,10 45.91,15" fill="#F6C84C"/>
-                <polygon points="63.16,25 54.5,30 45.84,25 45.84,15 54.5,10 63.16,15" fill="#F6C84C"/>
-              </g>
-            </svg>
-          </div>
+      <template #password-hint>
+        <NuxtLink to="/forgot-password" class="text-mona-700 font-bold underline underline-offset-2">
+          ¿Olvidaste la contraseña?
+        </NuxtLink>
+      </template>
 
-          <UCard class="pt-12 px-6 pb-6 bg-white/95 dark:bg-slate-800/95">
-            <UAuthForm
-              :fields="fields"
-              :schema="schema"
-              title="Iniciar sesión"
-              align="top"
-              :divider="'o'"
-              :providers="providers"
-              :submit-button="{ label: 'Iniciar sesión', trailingIcon: 'i-heroicons-arrow-right-20-solid' }"
-              @submit="onSubmit"
-              :submit="{
-                  label: 'Ingresar',
-                  color: 'primary',
-              }"
-            >
-              <template #description>
-                ¿No tienes cuenta?
-                <NuxtLink to="/signup" class="text-primary font-medium">
-                  Crear cuenta
-                </NuxtLink>.
-              </template>
-
-              <template #password-hint>
-                <NuxtLink to="/forgot-password" class="text-primary font-medium">
-                  Olvidaste la contraseña?
-                </NuxtLink>
-              </template>
-
-              <template #footer>
-                Al iniciar aceptas nuestros
-                <NuxtLink to="/terminos-y-condiciones" class="text-primary font-medium">
-                  Términos y condiciones
-                </NuxtLink>.
-              </template>
-            </UAuthForm>
-          </UCard>
-
-          <!-- small footer under card -->
-          <div class="mt-4 text-center text-xs text-slate-500 dark:text-slate-400">
-            © {{ new Date().getFullYear() }} Flopi Docentes
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
+      <template #footer>
+        Al entrar aceptás nuestros
+        <NuxtLink to="/terminos-y-condiciones" class="text-mona-700 font-bold underline underline-offset-2">
+          Términos y condiciones
+        </NuxtLink>.
+      </template>
+    </UAuthForm>
+  </AuthShell>
 </template>

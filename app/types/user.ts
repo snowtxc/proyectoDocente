@@ -7,8 +7,6 @@ export interface User extends BaseModel{
   apellido2: string;
   email: string;
   url_image_profile: string;
-  drive_path_planificaciones_folder?: string;
-  drive_path_planificaciones_folder_id?: string;
 }
 
 export interface CreateUserDTO {

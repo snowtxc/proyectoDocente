@@ -33,6 +33,7 @@ const fields = [
   {
     name: 'name',
     type: 'text',
+    size: 'xl',
     label: 'Nombres',
     placeholder: 'Ingresa tu nombre',
     required: true
@@ -40,6 +41,7 @@ const fields = [
   {
     name: 'lastname',
     type: 'text',
+    size: 'xl',
     label: 'Apellidos',
     placeholder: 'Ingresa tu apellido',
     required: true
@@ -47,6 +49,7 @@ const fields = [
   {
     name: 'email',
     type: 'email',
+    size: 'xl',
     label: 'Email',
     placeholder: 'Ingresar email',
     required: true
@@ -54,8 +57,9 @@ const fields = [
   {
     name: 'password',
     type: 'password',
+    size: 'xl',
     label: 'Contraseña',
-    placeholder: 'Ingresar contraseña',
+    placeholder: 'Tu contraseña',
     required: true
   }
 ]
@@ -102,6 +106,10 @@ const providers = [
   {
     label: 'Continuar con Google',
     icon: 'i-simple-icons-google',
+    size: 'xl',
+    color: 'neutral',
+    variant: 'outline',
+    class: 'justify-center rounded-2xl font-bold',
     onClick: () => {
       loginWithGoogle()
     }
@@ -173,78 +181,40 @@ async function onSubmit(payload: FormSubmitEvent<Schema>) {
 
 
 <template>
-  <div class="flex bg-gray-50 dark:bg-gray-900 min-h-screen">
-    <div class="w-full bg-transparent rounded-lg overflow-hidden grid grid-cols-1 md:grid-cols-12 h-full">
+  <AuthShell
+    saludo="¡Hola! Soy Flopi."
+    detalle="Creá tu cuenta y te ayudo a armar tu primera planificación en una charla."
+  >
+    <UAuthForm
+      :fields="fields"
+      :schema="schema"
+      :providers="providers"
+      separator="o"
+      title="Creá tu cuenta"
+      align="top"
+      :ui="{ title: 'font-display text-3xl font-bold text-mona-900', description: 'text-mona-800/80' }"
+      :submit-button="{ label: 'Crear cuenta', trailingIcon: 'i-heroicons-user-plus-20-solid' }"
+      @submit="onSubmit"
+      :submit="{
+          label: 'Crear cuenta',
+          color: 'primary',
+          size: 'xl',
+          class: 'justify-center font-display text-lg font-semibold text-mona-950 rounded-2xl',
+        }"
+    >
+      <template #description>
+        ¿Ya tenés cuenta?
+        <NuxtLink to="/login" class="text-mona-700 font-bold underline underline-offset-2">
+          Iniciar sesión
+        </NuxtLink>.
+      </template>
 
-      <!-- Left image -->
-      <div class="hidden md:flex relative h-full min-h-screen md:col-span-7">
-        <img
-          src="/wallpaper-login.png"
-          alt="Docentes"
-          class="w-full h-full object-cover"
-          loading="lazy"
-        />
-        <div class="absolute inset-0 flex flex-col justify-center items-start px-16 bg-black/20">
-          <h1 class="text-6xl font-bold text-white drop-shadow-lg">
-            Bienvenido a Flopi Docentes
-          </h1>
-          <p class="text-xl text-white/90 mt-4 max-w-xl drop-shadow">
-            Crea tu cuenta y comienza a planificar mejor.
-          </p>
-        </div>
-      </div>
-
-      <!-- Right card -->
-      <div class="flex items-center justify-center p-8 bg-transparent dark:bg-slate-800 relative md:col-span-5">
-        <div class="w-full max-w-sm relative">
-
-          <!-- Floating logo -->
-          <div class="absolute -top-10 left-1/2 transform -translate-x-1/2">
-            <!-- mismo SVG del login -->
-            <svg width="100" height="100" viewBox="0 0 100 100">
-              <g>
-                <polygon points="28.66,25 20,30 11.34,25 11.34,15 20,10 28.66,15" fill="#F6C84C"/>
-                <polygon points="45.91,25 37.25,30 28.59,25 28.59,15 37.25,10 45.91,15" fill="#F6C84C"/>
-                <polygon points="63.16,25 54.5,30 45.84,25 45.84,15 54.5,10 63.16,15" fill="#F6C84C"/>
-              </g>
-            </svg>
-          </div>
-
-          <UCard class="pt-12 px-6 pb-6 bg-white/95 dark:bg-slate-800/95">
-            <UAuthForm
-              :fields="fields"
-              :schema="schema"
-              :providers="providers"
-              title="Crear cuenta"
-              align="top"
-              :submit-button="{ label: 'Crear cuenta', trailingIcon: 'i-heroicons-user-plus-20-solid' }"
-              @submit="onSubmit"
-              :submit="{
-                  label: 'Registrarse',
-                  color: 'primary',
-                }"
-            >
-              <template #description>
-                ¿Ya tienes cuenta?
-                <NuxtLink to="/login" class="text-primary font-medium">
-                  Iniciar sesión
-                </NuxtLink>.
-              </template>
-
-              <template #footer>
-                Al registrarte aceptas nuestros
-                <NuxtLink to="/terminos-y-condiciones" class="text-primary font-medium">
-                  Términos y condiciones
-                </NuxtLink>.
-              </template>
-            </UAuthForm>
-          </UCard>
-
-          <div class="mt-4 text-center text-xs text-slate-500 dark:text-slate-400">
-            © {{ new Date().getFullYear() }} Flopi Docentes
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
+      <template #footer>
+        Al registrarte aceptás nuestros
+        <NuxtLink to="/terminos-y-condiciones" class="text-mona-700 font-bold underline underline-offset-2">
+          Términos y condiciones
+        </NuxtLink>.
+      </template>
+    </UAuthForm>
+  </AuthShell>
 </template>

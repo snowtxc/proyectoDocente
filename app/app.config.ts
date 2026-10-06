@@ -1,5 +1,3 @@
-import { colors } from "@unovis/ts";
-
 export default defineAppConfig({
   ui: {
     primary: 'yellow',

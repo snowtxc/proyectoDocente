@@ -26,7 +26,7 @@ useHead({
     { rel: 'icon', href: '/favicon.ico' }
   ],
   htmlAttrs: {
-    lang: 'en'
+    lang: 'es'
   }
 })
 
@@ -56,9 +56,6 @@ useSeoMeta({
         </NuxtLayout>
 
       </UApp>
-   
-    <UNotifications />
-    <UModals />
   </div>
 </template>
 

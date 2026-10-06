@@ -1,7 +1,7 @@
 <script setup lang="ts">
 
 definePageMeta({
-  layout: 'defaultTwo',
+  layout: 'default-two',
 });
 
 const page = ref({

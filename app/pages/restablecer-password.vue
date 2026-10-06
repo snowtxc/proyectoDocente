@@ -7,7 +7,7 @@ import type { ResetPasswordDTO } from '~/types/auth'
 import * as z from 'zod'
 
 definePageMeta({
-  layout: 'defaultTwo'
+  layout: 'default-two'
 })
 
 useSeoMeta({
