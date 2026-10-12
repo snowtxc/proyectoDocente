@@ -1,5 +1,6 @@
 import { useAuthStore } from "#imports";
 import { LIST_PUBLIC_ROUTES } from "~/utils/publicRoutes";
+import { useSuscripcionStore } from "~/utils/suscripcionStore";
 
 export default defineNuxtRouteMiddleware((to) => {
 
@@ -14,5 +15,10 @@ export default defineNuxtRouteMiddleware((to) => {
 
   if (authStore.token && isPublicRoute) {
     return navigateTo('/home')
+  }
+
+  // Con el período vencido, la única pantalla disponible es la de renovar.
+  if (authStore.token && useSuscripcionStore().vencida && to.path !== '/suscripcion') {
+    return navigateTo('/suscripcion')
   }
 })

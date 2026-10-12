@@ -1,8 +1,10 @@
 import { useAuthStore } from "~/utils/authStore";
+import { useSuscripcionStore } from "~/utils/suscripcionStore";
 import type { HttpMethodEnum } from "~/utils/enums/HttpMethodEnum";
 
 export default defineNuxtPlugin((nuxtApp) => {
     const authStore = useAuthStore();
+    const suscripcionStore = useSuscripcionStore();
     const config = useRuntimeConfig();
     const { start, finish } = useLoadingIndicator();
 
@@ -80,7 +82,18 @@ export default defineNuxtPlugin((nuxtApp) => {
             if (statusCode === 401) {
                 authStore.clearToken();
                 authStore.clearUser();
+                suscripcionStore.clear();
                 navigateTo("/login");
+            }
+
+            // Venció el mes gratis o el período pago: lo único que queda disponible es renovar.
+            if (statusCode === 402 && responseData?.codigo === 'suscripcion_vencida') {
+                suscripcionStore.marcarVencida();
+
+                // En el servidor ya redirige el layout; acá no hay contexto de Nuxt para navegar.
+                if (import.meta.client) {
+                    navigateTo("/suscripcion");
+                }
             }
 
             const message = responseData?.message || responseData || 'An error occurred';

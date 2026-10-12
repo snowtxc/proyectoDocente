@@ -3,17 +3,31 @@ import { useAuthStore } from '~/utils/authStore'
 import { HttpMethodEnum } from '~/utils/enums/HttpMethodEnum'
 import { apiAuthRoutes } from '~/utils/apiRoutes'
 import { appRoutes } from '~/utils/appRoutes'
+import { useSuscripcionStore } from '~/utils/suscripcionStore'
+import { useSuscripcionService } from '~/services/suscripcionService/suscripcionService'
 
 const { $apiRest } = useNuxtApp()
 const authStore = useAuthStore()
+const suscripcionStore = useSuscripcionStore()
+const suscripcionService = useSuscripcionService()
+const route = useRoute();
 
 const user = await $apiRest(apiAuthRoutes.user,HttpMethodEnum.GET);
 
 authStore.setUser(user);
 
-const route = useRoute();
+// Mes gratis o período pago. Si venció, lo único disponible es la pantalla para renovar.
+try {
+  suscripcionStore.setEstado(await suscripcionService.obtenerEstado())
+} catch (error) {
+  console.error('No se pudo consultar la suscripción:', error)
+}
 
-const links = [
+if (suscripcionStore.vencida && route.path !== appRoutes.suscripcion()) {
+  await navigateTo(appRoutes.suscripcion())
+}
+
+const secciones = [
   {
     id: 'asistente',
     label: 'Flopi',
@@ -29,6 +43,22 @@ const links = [
     to: appRoutes.grupos(),
   },
 ]
+
+// Con el período vencido no se muestran las secciones: no se puede entrar a ninguna.
+const links = computed(() => suscripcionStore.vencida ? [] : secciones)
+
+const avisoVencimiento = computed(() => {
+  const estado = suscripcionStore.estado
+
+  if (!estado?.avisar || route.path === appRoutes.suscripcion()) {
+    return null
+  }
+
+  const dias = estado.dias_restantes
+  const cuanto = dias <= 1 ? 'Te queda 1 día' : `Te quedan ${dias} días`
+
+  return estado.en_prueba ? `${cuanto} de tu mes gratis.` : `${cuanto} de Flopi.`
+})
 
 const estaActivo = (to: string) => route.path === to || route.path.startsWith(`${to}/`)
 </script>
@@ -92,8 +122,22 @@ const estaActivo = (to: string) => route.path === to || route.path.startsWith(`$
     </header>
 
     <!-- Contenido -->
-    <main class="flex-1 min-h-0 overflow-y-auto">
-      <slot />
-    </main>
+    <div class="flex-1 min-h-0 flex flex-col">
+      <NuxtLink
+        v-if="avisoVencimiento"
+        :to="appRoutes.suscripcion()"
+        class="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 px-4 py-2 bg-miel-200 text-mona-950 text-sm border-b-2 border-miel-400 hover:bg-miel-300 transition-colors"
+      >
+        <span class="inline-flex items-center gap-1.5">
+          <UIcon name="i-tabler-hourglass-low" class="w-4 h-4 flex-shrink-0" />
+          {{ avisoVencimiento }}
+        </span>
+        <span class="font-bold underline underline-offset-2">Renovar ahora</span>
+      </NuxtLink>
+
+      <main class="flex-1 min-h-0 overflow-y-auto">
+        <slot />
+      </main>
+    </div>
   </div>
 </template>

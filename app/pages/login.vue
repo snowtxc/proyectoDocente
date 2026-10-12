@@ -34,7 +34,11 @@ const googleSignInOptions: ImplicitFlowOptions = {
         navigateTo({ path: '/home' });
       }
     }catch(e){
-      // ToDo
+      // Sin este aviso, si el backend rechaza el ingreso con Google no pasa nada en pantalla.
+      toast.error({
+        title: "No se pudo entrar con Google",
+        message: typeof e === 'string' ? e : 'Probá de nuevo en un momento.',
+      });
     }
    
   },

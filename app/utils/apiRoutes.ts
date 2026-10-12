@@ -46,3 +46,9 @@ export const apiPlanificacionesRoutes = {
     confirmar: (id: number) => `/planificaciones/${id}/confirmar`,
     exportar: (id: number, formato: string) => `/planificaciones/${id}/exportar?formato=${formato}`,
 }
+
+export const apiSuscripcionRoutes = {
+    estado: '/suscripcion',
+    pagar: '/suscripcion/pagos',
+    verificar: '/suscripcion/pagos/verificar',
+}

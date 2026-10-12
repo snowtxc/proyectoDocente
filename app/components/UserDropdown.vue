@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useAuthStore } from '~/utils/authStore';
+import { useSuscripcionStore } from '~/utils/suscripcionStore';
 import { apiAuthRoutes } from '~/utils/apiRoutes';
 import { HttpMethodEnum } from '~/utils/enums/HttpMethodEnum';
 
@@ -26,6 +27,11 @@ const items = computed(() => [
     to: '/configuracion'
   },
   {
+    label: 'Mi suscripción',
+    icon: 'i-tabler-credit-card',
+    to: '/suscripcion'
+  },
+  {
     label: 'Salir',
     icon: 'tabler:logout',
     onSelect: async()=>{
@@ -34,6 +40,7 @@ const items = computed(() => [
        navigateTo("/login");
        authStore.setToken(null);
        authStore.setUser(null);
+       useSuscripcionStore().clear();
       }catch(message){
         toast.error({
           message: message ? message : 'Error al deslogearse',
