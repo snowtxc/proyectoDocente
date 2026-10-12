@@ -52,3 +52,11 @@ export const apiSuscripcionRoutes = {
     pagar: '/suscripcion/pagos',
     verificar: '/suscripcion/pagos/verificar',
 }
+
+export const apiAdminRoutes = {
+    usuarios: (pagina: number, porPagina: number, buscar: string) => `/admin/usuarios?page=${pagina}&rowsPerPage=${porPagina}&buscar=${encodeURIComponent(buscar)}`,
+    aplicarPlan: (id: number) => `/admin/usuarios/${id}/plan`,
+    planes: '/admin/planes',
+    configuraciones: '/admin/configuraciones',
+    configuracion: (id: number) => `/admin/configuraciones/${id}`,
+}

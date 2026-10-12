@@ -24,6 +24,8 @@ export interface EstadoSuscripcion {
   pagos_habilitados: boolean
   // Cuánto usó de la IA este mes, como porcentaje del tope.
   uso_ia: { porcentaje: number, agotado: boolean, se_renueva: string, en_prueba: boolean }
+  // Número de WhatsApp de soporte (solo dígitos). Vacío = sin botón.
+  whatsapp_soporte: string
   // Solo al verificar un pago: cómo quedó.
   resultado?: ResultadoPago | null
 }

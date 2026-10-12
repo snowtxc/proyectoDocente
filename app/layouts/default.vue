@@ -44,8 +44,31 @@ const secciones = [
   },
 ]
 
+const esSuperadmin = computed(() => authStore.user?.rol === 'superadmin')
+
+const seccionUsuarios = {
+  id: 'usuarios',
+  label: 'Usuarios',
+  descripcion: 'Cuentas, planes y configuración',
+  icon: 'i-tabler-shield-check',
+  to: appRoutes.usuarios(),
+}
+
 // Con el período vencido no se muestran las secciones: no se puede entrar a ninguna.
-const links = computed(() => suscripcionStore.vencida ? [] : secciones)
+const links = computed(() => {
+  if (suscripcionStore.vencida) return []
+
+  return esSuperadmin.value ? [...secciones, seccionUsuarios] : secciones
+})
+
+// Botón de WhatsApp para los docentes, si hay un número de soporte cargado.
+const enlaceWhatsapp = computed(() => {
+  const numero = suscripcionStore.estado?.whatsapp_soporte ?? ''
+
+  if (esSuperadmin.value || !/^\d{8,15}$/.test(numero)) return null
+
+  return `https://wa.me/${numero}?text=${encodeURIComponent('Hola, escribo desde Flopi Docentes.')}`
+})
 
 const avisoVencimiento = computed(() => {
   const estado = suscripcionStore.estado
@@ -61,7 +84,8 @@ const avisoVencimiento = computed(() => {
 })
 
 // Uso de la IA en el mes (porcentaje del tope).
-const usoIa = computed(() => suscripcionStore.vencida ? null : suscripcionStore.estado?.uso_ia ?? null)
+// El superadmin no tiene tope, así que no ve la barra.
+const usoIa = computed(() => suscripcionStore.vencida || authStore.user?.rol === 'superadmin' ? null : suscripcionStore.estado?.uso_ia ?? null)
 
 const usoIaRenueva = computed(() => usoIa.value
   ? new Date(`${usoIa.value.se_renueva}T12:00:00`).toLocaleDateString('es-UY', { day: 'numeric', month: 'long' })
@@ -166,5 +190,33 @@ const estaActivo = (to: string) => route.path === to || route.path.startsWith(`$
         <slot />
       </main>
     </div>
+
+    <!-- Soporte por WhatsApp -->
+    <a
+      v-if="enlaceWhatsapp"
+      :href="enlaceWhatsapp"
+      target="_blank"
+      rel="noopener noreferrer"
+      class="boton-whatsapp fixed z-40 right-4 bottom-24 md:bottom-6 md:right-6 w-14 h-14 rounded-full flex items-center justify-center text-white shadow-lg transition-transform hover:scale-105"
+      aria-label="Escribinos por WhatsApp"
+      title="¿Dudas o algún problema? Escribinos por WhatsApp"
+    >
+      <UIcon name="i-simple-icons-whatsapp" class="w-7 h-7" />
+    </a>
   </div>
 </template>
+
+<style scoped>
+.boton-whatsapp {
+  background-color: #25d366;
+}
+
+.boton-whatsapp:hover {
+  background-color: #1fb457;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .boton-whatsapp { transition: none; }
+  .boton-whatsapp:hover { transform: none; }
+}
+</style>
