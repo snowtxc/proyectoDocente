@@ -23,6 +23,12 @@ export const useSuscripcionStore = defineStore('suscripcion', {
       }
     },
 
+    actualizarUsoIa(usoIa: EstadoSuscripcion['uso_ia']) {
+      if (this.estado) {
+        this.estado = { ...this.estado, uso_ia: usoIa }
+      }
+    },
+
     clear() {
       this.estado = null
     },

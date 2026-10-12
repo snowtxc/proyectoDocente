@@ -60,6 +60,13 @@ const avisoVencimiento = computed(() => {
   return estado.en_prueba ? `${cuanto} de tu mes gratis.` : `${cuanto} de Flopi.`
 })
 
+// Uso de la IA en el mes (porcentaje del tope).
+const usoIa = computed(() => suscripcionStore.vencida ? null : suscripcionStore.estado?.uso_ia ?? null)
+
+const usoIaRenueva = computed(() => usoIa.value
+  ? new Date(`${usoIa.value.se_renueva}T12:00:00`).toLocaleDateString('es-UY', { day: 'numeric', month: 'long' })
+  : '')
+
 const estaActivo = (to: string) => route.path === to || route.path.startsWith(`${to}/`)
 </script>
 
@@ -96,6 +103,26 @@ const estaActivo = (to: string) => route.path === to || route.path.startsWith(`$
           </span>
         </NuxtLink>
       </nav>
+
+      <div v-if="usoIa" class="px-5 pb-4" :title="`Se renueva el ${usoIaRenueva}`">
+        <div class="flex items-baseline justify-between text-xs text-mona-200">
+          <span>Uso de la IA este mes</span>
+          <span class="font-bold" :class="usoIa.agotado ? 'text-miel-300' : 'text-white'">{{ usoIa.porcentaje }} %</span>
+        </div>
+        <div
+          class="mt-1.5 h-2 rounded-full bg-white/15 overflow-hidden"
+          role="progressbar"
+          aria-label="Uso de la IA este mes"
+          :aria-valuenow="usoIa.porcentaje"
+          aria-valuemin="0"
+          aria-valuemax="100"
+        >
+          <div class="h-full rounded-full bg-miel-400 transition-all" :style="{ width: `${Math.max(usoIa.porcentaje, 2)}%` }" />
+        </div>
+        <p v-if="usoIa.agotado" class="mt-1.5 text-xs text-miel-200 leading-snug">
+          Llegaste al tope. Se renueva el {{ usoIaRenueva }}.
+        </p>
+      </div>
 
       <div class="p-3 border-t border-white/10">
         <UserDropdown v-if="user" />

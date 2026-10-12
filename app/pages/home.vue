@@ -78,6 +78,10 @@ watch(() => [mensajes.value.length, enviando.value], bajarAlFinal)
 
 const usarSesion = (estado: EstadoSesion) => {
   sesion.value = estado
+
+  if (estado.uso_ia) {
+    useSuscripcionStore().actualizarUsoIa(estado.uso_ia)
+  }
   localStorage.setItem(CLAVE_SESION, String(estado.id))
 }
 
