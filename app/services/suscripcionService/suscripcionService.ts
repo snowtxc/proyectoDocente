@@ -11,7 +11,7 @@ export const useSuscripcionService = () => {
   }
 
   // Crea el pago del período elegido. Devuelve adónde ir a pagar.
-  const iniciarPago = async (plan: string): Promise<{ url: string }> => {
+  const iniciarPago = async (plan: number): Promise<{ url: string }> => {
     return $apiRest<{ url: string }>(apiSuscripcionRoutes.pagar, HttpMethodEnum.POST, { plan })
   }
 

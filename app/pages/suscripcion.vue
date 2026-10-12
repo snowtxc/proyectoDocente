@@ -13,7 +13,12 @@ const suscripcionStore = useSuscripcionStore()
 const suscripcionService = useSuscripcionService()
 
 const estado = computed(() => suscripcionStore.estado)
-const planElegido = ref('1m')
+// Arranca elegido el período más corto.
+const planElegido = ref<number | null>(estado.value?.planes[0]?.id ?? null)
+
+watch(estado, (nuevo) => {
+  if (planElegido.value === null) planElegido.value = nuevo?.planes[0]?.id ?? null
+})
 const pagando = ref(false)
 const verificando = ref(false)
 
@@ -50,7 +55,7 @@ const bajada = computed(() => {
 })
 
 const pagar = async () => {
-  if (pagando.value) return
+  if (pagando.value || planElegido.value === null) return
 
   pagando.value = true
 
@@ -221,7 +226,7 @@ onMounted(async () => {
           <button
             type="button"
             class="boton-miel inline-flex items-center gap-2 px-6 py-3 rounded-2xl font-display text-xl font-semibold"
-            :disabled="pagando || verificando || !estado.pagos_habilitados"
+            :disabled="pagando || verificando || planElegido === null || !estado.pagos_habilitados"
             @click="pagar"
           >
             <UIcon :name="pagando ? 'i-tabler-loader-2' : 'i-tabler-lock'" class="w-5 h-5" :class="{ 'animate-spin': pagando }" />

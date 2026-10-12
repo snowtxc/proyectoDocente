@@ -1,5 +1,5 @@
 export interface PlanSuscripcion {
-  id: string
+  id: number
   nombre: string
   meses: number
   precio: number
