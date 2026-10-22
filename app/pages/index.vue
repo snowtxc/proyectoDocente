@@ -38,10 +38,10 @@ const pasos = [
 
 // Lo que hay cargado hoy en el sistema.
 const programa = [
-  { cifra: '1.628', nombre: 'contenidos' },
-  { cifra: '1.868', nombre: 'criterios de logro' },
+  { cifra: '2.946', nombre: 'contenidos' },
+  { cifra: '2.642', nombre: 'criterios de logro' },
   { cifra: '10', nombre: 'competencias generales' },
-  { cifra: '9', nombre: 'grados, de Inicial 3 a 6to' },
+  { cifra: '12', nombre: 'grados, de Inicial 3 a 9no' },
 ]
 
 const partesDelDocumento = [
