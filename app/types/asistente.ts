@@ -38,13 +38,7 @@ export interface PropuestaCurricular {
   competencia_general_ids: number[]
   competencia_especifica_ids: number[]
   meta_aprendizaje: string
-  actividad: string
-  secuencia: string | null
-  antecedente: string | null
-  proyeccion: string | null
   plan: PasoPlan[]
-  adecuaciones: string[]
-  recursos: string[]
 }
 
 // Actividad sin datos del programa (por ejemplo, una clase a cargo de otro docente).
@@ -99,6 +93,21 @@ export interface Planificacion {
   // El mismo documento listo para mostrar, con los textos del programa.
   dias: DiaPresentado[]
   total_propuestas: number
+  // El PDF y el Word de esta versión ya están guardados en DigitalOcean.
+  archivos_guardados?: boolean
+}
+
+// Fila de "Mis planificaciones".
+export interface PlanificacionResumen {
+  id: number
+  titulo: string
+  estado: 'borrador' | 'confirmada'
+  grupo: string | null
+  desde: string | null
+  hasta: string | null
+  total_propuestas: number
+  archivos_guardados: boolean
+  actualizada: string | null
 }
 
 // Descripción fundada de un estudiante. El texto usa un marcador en lugar del nombre.

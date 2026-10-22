@@ -110,11 +110,9 @@ const quitarPropuesta = (fecha: string, indice: number, numero: string) => {
 const traducirError = (error: string): string => {
   if (error.includes('meta_aprendizaje') && error.includes('Los estudiantes')) return 'La meta de aprendizaje tiene que empezar con "Los estudiantes".'
   if (error.includes('meta_aprendizaje')) return 'La meta de aprendizaje es muy corta o muy larga.'
-  if (error.includes('actividad')) return 'El nombre de la actividad tiene que tener entre 3 y 200 letras.'
+  if (error.includes('actividad')) return 'El nombre de la actividad tiene que tener entre 3 y 300 letras.'
   if (error.includes('subpasos')) return 'Revisá las preguntas o ítems de los pasos: cada uno puede tener hasta 400 letras.'
   if (error.includes('plan')) return 'El plan tiene que tener al menos un paso, y cada paso un texto de hasta 700 letras.'
-  if (error.includes('adecuaciones')) return 'Revisá las adecuaciones: hasta 10, de no más de 300 letras cada una.'
-  if (error.includes('recursos')) return 'Revisá los recursos: hasta 15, de no más de 200 letras cada uno.'
   if (error.includes('datos del programa')) return 'No se pueden cambiar los datos del programa de un tramo.'
   return 'Revisá los datos del tramo.'
 }

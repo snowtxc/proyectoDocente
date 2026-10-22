@@ -15,8 +15,6 @@ const emit = defineEmits<{
 
 // Copia de trabajo. Las listas se editan como texto, un elemento por renglón.
 const borrador = ref<any>(JSON.parse(JSON.stringify(props.propuesta)))
-const adecuaciones = ref((props.propuesta as PropuestaCurricular).adecuaciones?.join('\n') ?? '')
-const recursos = ref((props.propuesta as PropuestaCurricular).recursos?.join('\n') ?? '')
 const subpasos = ref<string[]>(((props.propuesta as PropuestaCurricular).plan ?? []).map(paso => paso.subpasos.join('\n')))
 
 const esCurricular = computed(() => props.propuesta.tipo === 'curricular')
@@ -39,19 +37,12 @@ const guardar = () => {
     return
   }
 
-  const vacioANull = (valor: string | null) => (valor && valor.trim() !== '' ? valor.trim() : null)
-
   emit('guardar', {
     ...borrador.value,
-    secuencia: vacioANull(borrador.value.secuencia),
-    antecedente: vacioANull(borrador.value.antecedente),
-    proyeccion: vacioANull(borrador.value.proyeccion),
     // Se descartan los pasos que quedaron vacíos.
     plan: borrador.value.plan
       .map((paso: { texto: string }, i: number) => ({ texto: paso.texto.trim(), subpasos: renglones(subpasos.value[i] ?? '') }))
       .filter((paso: { texto: string }) => paso.texto !== ''),
-    adecuaciones: renglones(adecuaciones.value),
-    recursos: renglones(recursos.value),
   })
 }
 </script>
@@ -68,9 +59,10 @@ const guardar = () => {
       </ul>
     </div>
 
-    <label class="campo">
+    <!-- Tramo sin datos del programa: solo su nombre. -->
+    <label v-if="!esCurricular" class="campo">
       <span>Actividad</span>
-      <UInput v-model="borrador.actividad" class="w-full" maxlength="200" />
+      <UInput v-model="borrador.actividad" class="w-full" maxlength="300" />
     </label>
 
     <template v-if="esCurricular">
@@ -79,21 +71,6 @@ const guardar = () => {
         <UTextarea v-model="borrador.meta_aprendizaje" :rows="3" autoresize class="w-full" maxlength="700" />
         <small>Empieza con "Los estudiantes" y lleva el verbo en futuro.</small>
       </label>
-
-      <div class="grid sm:grid-cols-3 gap-3">
-        <label class="campo">
-          <span>Secuencia</span>
-          <UInput v-model="borrador.secuencia" class="w-full" maxlength="200" placeholder="Opcional" />
-        </label>
-        <label class="campo">
-          <span>Antecedente</span>
-          <UInput v-model="borrador.antecedente" class="w-full" maxlength="200" placeholder="Opcional" />
-        </label>
-        <label class="campo">
-          <span>Proyección</span>
-          <UInput v-model="borrador.proyeccion" class="w-full" maxlength="200" placeholder="Opcional" />
-        </label>
-      </div>
 
       <fieldset class="space-y-2.5">
         <legend class="etiqueta">Plan de aprendizaje y desarrollo de la intervención docente</legend>
@@ -127,19 +104,6 @@ const guardar = () => {
           Agregar paso
         </UButton>
       </fieldset>
-
-      <div class="grid sm:grid-cols-2 gap-3">
-        <label class="campo">
-          <span>Adecuación de acceso</span>
-          <UTextarea v-model="adecuaciones" :rows="3" autoresize class="w-full" />
-          <small>Una por renglón.</small>
-        </label>
-        <label class="campo">
-          <span>Recursos</span>
-          <UTextarea v-model="recursos" :rows="3" autoresize class="w-full" />
-          <small>Uno por renglón.</small>
-        </label>
-      </div>
 
       <p class="text-xs text-mona-800/70">
         <UIcon name="i-tabler-lock" class="w-3.5 h-3.5 inline -mt-0.5" />

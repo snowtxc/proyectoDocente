@@ -2,6 +2,8 @@
 export const appRoutes = {
     asistente: () => '/home',
     grupos: () => '/grupos',
+    planificaciones: () => '/planificaciones',
+    planificacion: (id: number) => `/planificaciones/${id}`,
     suscripcion: () => '/suscripcion',
     usuarios: () => '/admin/usuarios',
 }

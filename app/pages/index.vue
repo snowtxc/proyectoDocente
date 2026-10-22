@@ -46,9 +46,9 @@ const programa = [
 
 const partesDelDocumento = [
   { titulo: 'Meta de aprendizaje', texto: 'Una oración clara de lo que van a lograr los estudiantes.' },
+  { titulo: 'Espacio y unidad curricular', texto: 'De dónde sale cada tramo dentro del programa.' },
   { titulo: 'Contenido, criterio y competencias', texto: 'Los que elegiste, con el texto del programa.' },
   { titulo: 'Plan de aprendizaje', texto: 'Los pasos de la intervención docente, con las preguntas para hacerle al grupo.' },
-  { titulo: 'Adecuaciones y recursos', texto: 'Apoyos para quienes los necesiten y los materiales de ese día.' },
 ]
 </script>
 
@@ -157,7 +157,6 @@ const partesDelDocumento = [
               Los estudiantes identificarán y clasificarán sustantivos, verbos y adjetivos presentes en la reseña de un cuento
               para reconocer cómo cada clase de palabra aporta sentido al texto.
             </p>
-            <p><span class="rotulo">Actividad:</span> Clasificación de palabras en una reseña.</p>
             <p><span class="rotulo">Plan de aprendizaje y desarrollo de la intervención docente:</span></p>
             <ul class="list-disc pl-6 space-y-0.5">
               <li>Leer en voz alta la reseña elegida.</li>

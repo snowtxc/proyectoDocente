@@ -6,7 +6,6 @@ defineProps<{
   propuesta: PropuestaPresentada
 }>()
 
-const conPunto = (texto: string) => (/[.!?…]$/.test(texto) ? texto : `${texto}.`)
 const unir = (items: { texto: string }[]) => items.map(i => i.texto).join(' ')
 </script>
 
@@ -31,22 +30,6 @@ const unir = (items: { texto: string }[]) => items.map(i => i.texto).join(' ')
       <div class="px-4 py-3 space-y-3 text-[15px] leading-relaxed border-t-2 border-mona-200">
         <p><span class="etiqueta">Meta de aprendizaje:</span> {{ propuesta.meta_aprendizaje }}</p>
 
-        <p>
-          <span class="etiqueta">Actividad:</span> {{ conPunto(propuesta.actividad) + ' ' }}
-          <template v-if="propuesta.secuencia">
-            <span class="etiqueta">Secuencia:</span> {{ conPunto(propuesta.secuencia) }}
-          </template>
-        </p>
-
-        <p v-if="propuesta.antecedente || propuesta.proyeccion">
-          <template v-if="propuesta.antecedente">
-            <span class="etiqueta">Antecedente:</span> {{ conPunto(propuesta.antecedente) + ' ' }}
-          </template>
-          <template v-if="propuesta.proyeccion">
-            <span class="etiqueta">Proyección:</span> {{ conPunto(propuesta.proyeccion) }}
-          </template>
-        </p>
-
         <div>
           <p><span class="etiqueta">Plan de aprendizaje y desarrollo de la intervención docente:</span></p>
           <ul class="plan">
@@ -59,19 +42,6 @@ const unir = (items: { texto: string }[]) => items.map(i => i.texto).join(' ')
           </ul>
         </div>
 
-        <div v-if="propuesta.adecuaciones.length > 0">
-          <p><span class="etiqueta">Adecuación de acceso:</span></p>
-          <ul class="plan">
-            <li v-for="(adecuacion, a) in propuesta.adecuaciones" :key="a">{{ adecuacion }}</li>
-          </ul>
-        </div>
-      </div>
-
-      <div v-if="propuesta.recursos.length > 0" class="px-4 py-3 text-[15px] border-t-2 border-mona-200">
-        <p><span class="etiqueta">Recursos:</span></p>
-        <ul class="plan">
-          <li v-for="(recurso, r) in propuesta.recursos" :key="r">{{ recurso }}</li>
-        </ul>
       </div>
     </template>
   </div>

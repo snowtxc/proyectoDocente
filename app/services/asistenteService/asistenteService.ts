@@ -1,7 +1,7 @@
 import { useNuxtApp } from '#app'
 import { HttpMethodEnum } from '~/utils/enums/HttpMethodEnum'
 import { apiAsistenteRoutes, apiDescripcionesFundadasRoutes, apiPlanificacionesRoutes } from '~/utils/apiRoutes'
-import type { ContenidoPlanificacion, DescripcionFundada, EnvioMensaje, EstadoSesion, FormatoDescarga, Planificacion } from '~/types/asistente'
+import type { ContenidoPlanificacion, DescripcionFundada, EnvioMensaje, EstadoSesion, FormatoDescarga, Planificacion, PlanificacionResumen } from '~/types/asistente'
 
 export const useAsistenteService = () => {
   const { $apiRest } = useNuxtApp()
@@ -16,6 +16,14 @@ export const useAsistenteService = () => {
 
   const enviar = async (id: number, envio: EnvioMensaje): Promise<EstadoSesion> => {
     return $apiRest<EstadoSesion>(apiAsistenteRoutes.enviar(id), HttpMethodEnum.POST, envio)
+  }
+
+  const listarPlanificaciones = async (): Promise<PlanificacionResumen[]> => {
+    return $apiRest<PlanificacionResumen[]>(apiPlanificacionesRoutes.listar, HttpMethodEnum.GET)
+  }
+
+  const obtenerPlanificacion = async (id: number): Promise<Planificacion> => {
+    return $apiRest<Planificacion>(apiPlanificacionesRoutes.find(id), HttpMethodEnum.GET)
   }
 
   const guardarPlanificacion = async (id: number, contenido: ContenidoPlanificacion): Promise<Planificacion> => {
@@ -66,5 +74,5 @@ export const useAsistenteService = () => {
     await bajarArchivo(apiDescripcionesFundadasRoutes.exportar(descripcion.id, formato), `descripcion-fundada.${formato}`)
   }
 
-  return { iniciar, obtenerEstado, enviar, guardarPlanificacion, confirmarPlanificacion, descargar, guardarDescripcion, descargarDescripcion }
+  return { iniciar, obtenerEstado, enviar, listarPlanificaciones, obtenerPlanificacion, guardarPlanificacion, confirmarPlanificacion, descargar, guardarDescripcion, descargarDescripcion }
 }

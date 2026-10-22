@@ -36,6 +36,13 @@ const secciones = [
     to: appRoutes.asistente(),
   },
   {
+    id: 'planificaciones',
+    label: 'Mis planificaciones',
+    descripcion: 'Guardadas, para editar y descargar',
+    icon: 'i-tabler-file-text',
+    to: appRoutes.planificaciones(),
+  },
+  {
     id: 'grupos',
     label: 'Mis grupos',
     descripcion: 'Tus clases y sus grados',
