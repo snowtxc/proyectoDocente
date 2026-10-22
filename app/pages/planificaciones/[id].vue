@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useAsistenteService } from '~/services/asistenteService/asistenteService'
 import PlanificacionPreview from '~/components/asistente/PlanificacionPreview.vue'
 import { appRoutes } from '~/utils/appRoutes'
 import type { Planificacion } from '~/types/asistente'

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useAsistenteService } from '~/services/asistenteService/asistenteService'
 import { appRoutes } from '~/utils/appRoutes'
 import type { FormatoDescarga, PlanificacionResumen } from '~/types/asistente'
 
