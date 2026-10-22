@@ -10,6 +10,8 @@ export interface UsuarioAdmin {
   en_prueba: boolean
   // Porcentaje del tope de IA usado este mes.
   uso_ia: number
+  // Dólares de IA gastados este mes.
+  gasto_ia: number
 }
 
 export interface ConfiguracionAdmin {

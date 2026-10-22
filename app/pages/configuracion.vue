@@ -6,6 +6,10 @@ const links = [[{
   icon: 'i-lucide-user',
   to: '/configuracion',
   exact: true
+}, {
+  label: 'Uso de la IA',
+  icon: 'i-tabler-sparkles',
+  to: '/configuracion/uso-ia'
 }]] satisfies NavigationMenuItem[][]
 </script>
 

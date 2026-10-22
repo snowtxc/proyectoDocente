@@ -59,4 +59,9 @@ export const apiAdminRoutes = {
     planes: '/admin/planes',
     configuraciones: '/admin/configuraciones',
     configuracion: (id: number) => `/admin/configuraciones/${id}`,
+    usoIa: (id: number, pagina: number, porPagina: number) => `/admin/usuarios/${id}/uso-ia?page=${pagina}&rowsPerPage=${porPagina}`,
+}
+
+export const apiUsoIaRoutes = {
+    mio: (pagina: number, porPagina: number) => `/uso-ia?page=${pagina}&rowsPerPage=${porPagina}`,
 }

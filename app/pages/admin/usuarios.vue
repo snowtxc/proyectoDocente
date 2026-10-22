@@ -6,6 +6,7 @@ import { useAuthStore } from '~/utils/authStore'
 import type { ListResponse } from '~/types/list-response'
 import type { ConfiguracionAdmin, UsuarioAdmin } from '~/types/admin'
 import type { PlanSuscripcion } from '~/types/suscripcion'
+import type { UsoIaDetalle } from '~/types/usoIa'
 
 useSeoMeta({ title: 'Usuarios · Flopi Docentes' })
 
@@ -34,6 +35,40 @@ const usuarioElegido = ref<UsuarioAdmin | null>(null)
 const planElegido = ref<number | null>(null)
 const modalAbierto = ref(false)
 const aplicando = ref(false)
+
+// Consumo de IA de un usuario.
+const consumoAbierto = ref(false)
+const consumoUsuario = ref<UsuarioAdmin | null>(null)
+const consumo = ref<UsoIaDetalle | null>(null)
+const consumoPagina = ref(1)
+const consumoPorPagina = 15
+const cargandoConsumo = ref(false)
+
+const dinero = (valor: number) => new Intl.NumberFormat('es-UY', { style: 'currency', currency: 'USD', minimumFractionDigits: 2, maximumFractionDigits: 4 }).format(valor)
+
+const cargarConsumo = async () => {
+  if (!consumoUsuario.value) return
+
+  cargandoConsumo.value = true
+
+  try {
+    consumo.value = await $apiRest<UsoIaDetalle>(apiAdminRoutes.usoIa(consumoUsuario.value.id, consumoPagina.value, consumoPorPagina), HttpMethodEnum.GET)
+  } catch (error: any) {
+    toast.error({ title: 'No pudimos cargar el consumo', message: mensajeDe(error, 'Probá de nuevo.') })
+  } finally {
+    cargandoConsumo.value = false
+  }
+}
+
+const verConsumo = (usuario: UsuarioAdmin) => {
+  consumoUsuario.value = usuario
+  consumo.value = null
+  consumoPagina.value = 1
+  consumoAbierto.value = true
+  cargarConsumo()
+}
+
+watch(consumoPagina, cargarConsumo)
 
 const mensajeDe = (error: any, porDefecto: string) => typeof error === 'string' ? error : (error?.message ?? porDefecto)
 
@@ -171,6 +206,7 @@ onMounted(async () => {
               <th scope="col" class="px-4 py-3">Acceso hasta</th>
               <th scope="col" class="px-4 py-3">Estado</th>
               <th scope="col" class="px-4 py-3">IA del mes</th>
+              <th scope="col" class="px-4 py-3">Gasto IA</th>
               <th scope="col" class="px-4 py-3"><span class="sr-only">Acciones</span></th>
             </tr>
           </thead>
@@ -189,7 +225,16 @@ onMounted(async () => {
                 </span>
               </td>
               <td class="px-4 py-3 text-mona-900">{{ usuario.rol === 'superadmin' ? '—' : `${usuario.uso_ia} %` }}</td>
-              <td class="px-4 py-3 text-right">
+              <td class="px-4 py-3 text-mona-900 whitespace-nowrap">{{ dinero(usuario.gasto_ia) }}</td>
+              <td class="px-4 py-3 text-right whitespace-nowrap">
+                <button
+                  type="button"
+                  class="boton-mona inline-flex items-center gap-1.5 px-3 py-2 rounded-xl font-bold whitespace-nowrap mr-2"
+                  @click="verConsumo(usuario)"
+                >
+                  <UIcon name="i-tabler-sparkles" class="w-4 h-4" />
+                  Consumo
+                </button>
                 <button
                   v-if="usuario.rol !== 'superadmin'"
                   type="button"
@@ -202,10 +247,10 @@ onMounted(async () => {
               </td>
             </tr>
             <tr v-if="!cargando && usuarios.length === 0">
-              <td colspan="7" class="px-4 py-8 text-center text-mona-800/75">No hay usuarios que coincidan.</td>
+              <td colspan="8" class="px-4 py-8 text-center text-mona-800/75">No hay usuarios que coincidan.</td>
             </tr>
             <tr v-if="cargando && usuarios.length === 0">
-              <td colspan="7" class="px-4 py-8 text-center text-mona-800/75">Cargando…</td>
+              <td colspan="8" class="px-4 py-8 text-center text-mona-800/75">Cargando…</td>
             </tr>
           </tbody>
         </table>
@@ -243,6 +288,18 @@ onMounted(async () => {
         </div>
       </section>
     </div>
+
+    <!-- Consumo de IA de un usuario -->
+    <UModal
+      v-model:open="consumoAbierto"
+      title="Consumo de IA"
+      :description="consumoUsuario ? `${consumoUsuario.nombre} · ${consumoUsuario.email}` : ''"
+      :ui="{ content: 'sm:max-w-3xl' }"
+    >
+      <template #body>
+        <SettingsUsoIaDetalle v-model:pagina="consumoPagina" :datos="consumo" :cargando="cargandoConsumo" :por-pagina="consumoPorPagina" />
+      </template>
+    </UModal>
 
     <!-- Aplicar un plan a mano -->
     <UModal
