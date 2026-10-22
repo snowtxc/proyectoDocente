@@ -1,6 +1,7 @@
 import { useNuxtApp } from '#app'
 import { HttpMethodEnum } from '~/utils/enums/HttpMethodEnum'
 import { apiAsistenteRoutes, apiDescripcionesFundadasRoutes, apiPlanificacionesRoutes } from '~/utils/apiRoutes'
+import type { ListResponse } from '~/types/list-response'
 import type { ContenidoPlanificacion, DescripcionFundada, EnvioMensaje, EstadoSesion, FormatoDescarga, Planificacion, PlanificacionResumen } from '~/types/asistente'
 
 export const useAsistenteService = () => {
@@ -18,8 +19,13 @@ export const useAsistenteService = () => {
     return $apiRest<EstadoSesion>(apiAsistenteRoutes.enviar(id), HttpMethodEnum.POST, envio)
   }
 
-  const listarPlanificaciones = async (): Promise<PlanificacionResumen[]> => {
-    return $apiRest<PlanificacionResumen[]>(apiPlanificacionesRoutes.listar, HttpMethodEnum.GET)
+  const listarPlanificaciones = async (pagina: number, porPagina: number): Promise<ListResponse<PlanificacionResumen[]>> => {
+    return $apiRest<ListResponse<PlanificacionResumen[]>>(apiPlanificacionesRoutes.listar(pagina, porPagina), HttpMethodEnum.GET)
+  }
+
+  // Planificaciones con algún día entre desde y hasta (YYYY-MM-DD), para el calendario.
+  const planificacionesEntre = async (desde: string, hasta: string): Promise<PlanificacionResumen[]> => {
+    return (await $apiRest<ListResponse<PlanificacionResumen[]>>(apiPlanificacionesRoutes.calendario(desde, hasta), HttpMethodEnum.GET)).list
   }
 
   const obtenerPlanificacion = async (id: number): Promise<Planificacion> => {
@@ -74,5 +80,5 @@ export const useAsistenteService = () => {
     await bajarArchivo(apiDescripcionesFundadasRoutes.exportar(descripcion.id, formato), `descripcion-fundada.${formato}`)
   }
 
-  return { iniciar, obtenerEstado, enviar, listarPlanificaciones, obtenerPlanificacion, guardarPlanificacion, confirmarPlanificacion, descargar, guardarDescripcion, descargarDescripcion }
+  return { iniciar, obtenerEstado, enviar, listarPlanificaciones, planificacionesEntre, obtenerPlanificacion, guardarPlanificacion, confirmarPlanificacion, descargar, guardarDescripcion, descargarDescripcion }
 }

@@ -6,6 +6,7 @@ export const appRoutes = {
     planificacion: (id: number) => `/planificaciones/${id}`,
     suscripcion: () => '/suscripcion',
     usuarios: () => '/admin/usuarios',
+    reportes: () => '/admin/reportes',
 }
 
 export const appAuthRoutes ={

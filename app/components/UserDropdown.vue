@@ -14,6 +14,7 @@ const { $apiRest } = useNuxtApp();
 const toast = useToast()
 const user = computed(() => authStore.user);
 const runtimeConfig = useRuntimeConfig()
+const reporteAbierto = ref(false)
 
 
 const items = computed(() => [
@@ -30,6 +31,11 @@ const items = computed(() => [
     label: 'Mi suscripción',
     icon: 'i-tabler-credit-card',
     to: '/suscripcion'
+  },
+  {
+    label: 'Reportar un problema o sugerir',
+    icon: 'i-tabler-message-report',
+    onSelect: () => { reporteAbierto.value = true }
   },
   {
     label: 'Salir',
@@ -52,6 +58,8 @@ const items = computed(() => [
 </script>
 
 <template>
+  <!-- display: contents para no cambiar el layout de quien lo usa; el modal se monta al lado. -->
+  <div class="contents">
   <UDropdownMenu
     :items="items"
     class="w-full"
@@ -90,4 +98,7 @@ const items = computed(() => [
       </div>
     </template>
   </UDropdownMenu>
+
+  <ReporteModal v-model:open="reporteAbierto" />
+  </div>
 </template>

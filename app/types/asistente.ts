@@ -105,6 +105,8 @@ export interface PlanificacionResumen {
   grupo: string | null
   desde: string | null
   hasta: string | null
+  // Días de clase con la cantidad de tramos de cada uno.
+  dias: { fecha: string, tramos: number }[]
   total_propuestas: number
   archivos_guardados: boolean
   actualizada: string | null

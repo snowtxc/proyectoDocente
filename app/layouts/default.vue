@@ -61,11 +61,19 @@ const seccionUsuarios = {
   to: appRoutes.usuarios(),
 }
 
+const seccionReportes = {
+  id: 'reportes',
+  label: 'Reportes',
+  descripcion: 'Problemas e ideas de los usuarios',
+  icon: 'i-tabler-message-report',
+  to: appRoutes.reportes(),
+}
+
 // Con el período vencido no se muestran las secciones: no se puede entrar a ninguna.
 const links = computed(() => {
   if (suscripcionStore.vencida) return []
 
-  return esSuperadmin.value ? [...secciones, seccionUsuarios] : secciones
+  return esSuperadmin.value ? [...secciones, seccionUsuarios, seccionReportes] : secciones
 })
 
 // Botón de WhatsApp para los docentes, si hay un número de soporte cargado.

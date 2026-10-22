@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useAsistenteService } from '~/services/asistenteService/asistenteService'
+import CalendarioPlanificaciones from '~/components/planificaciones/CalendarioPlanificaciones.vue'
 import { appRoutes } from '~/utils/appRoutes'
 import type { FormatoDescarga, PlanificacionResumen } from '~/types/asistente'
 
@@ -9,7 +10,17 @@ const { listarPlanificaciones, obtenerPlanificacion, descargar } = useAsistenteS
 const toast = useToast()
 
 const planificaciones = ref<PlanificacionResumen[]>([])
+const total = ref(0)
+const pagina = ref(1)
+const porPagina = 9
 const cargando = ref(true)
+
+// Lista o calendario. Se recuerda en este navegador.
+const vistas = [
+  { label: 'Lista', value: 'lista', icon: 'i-tabler-layout-grid' },
+  { label: 'Calendario', value: 'calendario', icon: 'i-tabler-calendar-month' },
+]
+const vista = ref<'lista' | 'calendario'>('lista')
 // "id_formato" que se está descargando.
 const descargando = ref<string | null>(null)
 
@@ -33,20 +44,39 @@ const bajar = async (p: PlanificacionResumen, formato: FormatoDescarga) => {
   }
 }
 
-onMounted(async () => {
+const cargar = async () => {
+  cargando.value = true
+
   try {
-    planificaciones.value = await listarPlanificaciones()
+    const respuesta = await listarPlanificaciones(pagina.value, porPagina)
+    planificaciones.value = respuesta.list
+    total.value = respuesta.totalCount
   } catch (e: any) {
     toast.error({ title: 'No pudimos cargar tus planificaciones', message: typeof e === 'string' ? e : (e?.message ?? 'Probá de nuevo.') })
   } finally {
     cargando.value = false
   }
+}
+
+watch(pagina, cargar)
+
+watch(vista, (valor) => {
+  try { localStorage.setItem('flopi.planificaciones.vista', valor) } catch {}
+})
+
+onMounted(() => {
+  try {
+    const guardada = localStorage.getItem('flopi.planificaciones.vista')
+    if (guardada === 'calendario' || guardada === 'lista') vista.value = guardada
+  } catch {}
+
+  cargar()
 })
 </script>
 
 <template>
   <div class="min-h-full px-4 sm:px-8 py-6 sm:py-8">
-    <div class="max-w-5xl mx-auto">
+    <div class="max-w-6xl mx-auto">
       <header class="flex flex-wrap items-end justify-between gap-4 mb-6">
         <div>
           <h1 class="font-display text-4xl font-bold text-mona-900 leading-none">Mis planificaciones</h1>
@@ -60,55 +90,76 @@ onMounted(async () => {
         </NuxtLink>
       </header>
 
-      <p v-if="cargando" class="text-mona-800/75">Cargando…</p>
+      <UTabs v-model="vista" :items="vistas" :content="false" class="mb-5 w-full sm:w-72" />
 
-      <div v-else-if="planificaciones.length === 0" class="bg-white rounded-2xl border-2 border-mona-100 px-6 py-10 text-center">
-        <p class="font-display text-xl font-semibold text-mona-900">Todavía no tenés planificaciones</p>
-        <p class="text-mona-800/75 mt-1">Pedile una a Flopi y va a aparecer acá.</p>
-      </div>
+      <CalendarioPlanificaciones v-if="vista === 'calendario'" />
 
-      <ul v-else class="flex flex-col gap-3">
-        <li
-          v-for="p in planificaciones"
-          :key="p.id"
-          class="bg-white rounded-2xl border-2 border-mona-100 px-4 sm:px-5 py-4 flex flex-wrap items-center gap-x-4 gap-y-3"
-        >
-          <NuxtLink :to="appRoutes.planificacion(p.id)" class="flex-1 min-w-60 group">
-            <span class="block font-display text-lg font-semibold text-mona-950 group-hover:text-mona-700">{{ p.titulo }}</span>
-            <span class="block text-sm text-mona-800/75">
-              {{ p.grupo ?? 'Sin grupo' }} · {{ rango(p) }} · {{ p.total_propuestas }} {{ p.total_propuestas === 1 ? 'tramo' : 'tramos' }}
-            </span>
-          </NuxtLink>
+      <template v-else>
+        <p v-if="cargando && planificaciones.length === 0" class="text-mona-800/75">Cargando…</p>
 
-          <span
-            class="inline-block px-2.5 py-1 rounded-full text-xs font-bold whitespace-nowrap"
-            :class="p.estado === 'confirmada' ? 'bg-green-100 text-green-900' : 'bg-miel-100 text-miel-900'"
+        <div v-else-if="total === 0" class="bg-white rounded-2xl border-2 border-mona-100 px-6 py-10 text-center">
+          <p class="font-display text-xl font-semibold text-mona-900">Todavía no tenés planificaciones</p>
+          <p class="text-mona-800/75 mt-1">Pedile una a Flopi y va a aparecer acá.</p>
+        </div>
+
+        <ul v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <li
+            v-for="p in planificaciones"
+            :key="p.id"
+            class="bg-white rounded-2xl border-2 border-mona-100 p-5 flex flex-col aspect-square min-h-64 hover:border-mona-300 transition-colors"
           >
-            {{ p.estado === 'confirmada' ? 'Confirmada' : 'Borrador' }}
-          </span>
-
-          <div class="flex items-center gap-2">
-            <template v-if="p.estado === 'confirmada'">
-              <button
-                v-for="formato in (['pdf', 'docx'] as const)"
-                :key="formato"
-                type="button"
-                class="boton-mona inline-flex items-center gap-1.5 px-3 py-2 rounded-xl font-bold text-sm"
-                :disabled="descargando !== null"
-                :title="p.archivos_guardados ? 'Guardado en la nube' : 'Se genera al descargar'"
-                @click="bajar(p, formato)"
+            <div class="flex items-start justify-between gap-2">
+              <span
+                class="inline-block px-2.5 py-1 rounded-full text-xs font-bold whitespace-nowrap"
+                :class="p.estado === 'confirmada' ? 'bg-green-100 text-green-900' : 'bg-miel-100 text-miel-900'"
               >
-                <UIcon :name="formato === 'pdf' ? 'i-tabler-file-type-pdf' : 'i-tabler-file-type-docx'" class="w-4 h-4" />
-                {{ descargando === `${p.id}_${formato}` ? 'Bajando…' : (formato === 'pdf' ? 'PDF' : 'Word') }}
-              </button>
-            </template>
-            <NuxtLink :to="appRoutes.planificacion(p.id)" class="boton-mona inline-flex items-center gap-1.5 px-3 py-2 rounded-xl font-bold text-sm">
-              <UIcon name="i-tabler-pencil" class="w-4 h-4" />
-              Abrir
+                {{ p.estado === 'confirmada' ? 'Confirmada' : 'Borrador' }}
+              </span>
+              <UIcon
+                v-if="p.archivos_guardados"
+                name="i-tabler-cloud-check"
+                class="w-5 h-5 text-green-700"
+                title="El PDF y el Word están guardados en la nube"
+              />
+            </div>
+
+            <NuxtLink :to="appRoutes.planificacion(p.id)" class="mt-4 group flex-1">
+              <span class="block font-display text-xl font-semibold leading-tight text-mona-950 group-hover:text-mona-700">{{ p.titulo }}</span>
+              <span class="block mt-2 text-sm text-mona-800/80">{{ p.grupo ?? 'Sin grupo' }}</span>
+              <span class="block text-sm text-mona-800/80">{{ rango(p) }}</span>
+              <span class="block mt-3 font-display text-3xl font-bold text-mona-900">
+                {{ p.total_propuestas }}
+                <span class="text-base font-semibold text-mona-800/70">{{ p.total_propuestas === 1 ? 'tramo' : 'tramos' }}</span>
+              </span>
             </NuxtLink>
-          </div>
-        </li>
-      </ul>
+
+            <div class="flex flex-wrap items-center gap-2 mt-4">
+              <NuxtLink :to="appRoutes.planificacion(p.id)" class="boton-mona inline-flex items-center gap-1.5 px-3 py-2 rounded-xl font-bold text-sm">
+                <UIcon name="i-tabler-pencil" class="w-4 h-4" />
+                Abrir
+              </NuxtLink>
+              <template v-if="p.estado === 'confirmada'">
+                <button
+                  v-for="formato in (['pdf', 'docx'] as const)"
+                  :key="formato"
+                  type="button"
+                  class="boton-mona inline-flex items-center gap-1.5 px-3 py-2 rounded-xl font-bold text-sm"
+                  :disabled="descargando !== null"
+                  :title="p.archivos_guardados ? 'Guardado en la nube' : 'Se genera al descargar'"
+                  @click="bajar(p, formato)"
+                >
+                  <UIcon :name="formato === 'pdf' ? 'i-tabler-file-type-pdf' : 'i-tabler-file-type-docx'" class="w-4 h-4" />
+                  {{ descargando === `${p.id}_${formato}` ? '…' : (formato === 'pdf' ? 'PDF' : 'Word') }}
+                </button>
+              </template>
+            </div>
+          </li>
+        </ul>
+
+        <div v-if="total > porPagina" class="flex justify-center mt-6">
+          <UPagination v-model:page="pagina" :items-per-page="porPagina" :total="total" />
+        </div>
+      </template>
     </div>
   </div>
 </template>

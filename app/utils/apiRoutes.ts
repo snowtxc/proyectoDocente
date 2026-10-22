@@ -40,7 +40,8 @@ export const apiDescripcionesFundadasRoutes = {
 }
 
 export const apiPlanificacionesRoutes = {
-    listar: '/planificaciones',
+    listar: (pagina: number, porPagina: number) => `/planificaciones?page=${pagina}&rowsPerPage=${porPagina}`,
+    calendario: (desde: string, hasta: string) => `/planificaciones?desde=${desde}&hasta=${hasta}`,
     find: (id: number) => `/planificaciones/${id}`,
     update: (id: number) => `/planificaciones/${id}`,
     confirmar: (id: number) => `/planificaciones/${id}/confirmar`,
@@ -60,6 +61,12 @@ export const apiAdminRoutes = {
     configuraciones: '/admin/configuraciones',
     configuracion: (id: number) => `/admin/configuraciones/${id}`,
     usoIa: (id: number, pagina: number, porPagina: number) => `/admin/usuarios/${id}/uso-ia?page=${pagina}&rowsPerPage=${porPagina}`,
+    reportes: (pagina: number, porPagina: number, tipo: string, estado: string) => `/admin/reportes?page=${pagina}&rowsPerPage=${porPagina}&tipo=${tipo}&estado=${estado}`,
+    reporte: (id: number) => `/admin/reportes/${id}`,
+}
+
+export const apiReportesRoutes = {
+    crear: '/reportes',
 }
 
 export const apiUsoIaRoutes = {
