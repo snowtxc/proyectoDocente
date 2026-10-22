@@ -39,6 +39,9 @@ export interface PropuestaCurricular {
   competencia_especifica_ids: number[]
   meta_aprendizaje: string
   plan: PasoPlan[]
+  // Versión con formato que escribió el docente en el editor (si la editó). Tiene prioridad.
+  meta_html?: string
+  plan_html?: string
 }
 
 // Actividad sin datos del programa (por ejemplo, una clase a cargo de otro docente).

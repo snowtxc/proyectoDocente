@@ -243,6 +243,7 @@ const bajar = async (formato: FormatoDescarga) => {
             <!-- Edición -->
             <PropuestaEditor
               v-if="editando === clave(dia.fecha, i)"
+              :planificacion-id="planificacion.id"
               :propuesta="planificacion.contenido.dias.find(d => d.fecha === dia.fecha)!.propuestas[i]!"
               :guardando="guardando"
               :errores="errores"

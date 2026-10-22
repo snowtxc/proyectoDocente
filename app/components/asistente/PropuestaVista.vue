@@ -28,11 +28,17 @@ const unir = (items: { texto: string }[]) => items.map(i => i.texto).join(' ')
       </div>
 
       <div class="px-4 py-3 space-y-3 text-[15px] leading-relaxed border-t-2 border-mona-200">
-        <p><span class="etiqueta">Meta de aprendizaje:</span> {{ propuesta.meta_aprendizaje }}</p>
+        <!-- El HTML del editor llega limpio del backend (HtmlTramo::limpiar). -->
+        <div v-if="propuesta.meta_html">
+          <p><span class="etiqueta">Meta de aprendizaje:</span></p>
+          <div class="html-docente" v-html="propuesta.meta_html" />
+        </div>
+        <p v-else><span class="etiqueta">Meta de aprendizaje:</span> {{ propuesta.meta_aprendizaje }}</p>
 
         <div>
           <p><span class="etiqueta">Plan de aprendizaje y desarrollo de la intervención docente:</span></p>
-          <ul class="plan">
+          <div v-if="propuesta.plan_html" class="html-docente" v-html="propuesta.plan_html" />
+          <ul v-else class="plan">
             <li v-for="(paso, p) in propuesta.plan" :key="p">
               {{ paso.texto }}
               <ul v-if="paso.subpasos.length > 0">
@@ -48,6 +54,20 @@ const unir = (items: { texto: string }[]) => items.map(i => i.texto).join(' ')
 </template>
 
 <style scoped>
+/* Texto con formato del editor: mismas clases que genera Quill. */
+.html-docente :deep(p) { margin: 0.15rem 0; }
+.html-docente :deep(ul) { list-style: disc; padding-left: 1.4rem; }
+.html-docente :deep(ol) { list-style: decimal; padding-left: 1.4rem; }
+.html-docente :deep(li.ql-indent-1) { margin-left: 1.4rem; list-style: circle; }
+.html-docente :deep(li.ql-indent-2) { margin-left: 2.8rem; list-style: square; }
+.html-docente :deep(h2) { font-weight: 800; font-size: 1.1rem; margin-top: 0.5rem; }
+.html-docente :deep(h3) { font-weight: 800; margin-top: 0.4rem; }
+.html-docente :deep(img) { max-width: 100%; height: auto; border-radius: 0.5rem; margin: 0.4rem 0; }
+.html-docente :deep(blockquote) { border-left: 3px solid var(--color-mona-200); padding-left: 0.75rem; color: var(--color-mona-800); }
+.html-docente :deep(.ql-align-center) { text-align: center; }
+.html-docente :deep(.ql-align-right) { text-align: right; }
+.html-docente :deep(.ql-align-justify) { text-align: justify; }
+
 /* Etiquetas en negrita subrayada, con el color del espacio de conocimiento (como en el documento). */
 .etiqueta {
   font-weight: 800;

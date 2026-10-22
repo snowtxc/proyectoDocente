@@ -4,6 +4,7 @@ import type { Propuesta, PropuestaCurricular } from '~/types/asistente'
 // Formulario para editar la redacción de una propuesta. Los datos del programa no se tocan.
 const props = defineProps<{
   propuesta: Propuesta
+  planificacionId: number
   guardando?: boolean
   errores?: string[]
 }>()
@@ -13,23 +14,20 @@ const emit = defineEmits<{
   (e: 'cancelar'): void
 }>()
 
-// Copia de trabajo. Las listas se editan como texto, un elemento por renglón.
+// Copia de trabajo.
 const borrador = ref<any>(JSON.parse(JSON.stringify(props.propuesta)))
-const subpasos = ref<string[]>(((props.propuesta as PropuestaCurricular).plan ?? []).map(paso => paso.subpasos.join('\n')))
+
+// La meta y el plan se editan con formato. Si el tramo todavía no tiene versión con formato,
+// se arma desde el texto que redactó Flopi.
+const escapar = (texto: string) => texto.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+const curricular = props.propuesta as PropuestaCurricular
+
+const metaHtml = ref(curricular.meta_html ?? (curricular.meta_aprendizaje ? `<p>${escapar(curricular.meta_aprendizaje)}</p>` : ''))
+const planHtml = ref(curricular.plan_html ?? (curricular.plan?.length
+  ? '<ul>' + curricular.plan.map(paso => `<li>${escapar(paso.texto)}</li>` + paso.subpasos.map(sub => `<li class="ql-indent-1">${escapar(sub)}</li>`).join('')).join('') + '</ul>'
+  : ''))
 
 const esCurricular = computed(() => props.propuesta.tipo === 'curricular')
-
-const renglones = (texto: string) => texto.split('\n').map(r => r.trim()).filter(r => r !== '')
-
-const agregarPaso = () => {
-  borrador.value.plan.push({ texto: '', subpasos: [] })
-  subpasos.value.push('')
-}
-
-const quitarPaso = (indice: number) => {
-  borrador.value.plan.splice(indice, 1)
-  subpasos.value.splice(indice, 1)
-}
 
 const guardar = () => {
   if (!esCurricular.value) {
@@ -37,12 +35,11 @@ const guardar = () => {
     return
   }
 
+  // El backend limpia el HTML y saca de ahí el texto de la meta y los pasos del plan.
   emit('guardar', {
     ...borrador.value,
-    // Se descartan los pasos que quedaron vacíos.
-    plan: borrador.value.plan
-      .map((paso: { texto: string }, i: number) => ({ texto: paso.texto.trim(), subpasos: renglones(subpasos.value[i] ?? '') }))
-      .filter((paso: { texto: string }) => paso.texto !== ''),
+    meta_html: metaHtml.value,
+    plan_html: planHtml.value,
   })
 }
 </script>
@@ -66,44 +63,17 @@ const guardar = () => {
     </label>
 
     <template v-if="esCurricular">
-      <label class="campo">
+      <div class="campo">
         <span>Meta de aprendizaje</span>
-        <UTextarea v-model="borrador.meta_aprendizaje" :rows="3" autoresize class="w-full" maxlength="700" />
+        <AsistenteEditorTexto v-model="metaHtml" :planificacion-id="planificacionId" :alto="90" placeholder="Los estudiantes…" />
         <small>Empieza con "Los estudiantes" y lleva el verbo en futuro.</small>
-      </label>
+      </div>
 
-      <fieldset class="space-y-2.5">
-        <legend class="etiqueta">Plan de aprendizaje y desarrollo de la intervención docente</legend>
-
-        <div v-for="(paso, i) in borrador.plan" :key="i" class="flex items-start gap-2 p-2.5 rounded-xl bg-mona-50/70 border border-mona-100">
-          <span class="mt-2 w-6 text-center text-sm font-extrabold text-mona-700">{{ i + 1 }}</span>
-          <div class="flex-1 space-y-1.5">
-            <UTextarea v-model="paso.texto" :rows="1" autoresize class="w-full" maxlength="700" :aria-label="`Paso ${i + 1}`" />
-            <UTextarea
-              v-model="subpasos[i]"
-              :rows="1"
-              autoresize
-              class="w-full"
-              size="sm"
-              placeholder="Preguntas o ítems de este paso, uno por renglón (opcional)"
-              :aria-label="`Preguntas o ítems del paso ${i + 1}`"
-            />
-          </div>
-          <UButton
-            icon="i-tabler-trash"
-            color="neutral"
-            variant="ghost"
-            size="sm"
-            :aria-label="`Quitar paso ${i + 1}`"
-            :disabled="borrador.plan.length <= 1"
-            @click="quitarPaso(i)"
-          />
-        </div>
-
-        <UButton icon="i-tabler-plus" color="neutral" variant="ghost" size="xs" @click="agregarPaso">
-          Agregar paso
-        </UButton>
-      </fieldset>
+      <div class="campo">
+        <span>Plan de aprendizaje y desarrollo de la intervención docente</span>
+        <AsistenteEditorTexto v-model="planHtml" :planificacion-id="planificacionId" :alto="220" placeholder="Los pasos de la clase…" />
+        <small>Podés usar listas, negrita, títulos e imágenes, como en Word.</small>
+      </div>
 
       <p class="text-xs text-mona-800/70">
         <UIcon name="i-tabler-lock" class="w-3.5 h-3.5 inline -mt-0.5" />
