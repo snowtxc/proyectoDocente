@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { Propuesta, PropuestaCurricular } from '~/types/asistente'
+import type { PasoPlan, Propuesta, PropuestaCurricular } from '~/types/asistente'
 
 // Formulario para editar la redacción de una propuesta. Los datos del programa no se tocan.
 const props = defineProps<{
@@ -22,10 +22,29 @@ const borrador = ref<any>(JSON.parse(JSON.stringify(props.propuesta)))
 const escapar = (texto: string) => texto.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
 const curricular = props.propuesta as PropuestaCurricular
 
+// Los subtítulos del plan (en multigrado, uno por grado) van como títulos del editor.
+const planComoHtml = (plan: PasoPlan[]) => {
+  let html = ''
+  let enLista = false
+
+  for (const paso of plan) {
+    if (paso.titulo) {
+      if (enLista) html += '</ul>'
+      enLista = false
+      html += `<h3>${escapar(paso.texto)}</h3>`
+      continue
+    }
+
+    if (!enLista) html += '<ul>'
+    enLista = true
+    html += `<li>${escapar(paso.texto)}</li>` + paso.subpasos.map(sub => `<li class="ql-indent-1">${escapar(sub)}</li>`).join('')
+  }
+
+  return enLista ? html + '</ul>' : html
+}
+
 const metaHtml = ref(curricular.meta_html ?? (curricular.meta_aprendizaje ? `<p>${escapar(curricular.meta_aprendizaje)}</p>` : ''))
-const planHtml = ref(curricular.plan_html ?? (curricular.plan?.length
-  ? '<ul>' + curricular.plan.map(paso => `<li>${escapar(paso.texto)}</li>` + paso.subpasos.map(sub => `<li class="ql-indent-1">${escapar(sub)}</li>`).join('')).join('') + '</ul>'
-  : ''))
+const planHtml = ref(curricular.plan_html ?? (curricular.plan?.length ? planComoHtml(curricular.plan) : ''))
 
 const esCurricular = computed(() => props.propuesta.tipo === 'curricular')
 

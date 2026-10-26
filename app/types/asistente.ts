@@ -27,6 +27,8 @@ export interface MensajeChat {
 export interface PasoPlan {
   texto: string
   subpasos: string[]
+  // Subtítulo dentro del plan: en multigrado, "Todos juntos" o el nombre de un grado.
+  titulo?: boolean
 }
 
 // Propuesta con contenidos del programa. Los datos del programa van como IDs.

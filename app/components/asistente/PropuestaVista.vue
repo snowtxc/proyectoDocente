@@ -39,7 +39,7 @@ const unir = (items: { texto: string }[]) => items.map(i => i.texto).join(' ')
           <p><span class="etiqueta">Plan de aprendizaje y desarrollo de la intervención docente:</span></p>
           <div v-if="propuesta.plan_html" class="html-docente" v-html="propuesta.plan_html" />
           <ul v-else class="plan">
-            <li v-for="(paso, p) in propuesta.plan" :key="p">
+            <li v-for="(paso, p) in propuesta.plan" :key="p" :class="{ subtitulo: paso.titulo }">
               {{ paso.texto }}
               <ul v-if="paso.subpasos.length > 0">
                 <li v-for="(subpaso, s) in paso.subpasos" :key="s">{{ subpaso }}</li>
@@ -108,6 +108,17 @@ const unir = (items: { texto: string }[]) => items.map(i => i.texto).join(' ')
 
 .plan li {
   margin-bottom: 0.2rem;
+}
+
+.plan li.subtitulo {
+  list-style: none;
+  margin: 0.6rem 0 0.2rem -1.4rem;
+  font-weight: 800;
+  color: var(--color-mona-900);
+}
+
+.plan li.subtitulo:first-child {
+  margin-top: 0;
 }
 
 .plan ul {
