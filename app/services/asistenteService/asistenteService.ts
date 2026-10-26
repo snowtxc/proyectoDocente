@@ -1,6 +1,6 @@
 import { useNuxtApp } from '#app'
 import { HttpMethodEnum } from '~/utils/enums/HttpMethodEnum'
-import { apiAsistenteRoutes, apiDescripcionesFundadasRoutes, apiPlanificacionesRoutes } from '~/utils/apiRoutes'
+import { apiAsistenteRoutes, apiDescripcionesFundadasRoutes, apiEstiloRoutes, apiPlanificacionesRoutes } from '~/utils/apiRoutes'
 import type { ListResponse } from '~/types/list-response'
 import type { ContenidoPlanificacion, DescripcionFundada, EnvioMensaje, EstadoSesion, FormatoDescarga, Planificacion, PlanificacionResumen } from '~/types/asistente'
 
@@ -38,6 +38,10 @@ export const useAsistenteService = () => {
 
   const confirmarPlanificacion = async (id: number): Promise<Planificacion> => {
     return $apiRest<Planificacion>(apiPlanificacionesRoutes.confirmar(id), HttpMethodEnum.POST)
+  }
+
+  const eliminarPlanificacion = async (id: number): Promise<void> => {
+    await $apiRest(apiPlanificacionesRoutes.eliminar(id), HttpMethodEnum.DELETE)
   }
 
   const guardarDescripcion = async (id: number, texto: string): Promise<DescripcionFundada> => {
@@ -80,5 +84,10 @@ export const useAsistenteService = () => {
     await bajarArchivo(apiDescripcionesFundadasRoutes.exportar(descripcion.id, formato), `descripcion-fundada.${formato}`)
   }
 
-  return { iniciar, obtenerEstado, enviar, listarPlanificaciones, planificacionesEntre, obtenerPlanificacion, guardarPlanificacion, confirmarPlanificacion, descargar, guardarDescripcion, descargarDescripcion }
+  // Planificación de prueba con el formato copiado del docente.
+  const descargarEjemploFormato = async (formato: FormatoDescarga): Promise<void> => {
+    await bajarArchivo(apiEstiloRoutes.formatoEjemplo(formato), `ejemplo-con-mi-formato.${formato}`)
+  }
+
+  return { iniciar, obtenerEstado, enviar, listarPlanificaciones, planificacionesEntre, obtenerPlanificacion, guardarPlanificacion, confirmarPlanificacion, eliminarPlanificacion, descargar, guardarDescripcion, descargarDescripcion, descargarEjemploFormato }
 }

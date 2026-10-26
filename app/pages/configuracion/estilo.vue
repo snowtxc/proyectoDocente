@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { HttpMethodEnum } from '~/utils/enums/HttpMethodEnum'
 import { apiEstiloRoutes } from '~/utils/apiRoutes'
+import { paginasPdf } from '~/utils/paginasPdf'
 import type { EstiloDocente } from '~/types/estilo'
 
 // Perfil de estilo: el docente sube planificaciones suyas y Flopi aprende cómo planifica.
+// Con la misma subida copia el diseño de la última para sus descargas.
 useSeoMeta({ title: 'Mi estilo · Flopi Docentes' })
 
 const { $apiRest } = useNuxtApp()
@@ -17,7 +19,10 @@ const guardando = ref(false)
 const resumen = ref('')
 const entrada = ref<HTMLInputElement>()
 
-const mensajeDe = (error: any, porDefecto: string) => error?.errors?.archivo?.[0] ?? (typeof error === 'string' ? error : (error?.message ?? porDefecto))
+const mensajeDe = (error: any, porDefecto: string) => {
+  const errores = error?.errors ? Object.values(error.errors).flat() : []
+  return (errores[0] as string) ?? (typeof error === 'string' ? error : (error?.message ?? porDefecto))
+}
 
 const aplicar = (datos: EstiloDocente) => {
   estilo.value = datos
@@ -46,8 +51,20 @@ const subir = async (evento: Event) => {
   try {
     const datos = new FormData()
     datos.append('archivo', archivo)
+
+    // Del PDF, Flopi también mira cómo se ven las primeras páginas para copiar su diseño.
+    if (archivo.name.toLowerCase().endsWith('.pdf')) {
+      const paginas = await paginasPdf(archivo).catch(() => [])
+      paginas.forEach(pagina => datos.append('paginas[]', pagina))
+    }
+
     aplicar(await $apiRest<EstiloDocente>(apiEstiloRoutes.ejemplos, HttpMethodEnum.POST, datos))
-    toast.success({ title: '¡Listo!', message: 'Flopi ya aprendió de tu planificación. Revisá abajo cómo describió tu estilo.' })
+    toast.success({
+      title: '¡Listo!',
+      message: estilo.value?.formato.analizando
+        ? 'Flopi ya aprendió cómo escribís. Ahora está copiando el diseño para tus descargas.'
+        : 'Flopi ya aprendió de tu planificación. Revisá abajo cómo describió tu estilo.',
+    })
   } catch (error: any) {
     toast.error({ title: 'No se pudo usar ese archivo', message: mensajeDe(error, 'Probá de nuevo.') })
     await cargar()
@@ -107,7 +124,7 @@ onMounted(cargar)
   <div>
     <UPageCard
       title="Mi estilo"
-      description="Enseñale a Flopi cómo planificás. Subí una o más planificaciones tuyas y los tramos que arme van a parecerse a lo que escribís vos."
+      description="Enseñale a Flopi cómo planificás. Subí una o más planificaciones tuyas: los tramos que arme van a parecerse a lo que escribís vos y tus descargas van a tener tu mismo diseño."
       variant="naked"
       class="mb-4"
     />
@@ -121,7 +138,8 @@ onMounted(cargar)
           <div>
             <h3 class="font-display text-xl font-semibold text-mona-900">Tus planificaciones de ejemplo</h3>
             <p class="text-sm text-mona-800/75 mt-1">
-              Word (.docx) o PDF, hasta {{ estilo.max_ejemplos }}. Flopi aprende tu forma de planificar, no copia los temas.
+              Word (.docx) o PDF, hasta {{ estilo.max_ejemplos }}. Flopi aprende tu forma de planificar (no copia los temas)
+              y la última que subas define cómo se ven tus descargas.
             </p>
           </div>
           <button
@@ -184,6 +202,9 @@ onMounted(cargar)
           </button>
         </div>
       </section>
+
+      <!-- Formato de las descargas, copiado de la última planificación que subió -->
+      <EstiloFormatoDescarga :formato="estilo.formato" />
     </div>
   </div>
 </template>

@@ -44,6 +44,7 @@ export const apiPlanificacionesRoutes = {
     calendario: (desde: string, hasta: string) => `/planificaciones?desde=${desde}&hasta=${hasta}`,
     find: (id: number) => `/planificaciones/${id}`,
     update: (id: number) => `/planificaciones/${id}`,
+    eliminar: (id: number) => `/planificaciones/${id}`,
     confirmar: (id: number) => `/planificaciones/${id}/confirmar`,
     exportar: (id: number, formato: string) => `/planificaciones/${id}/exportar?formato=${formato}`,
     imagen: (id: number) => `/planificaciones/${id}/imagenes`,
@@ -71,6 +72,8 @@ export const apiEstiloRoutes = {
     ejemplos: '/estilo/ejemplos',
     ejemplo: (id: number) => `/estilo/ejemplos/${id}`,
     analizar: '/estilo/analizar',
+    formato: '/estilo/formato',
+    formatoEjemplo: (formato: string) => `/estilo/formato/ejemplo?formato=${formato}`,
 }
 
 export const apiReportesRoutes = {

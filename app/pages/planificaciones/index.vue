@@ -6,7 +6,7 @@ import type { FormatoDescarga, PlanificacionResumen } from '~/types/asistente'
 
 useSeoMeta({ title: 'Mis planificaciones · Flopi Docentes' })
 
-const { listarPlanificaciones, obtenerPlanificacion, descargar } = useAsistenteService()
+const { listarPlanificaciones, obtenerPlanificacion, eliminarPlanificacion, descargar } = useAsistenteService()
 const toast = useToast()
 
 const planificaciones = ref<PlanificacionResumen[]>([])
@@ -41,6 +41,30 @@ const bajar = async (p: PlanificacionResumen, formato: FormatoDescarga) => {
     toast.error({ title: 'No se pudo descargar', message: e?.message ?? 'Probá de nuevo.' })
   } finally {
     descargando.value = null
+  }
+}
+
+const borrando = ref<number | null>(null)
+
+const borrar = async (p: PlanificacionResumen) => {
+  if (!window.confirm(`¿Borrar "${p.titulo}"? No se puede deshacer.`)) return
+
+  borrando.value = p.id
+
+  try {
+    await eliminarPlanificacion(p.id)
+    toast.success({ title: 'Planificación borrada', message: p.titulo })
+
+    // Si era la última de la página, se vuelve a la anterior (el watch recarga).
+    if (planificaciones.value.length === 1 && pagina.value > 1) {
+      pagina.value--
+    } else {
+      await cargar()
+    }
+  } catch (e: any) {
+    toast.error({ title: 'No se pudo borrar', message: typeof e === 'string' ? e : (e?.message ?? 'Probá de nuevo.') })
+  } finally {
+    borrando.value = null
   }
 }
 
@@ -152,6 +176,16 @@ onMounted(() => {
                   {{ descargando === `${p.id}_${formato}` ? '…' : (formato === 'pdf' ? 'PDF' : 'Word') }}
                 </button>
               </template>
+              <button
+                type="button"
+                class="ml-auto p-2 rounded-xl text-mona-800/60 hover:text-red-700 hover:bg-red-50"
+                :disabled="borrando !== null"
+                :aria-label="`Borrar ${p.titulo}`"
+                title="Borrar"
+                @click="borrar(p)"
+              >
+                <UIcon :name="borrando === p.id ? 'i-tabler-loader-2' : 'i-tabler-trash'" class="w-5 h-5" :class="{ 'animate-spin': borrando === p.id }" />
+              </button>
             </div>
           </li>
         </ul>
