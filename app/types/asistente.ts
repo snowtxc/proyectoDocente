@@ -141,6 +141,8 @@ export interface EstadoSesion {
   borrador_tramo: BorradorTramo | null
   // Cuánto usó de la IA este mes: llega con cada respuesta para mantener al día la barra.
   uso_ia?: { porcentaje: number, agotado: boolean, se_renueva: string, en_prueba: boolean }
+  // Si ya le enseñó a Flopi cómo planifica (Configuración > Mi estilo).
+  tiene_estilo?: boolean
 }
 
 export interface EnvioMensaje {

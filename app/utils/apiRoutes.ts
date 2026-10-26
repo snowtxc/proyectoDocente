@@ -66,6 +66,13 @@ export const apiAdminRoutes = {
     reporte: (id: number) => `/admin/reportes/${id}`,
 }
 
+export const apiEstiloRoutes = {
+    estado: '/estilo',
+    ejemplos: '/estilo/ejemplos',
+    ejemplo: (id: number) => `/estilo/ejemplos/${id}`,
+    analizar: '/estilo/analizar',
+}
+
 export const apiReportesRoutes = {
     crear: '/reportes',
 }

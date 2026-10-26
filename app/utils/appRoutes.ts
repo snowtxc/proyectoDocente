@@ -7,6 +7,7 @@ export const appRoutes = {
     suscripcion: () => '/suscripcion',
     usuarios: () => '/admin/usuarios',
     reportes: () => '/admin/reportes',
+    estilo: () => '/configuracion/estilo',
 }
 
 export const appAuthRoutes ={

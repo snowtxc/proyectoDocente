@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { appRoutes } from '~/utils/appRoutes'
 import { useAsistenteService } from '~/services/asistenteService/asistenteService'
 import type { DescripcionFundada, EnvioMensaje, EstadoSesion, MensajeChat, Planificacion } from '~/types/asistente'
 import ChatMensaje from '~/components/asistente/ChatMensaje.vue'
@@ -25,6 +26,12 @@ const animoFlopi = computed(() => {
 const CLAVE_SESION = 'flopi-asistente-sesion'
 
 const sesion = ref<EstadoSesion | null>(null)
+
+// Aviso para armar el perfil de estilo: al empezar o al planificar, si todavía no lo tiene.
+const avisoEstiloCerrado = ref(false)
+const mostrarAvisoEstilo = computed(() => !avisoEstiloCerrado.value
+  && sesion.value?.tiene_estilo === false
+  && (sesion.value.tipo_documento === 'planificacion' || !sesion.value.tipo_documento))
 const cargandoSesion = ref(true)
 const enviando = ref(false)
 const texto = ref('')
@@ -213,6 +220,25 @@ const alConfirmar = async () => {
           <span class="hidden sm:inline">Empezar de nuevo</span>
         </button>
       </header>
+
+      <!-- Sin perfil de estilo: se le sugiere enseñarle a Flopi cómo planifica. -->
+      <div
+        v-if="mostrarAvisoEstilo"
+        class="flex items-start gap-3 px-4 sm:px-6 py-3 bg-miel-50 border-b-2 border-miel-200 text-sm"
+        role="status"
+      >
+        <UIcon name="i-tabler-sparkles" class="w-5 h-5 text-miel-700 flex-shrink-0 mt-0.5" />
+        <p class="flex-1 text-mona-900">
+          <strong>Todavía no tenés tu perfil.</strong>
+          Enseñale a Flopi cómo planificás: subí una planificación tuya (Word o PDF) y los tramos van a salir con tu estilo.
+          <NuxtLink :to="appRoutes.estilo()" class="font-bold text-mona-700 underline underline-offset-2 hover:text-mona-900 whitespace-nowrap">
+            Armar mi perfil
+          </NuxtLink>
+        </p>
+        <button type="button" class="text-mona-800/60 hover:text-mona-900" aria-label="Cerrar el aviso" @click="avisoEstiloCerrado = true">
+          <UIcon name="i-tabler-x" class="w-4 h-4" />
+        </button>
+      </div>
 
       <div ref="listaMensajes" class="flex-1 overflow-y-auto px-4 sm:px-6 py-6">
         <div class="max-w-2xl mx-auto">

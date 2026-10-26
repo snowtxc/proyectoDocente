@@ -7,6 +7,10 @@ const links = [[{
   to: '/configuracion',
   exact: true
 }, {
+  label: 'Mi estilo',
+  icon: 'i-tabler-writing',
+  to: '/configuracion/estilo'
+}, {
   label: 'Uso de la IA',
   icon: 'i-tabler-sparkles',
   to: '/configuracion/uso-ia'
