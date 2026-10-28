@@ -14,6 +14,8 @@ export default defineNuxtPlugin((nuxtApp) => {
     };
 
     const apiRest = async (endpoint: string, method: HttpMethodEnum, body: any, options: Record<string, any> = {}) => {
+        // "silencioso": sin la barra de carga (la vista previa del editor de formato se pide con cada cambio).
+        const { silencioso, ...opciones } = options;
 
         const token = authStore.token;
         
@@ -34,7 +36,7 @@ export default defineNuxtPlugin((nuxtApp) => {
             ...(isFormData ? {} : { "Content-Type": "application/json" }),
             "X-XSRF-TOKEN": csrfToken || "",
             ...(token ? { Authorization: `Bearer ${token}` } : {}),
-            ...options.headers
+            ...opciones.headers
         };
         
         console.log('✅ Enviando headers:', {
@@ -42,7 +44,7 @@ export default defineNuxtPlugin((nuxtApp) => {
             Authorization: token ? 'Bearer ...' : 'none'
         });
 
-        start();
+        if (!silencioso) start();
 
         try {
             const response = await $fetch(`${config.public.apiBaseUrl}${endpoint}`, {
@@ -50,13 +52,13 @@ export default defineNuxtPlugin((nuxtApp) => {
                 headers,
                 body,
                 credentials: 'include',
-                ...options
+                ...opciones
             });
-            finish();
+            if (!silencioso) finish();
             return response;
             
         } catch (e: any) {
-            finish();
+            if (!silencioso) finish();
             
             const statusCode = e?.response?.status || e?.statusCode;
             const responseData = e?.response?._data || e?.data;

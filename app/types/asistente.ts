@@ -1,3 +1,5 @@
+import type { RecetaFormato } from '~/types/estilo'
+
 export type TipoOpciones = 'simple' | 'multiple' | 'fechas'
 
 export interface OpcionItem {
@@ -100,6 +102,8 @@ export interface Planificacion {
   total_propuestas: number
   // El PDF y el Word de esta versión ya están guardados en DigitalOcean.
   archivos_guardados?: boolean
+  // Diseño de las descargas del docente: la planificación se muestra igual que el archivo.
+  receta: RecetaFormato
 }
 
 // Fila de "Mis planificaciones".

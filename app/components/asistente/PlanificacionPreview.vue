@@ -3,6 +3,7 @@ import { useAsistenteService } from '~/services/asistenteService/asistenteServic
 import type { BorradorTramo, ContenidoPlanificacion, FormatoDescarga, Planificacion, Propuesta } from '~/types/asistente'
 import PropuestaEditor from '~/components/asistente/PropuestaEditor.vue'
 import PropuestaVista from '~/components/asistente/PropuestaVista.vue'
+import { estiloBloque, familiaDe, tamanoEnPantalla, textoDia, textoEncabezado } from '~/utils/recetaFormato'
 
 const props = defineProps<{
   planificacion: Planificacion
@@ -19,6 +20,7 @@ const emit = defineEmits<{
 
 const { guardarPlanificacion, confirmarPlanificacion, descargar } = useAsistenteService()
 const toast = useToast()
+const authStore = useAuthStore()
 
 const formatos = [
   { id: 'pdf', nombre: 'PDF', icono: 'i-tabler-file-type-pdf', color: 'text-red-600' },
@@ -36,6 +38,32 @@ const confirmada = computed(() => props.planificacion.estado === 'confirmada')
 const vacia = computed(() => props.planificacion.total_propuestas === 0)
 
 const clave = (fecha: string, indice: number) => `${fecha}_${indice}`
+
+// El documento se ve con el diseño de sus descargas (Mi estilo), igual que el archivo.
+const receta = computed(() => props.planificacion.receta)
+
+const encabezado = computed(() => textoEncabezado(receta.value, {
+  titulo: props.planificacion.titulo,
+  grupo: props.planificacion.grupo.nombre ?? '',
+  docente: [authStore.user?.nombre1, authStore.user?.apellido1].filter(Boolean).join(' '),
+}))
+
+// Como en el archivo, los días sin tramos no salen; mientras se arma, se ven para saber qué falta.
+const diasVisibles = computed(() => confirmada.value
+  ? props.planificacion.dias.filter(dia => dia.propuestas.length > 0)
+  : props.planificacion.dias)
+
+// Si cada día empieza en una hoja nueva, una hoja por día; si no, todos en la misma.
+const hojas = computed(() => receta.value.dia.nueva_pagina && diasVisibles.value.length > 0
+  ? diasVisibles.value.map(dia => [dia])
+  : [diasVisibles.value])
+
+const estiloHoja = computed(() => ({
+  fontFamily: familiaDe(receta.value),
+  fontSize: tamanoEnPantalla(receta.value.fuente.tamano),
+  '--alineacion-texto': receta.value.justificado ? 'justify' : 'left',
+  '--separacion-parrafos': receta.value.disposicion === 'secuencial' ? '1px' : '6px',
+}))
 
 // Cuando llega un borrador nuevo, la hoja se desplaza hasta él.
 const tarjetaBorrador = ref<HTMLElement[] | HTMLElement | null>(null)
@@ -192,90 +220,151 @@ const bajar = async (formato: FormatoDescarga) => {
       </button>
     </div>
 
-    <!-- El documento: un bloque por día, un cuadro por tramo -->
+    <!-- El documento, con el diseño de sus descargas: una hoja por día si cada día empieza en una hoja nueva -->
     <div class="flex-1 overflow-y-auto px-3 sm:px-6 py-5">
-      <div class="max-w-3xl mx-auto space-y-8">
-        <section v-for="dia in planificacion.dias" :key="dia.fecha" :aria-label="dia.dia">
-          <h3 class="font-display text-2xl font-bold text-mona-900 text-center tracking-wide">
-            {{ dia.encabezado }}
-          </h3>
-          <p v-if="dia.propuestas.length > 0" class="text-center text-xs font-extrabold uppercase tracking-wide text-mona-700 mt-0.5">
-            {{ dia.propuestas.length }} {{ dia.propuestas.length === 1 ? 'tramo' : 'tramos' }}
-          </p>
+      <div class="mx-auto space-y-6" :class="receta.orientacion === 'horizontal' ? 'max-w-5xl' : 'max-w-3xl'">
+        <div v-for="(hoja, h) in hojas" :key="h" class="hoja" :style="estiloHoja">
+          <div v-if="h === 0 && receta.encabezado.mostrar" class="titulo" :style="estiloBloque(receta.encabezado)">{{ encabezado }}</div>
 
-          <p
-            v-if="dia.propuestas.length === 0"
-            class="mt-3 text-center text-sm text-mona-800/60 border-2 border-dashed border-mona-200 rounded-2xl py-5"
-          >
-            Todavía no tiene tramos. Agregalos desde el chat.
-          </p>
+          <section v-for="(dia, d) in hoja" :key="dia.fecha" :aria-label="dia.dia" :class="{ separado: d > 0 }">
+            <h3 class="titulo" :style="estiloBloque(receta.dia)">{{ textoDia(receta, dia.fecha) }}</h3>
 
-          <article
-            v-for="(propuesta, i) in dia.propuestas"
-            :key="clave(dia.fecha, i)"
-            class="propuesta aparecer mt-4 bg-white rounded-2xl border-2 border-mona-200 overflow-hidden"
-          >
-            <header class="flex items-center justify-between gap-2 px-4 py-2 bg-mona-50 border-b-2 border-mona-200">
-              <span class="w-16" />
-              <h4 class="font-display text-lg font-bold italic text-mona-900">TRAMO {{ propuesta.numero }}</h4>
-              <div class="w-16 flex justify-end gap-0.5">
-                <UButton
-                  icon="i-tabler-pencil"
-                  color="neutral"
-                  variant="ghost"
-                  size="sm"
-                  :aria-label="`Editar el Tramo ${propuesta.numero} del ${dia.dia}`"
-                  :disabled="ocupado || guardando || editando !== null"
-                  @click="empezarEdicion(dia.fecha, i)"
-                />
-                <UButton
-                  icon="i-tabler-trash"
-                  color="neutral"
-                  variant="ghost"
-                  size="sm"
-                  :aria-label="`Quitar el Tramo ${propuesta.numero} del ${dia.dia}`"
-                  :disabled="ocupado || guardando || editando !== null"
-                  @click="quitarPropuesta(dia.fecha, i, propuesta.numero)"
+            <p
+              v-if="dia.propuestas.length === 0 && borrador?.fecha !== dia.fecha"
+              class="interfaz mb-4 text-center text-sm text-mona-800/60 border-2 border-dashed border-mona-200 rounded-2xl py-5"
+            >
+              Todavía no tiene tramos. Agregalos desde el chat.
+            </p>
+
+            <div v-for="(propuesta, i) in dia.propuestas" :key="clave(dia.fecha, i)" class="aparecer">
+              <!-- Edición -->
+              <div v-if="editando === clave(dia.fecha, i)" class="interfaz editor">
+                <p class="px-4 sm:px-5 pt-3 font-display text-lg font-bold text-mona-900">Editando el Tramo {{ propuesta.numero }}</p>
+                <PropuestaEditor
+                  :planificacion-id="planificacion.id"
+                  :propuesta="planificacion.contenido.dias.find(dc => dc.fecha === dia.fecha)!.propuestas[i]!"
+                  :guardando="guardando"
+                  :errores="errores"
+                  @guardar="guardarPropuesta(dia.fecha, i, $event)"
+                  @cancelar="editando = null"
                 />
               </div>
-            </header>
 
-            <!-- Edición -->
-            <PropuestaEditor
-              v-if="editando === clave(dia.fecha, i)"
-              :planificacion-id="planificacion.id"
-              :propuesta="planificacion.contenido.dias.find(d => d.fecha === dia.fecha)!.propuestas[i]!"
-              :guardando="guardando"
-              :errores="errores"
-              @guardar="guardarPropuesta(dia.fecha, i, $event)"
-              @cancelar="editando = null"
-            />
+              <template v-else>
+                <div class="interfaz acciones">
+                  <button
+                    type="button"
+                    class="accion"
+                    :aria-label="`Editar el Tramo ${propuesta.numero} del ${dia.dia}`"
+                    :disabled="ocupado || guardando || editando !== null"
+                    @click="empezarEdicion(dia.fecha, i)"
+                  >
+                    <UIcon name="i-tabler-pencil" class="w-4 h-4" />
+                    Editar
+                  </button>
+                  <button
+                    type="button"
+                    class="accion quitar"
+                    :aria-label="`Quitar el Tramo ${propuesta.numero} del ${dia.dia}`"
+                    :disabled="ocupado || guardando || editando !== null"
+                    @click="quitarPropuesta(dia.fecha, i, propuesta.numero)"
+                  >
+                    <UIcon name="i-tabler-trash" class="w-4 h-4" />
+                    Quitar
+                  </button>
+                </div>
+                <PropuestaVista :propuesta="propuesta" :receta="receta" :numero="i + 1" />
+              </template>
+            </div>
 
-            <PropuestaVista v-else :propuesta="propuesta" />
-          </article>
-
-          <!-- Tramo redactado que todavía no se agregó: se confirma desde el chat -->
-          <article
-            v-if="borrador && borrador.fecha === dia.fecha"
-            ref="tarjetaBorrador"
-            class="aparecer mt-4 bg-white rounded-2xl border-2 border-dashed border-miel-500 overflow-hidden"
-          >
-            <header class="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 px-4 py-2 bg-miel-100 border-b-2 border-dashed border-miel-500">
-              <h4 class="font-display text-lg font-bold italic text-mona-900">TRAMO {{ borrador.propuesta.numero }}</h4>
-              <span class="text-xs font-extrabold uppercase tracking-wide text-miel-800 bg-white rounded-full px-2.5 py-0.5">
-                Borrador · confirmalo en el chat
-              </span>
-            </header>
-            <PropuestaVista :propuesta="borrador.propuesta" />
-          </article>
-        </section>
+            <!-- Tramo redactado que todavía no se agregó: se confirma desde el chat -->
+            <div v-if="borrador && borrador.fecha === dia.fecha" ref="tarjetaBorrador" class="borrador aparecer">
+              <p class="interfaz acciones">
+                <span class="text-xs font-extrabold uppercase tracking-wide text-miel-800 bg-miel-100 rounded-full px-2.5 py-0.5">
+                  Borrador · confirmalo en el chat
+                </span>
+              </p>
+              <PropuestaVista :propuesta="borrador.propuesta" :receta="receta" :numero="dia.propuestas.length + 1" />
+            </div>
+          </section>
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <style scoped>
-.propuesta {
-  box-shadow: 0 5px 0 0 var(--color-mona-100);
+/* Una hoja del documento: la letra, el tamaño y los títulos salen del diseño (estiloHoja). */
+.hoja {
+  container-type: inline-size;
+  background: #fff;
+  color: #000;
+  line-height: 1.3;
+  padding: clamp(1rem, 6%, 3rem);
+  box-shadow: 0 1px 6px rgb(0 0 0 / 0.12);
+}
+
+.titulo { margin: 0 0 10px 0; }
+.separado { margin-top: 18px; }
+
+/* Lo que no es parte del documento (botones, avisos, el formulario) va con la letra de Flopi. */
+.interfaz {
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  line-height: 1.5;
+  color: var(--color-mona-950);
+}
+
+.acciones {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.25rem;
+  margin-bottom: 4px;
+}
+
+.accion {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.15rem 0.55rem;
+  border-radius: 0.6rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--color-mona-700);
+}
+
+.accion:hover:not(:disabled) {
+  background: var(--color-mona-50);
+  color: var(--color-mona-900);
+}
+
+.accion.quitar:hover:not(:disabled) {
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+.accion:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.editor {
+  margin-bottom: 16px;
+  border: 2px solid var(--color-mona-200);
+  border-radius: 1rem;
+  background: #fff;
+}
+
+/* El tramo que todavía no se agregó, con borde punteado y del mismo ancho que los otros. */
+.borrador {
+  margin: 0 -10px 16px;
+  padding: 6px 8px 8px;
+  border: 2px dashed var(--color-miel-500);
+  border-radius: 0.75rem;
+}
+
+.borrador :deep(.cuadro),
+.borrador :deep(.tramo-secuencial) {
+  margin-bottom: 0;
 }
 </style>

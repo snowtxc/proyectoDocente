@@ -5,7 +5,7 @@ import { paginasPdf } from '~/utils/paginasPdf'
 import type { EstiloDocente } from '~/types/estilo'
 
 // Perfil de estilo: el docente sube planificaciones suyas y Flopi aprende cómo planifica.
-// Con la misma subida copia el diseño de la última para sus descargas.
+// Con la misma subida copia el diseño de la última para sus descargas; también puede diseñar el suyo.
 useSeoMeta({ title: 'Mi estilo · Flopi Docentes' })
 
 const { $apiRest } = useNuxtApp()
@@ -124,7 +124,7 @@ onMounted(cargar)
   <div>
     <UPageCard
       title="Mi estilo"
-      description="Enseñale a Flopi cómo planificás. Subí una o más planificaciones tuyas: los tramos que arme van a parecerse a lo que escribís vos y tus descargas van a tener tu mismo diseño."
+      description="Enseñale a Flopi cómo planificás. Subí una o más planificaciones tuyas: los tramos que arme van a parecerse a lo que escribís vos. Abajo elegís cómo se ven tus descargas: con el diseño de tu planificación o con uno que armes vos."
       variant="naked"
       class="mb-4"
     />
@@ -139,7 +139,7 @@ onMounted(cargar)
             <h3 class="font-display text-xl font-semibold text-mona-900">Tus planificaciones de ejemplo</h3>
             <p class="text-sm text-mona-800/75 mt-1">
               Word (.docx) o PDF, hasta {{ estilo.max_ejemplos }}. Flopi aprende tu forma de planificar (no copia los temas)
-              y la última que subas define cómo se ven tus descargas.
+              y copia el diseño de la última que subas para tus descargas.
             </p>
           </div>
           <button
@@ -203,7 +203,7 @@ onMounted(cargar)
         </div>
       </section>
 
-      <!-- Formato de las descargas, copiado de la última planificación que subió -->
+      <!-- Formato de las descargas: el de Flopi, el copiado de la última planificación o el que diseñó -->
       <EstiloFormatoDescarga :formato="estilo.formato" />
     </div>
   </div>

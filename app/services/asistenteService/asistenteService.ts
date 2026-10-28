@@ -3,6 +3,7 @@ import { HttpMethodEnum } from '~/utils/enums/HttpMethodEnum'
 import { apiAsistenteRoutes, apiDescripcionesFundadasRoutes, apiEstiloRoutes, apiPlanificacionesRoutes } from '~/utils/apiRoutes'
 import type { ListResponse } from '~/types/list-response'
 import type { ContenidoPlanificacion, DescripcionFundada, EnvioMensaje, EstadoSesion, FormatoDescarga, Planificacion, PlanificacionResumen } from '~/types/asistente'
+import type { RecetaFormato } from '~/types/estilo'
 
 export const useAsistenteService = () => {
   const { $apiRest } = useNuxtApp()
@@ -48,17 +49,21 @@ export const useAsistenteService = () => {
     return $apiRest<DescripcionFundada>(apiDescripcionesFundadasRoutes.update(id), HttpMethodEnum.PUT, { texto })
   }
 
-  // Baja un archivo del backend con la sesión del docente.
-  const bajarArchivo = async (ruta: string, nombre: string): Promise<void> => {
+  // Baja un archivo del backend con la sesión del docente. Con "cuerpo", lo pide por POST.
+  const bajarArchivo = async (ruta: string, nombre: string, cuerpo?: object): Promise<void> => {
     const config = useRuntimeConfig()
+    // Sanctum pide el token CSRF en los POST (la cookie ya la dejó $apiRest).
+    const xsrf = document.cookie.match(/(?:^|; )XSRF-TOKEN=([^;]+)/)?.[1] ?? ''
 
     const response = await fetch(`${config.public.apiBaseUrl}${ruta}`, {
-      method: 'GET',
+      method: cuerpo ? 'POST' : 'GET',
       credentials: 'include',
       headers: {
         Authorization: `Bearer ${useAuthStore().token}`,
         Accept: 'application/json',
+        ...(cuerpo ? { 'Content-Type': 'application/json', 'X-XSRF-TOKEN': decodeURIComponent(xsrf) } : {}),
       },
+      body: cuerpo ? JSON.stringify(cuerpo) : undefined,
     })
 
     if (!response.ok) {
@@ -84,10 +89,15 @@ export const useAsistenteService = () => {
     await bajarArchivo(apiDescripcionesFundadasRoutes.exportar(descripcion.id, formato), `descripcion-fundada.${formato}`)
   }
 
-  // Planificación de prueba con el formato copiado del docente.
+  // Planificación de prueba con el formato que usan las descargas del docente.
   const descargarEjemploFormato = async (formato: FormatoDescarga): Promise<void> => {
     await bajarArchivo(apiEstiloRoutes.formatoEjemplo(formato), `ejemplo-con-mi-formato.${formato}`)
   }
 
-  return { iniciar, obtenerEstado, enviar, listarPlanificaciones, planificacionesEntre, obtenerPlanificacion, guardarPlanificacion, confirmarPlanificacion, eliminarPlanificacion, descargar, guardarDescripcion, descargarDescripcion, descargarEjemploFormato }
+  // La misma prueba con el diseño que está armando en el editor, sin guardarlo.
+  const descargarEjemploDiseno = async (formato: FormatoDescarga, receta: RecetaFormato): Promise<void> => {
+    await bajarArchivo(apiEstiloRoutes.formatoEjemploDiseno, `ejemplo-con-mi-diseno.${formato}`, { formato, receta })
+  }
+
+  return { iniciar, obtenerEstado, enviar, listarPlanificaciones, planificacionesEntre, obtenerPlanificacion, guardarPlanificacion, confirmarPlanificacion, eliminarPlanificacion, descargar, guardarDescripcion, descargarDescripcion, descargarEjemploFormato, descargarEjemploDiseno }
 }

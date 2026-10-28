@@ -74,6 +74,10 @@ export const apiEstiloRoutes = {
     analizar: '/estilo/analizar',
     formato: '/estilo/formato',
     formatoEjemplo: (formato: string) => `/estilo/formato/ejemplo?formato=${formato}`,
+    // Ejemplo con el diseño del editor sin guardar (POST).
+    formatoEjemploDiseno: '/estilo/formato/ejemplo',
+    formatoDiseno: '/estilo/formato/diseno',
+    formatoVistaPrevia: '/estilo/formato/vista-previa',
 }
 
 export const apiReportesRoutes = {
