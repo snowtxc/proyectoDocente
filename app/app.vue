@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { es } from '@nuxt/ui/locale'
 
 useSeoMeta({
   ogImage: '/logo.png',
@@ -50,7 +51,8 @@ useSeoMeta({
   <div>
     <NuxtLoadingIndicator />
 
-      <UApp>
+      <!-- En castellano: los meses y días del calendario y los textos de los componentes. -->
+      <UApp :locale="es">
          <NuxtLayout>
           <NuxtPage />
         </NuxtLayout>

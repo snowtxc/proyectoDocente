@@ -7,6 +7,9 @@ export interface User extends BaseModel{
   apellido2: string;
   email: string;
   url_image_profile: string;
+  rol?: 'superadmin' | 'docente';
+  // Cuándo eligió cómo se ven sus planificaciones (paso obligatorio de Mi estilo).
+  formato_elegido_at?: string | null;
 }
 
 export interface CreateUserDTO {

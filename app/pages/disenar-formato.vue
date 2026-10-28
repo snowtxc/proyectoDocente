@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { HttpMethodEnum } from '~/utils/enums/HttpMethodEnum'
-import { apiEstiloRoutes } from '~/utils/apiRoutes'
+import { apiAuthRoutes, apiEstiloRoutes } from '~/utils/apiRoutes'
 import { appRoutes } from '~/utils/appRoutes'
 import { useAsistenteService } from '~/services/asistenteService/asistenteService'
 import type { FormatoDescarga } from '~/types/asistente'
@@ -14,6 +14,10 @@ useSeoMeta({ title: 'Diseñá tu formato · Flopi Docentes' })
 const { $apiRest } = useNuxtApp()
 const { descargarEjemploDiseno } = useAsistenteService()
 const toast = useToast()
+const pedirConfirmacion = useConfirmacion()
+const authStore = useAuthStore()
+// Desde la bienvenida (el paso obligatorio de elegir el formato), al guardar se sigue a Flopi.
+const desdeBienvenida = useRoute().query.desde === 'bienvenida'
 
 // Las que suelen estar en las computadoras con Word. En el PDF va una del mismo tipo.
 const FUENTES: { familia: string, tipo: 'serif' | 'sans' }[] = [
@@ -162,8 +166,8 @@ const opcionesFuente = computed(() => {
   return actual && !conocidas.includes(actual) ? [actual, ...conocidas] : conocidas
 })
 
-const reiniciar = (base: RecetaFormato, nombre: string) => {
-  if (!window.confirm(`¿Empezar de nuevo desde ${nombre}? Se pierden los cambios que no guardaste.`)) return
+const reiniciar = async (base: RecetaFormato, nombre: string) => {
+  if (!await pedirConfirmacion({ titulo: `¿Empezar de nuevo desde ${nombre}?`, mensaje: 'Se pierden los cambios que no guardaste.', aceptar: 'Empezar de nuevo', peligro: true })) return
   empezarDesde(base)
 }
 
@@ -185,8 +189,13 @@ const guardar = async () => {
   try {
     await $apiRest(apiEstiloRoutes.formatoDiseno, HttpMethodEnum.PUT, { receta: recetaFinal.value })
     guardada.value = JSON.stringify(recetaFinal.value)
-    toast.success({ title: '¡Listo!', message: 'Tus descargas van a salir con tu diseño.' })
-    await navigateTo(appRoutes.estilo())
+    // Con el diseño guardado ya eligió su formato: el usuario al día deja pasar a todo Flopi.
+    authStore.setUser(await $apiRest(apiAuthRoutes.user, HttpMethodEnum.GET))
+    toast.success({
+      title: '¡Listo!',
+      message: desdeBienvenida ? 'Tus planificaciones van a salir con tu diseño. Ya podés empezar a planificar.' : 'Tus descargas van a salir con tu diseño.',
+    })
+    await navigateTo(desdeBienvenida ? appRoutes.asistente() : appRoutes.estilo())
   } catch (e: any) {
     toast.error({ title: 'No se pudo guardar', message: mensajeDe(e, 'Probá de nuevo.') })
   } finally {
@@ -194,8 +203,8 @@ const guardar = async () => {
   }
 }
 
-onBeforeRouteLeave(() => {
-  if (sucio.value && !window.confirm('Tenés cambios sin guardar en tu formato. ¿Salir igual?')) return false
+onBeforeRouteLeave(async () => {
+  if (sucio.value && !await pedirConfirmacion({ titulo: 'Tenés cambios sin guardar', mensaje: 'Si salís ahora, se pierden los cambios de tu formato.', aceptar: 'Salir sin guardar', cancelar: 'Seguir editando', peligro: true })) return false
 })
 
 useEventListener('beforeunload', (evento: BeforeUnloadEvent) => {
@@ -220,9 +229,9 @@ onMounted(async () => {
     <div class="max-w-7xl mx-auto">
       <header class="flex flex-wrap items-end justify-between gap-4 mb-4">
         <div class="min-w-0">
-          <NuxtLink :to="appRoutes.estilo()" class="inline-flex items-center gap-1 text-sm font-bold text-mona-700 hover:text-mona-900">
+          <NuxtLink :to="desdeBienvenida ? appRoutes.bienvenida() : appRoutes.estilo()" class="inline-flex items-center gap-1 text-sm font-bold text-mona-700 hover:text-mona-900">
             <UIcon name="i-tabler-arrow-left" class="w-4 h-4" />
-            Mi estilo
+            {{ desdeBienvenida ? 'Volver' : 'Mi estilo' }}
           </NuxtLink>
           <h1 class="font-display text-3xl sm:text-4xl font-bold text-mona-900 leading-none mt-1">Diseñá tu formato</h1>
           <p class="text-mona-800/75 mt-2 max-w-2xl">

@@ -8,6 +8,7 @@ import type { Planificacion } from '~/types/asistente'
 const route = useRoute()
 const { obtenerPlanificacion, eliminarPlanificacion } = useAsistenteService()
 const toast = useToast()
+const pedirConfirmacion = useConfirmacion()
 
 const planificacion = ref<Planificacion | null>(null)
 const noEncontrada = ref(false)
@@ -25,7 +26,7 @@ const cargar = async () => {
 }
 
 const borrar = async () => {
-  if (!planificacion.value || !window.confirm(`¿Borrar "${planificacion.value.titulo}"? No se puede deshacer.`)) return
+  if (!planificacion.value || !await pedirConfirmacion({ titulo: `¿Borrar "${planificacion.value.titulo}"?`, mensaje: 'Se borran la planificación y sus archivos. No se puede deshacer.', aceptar: 'Borrar', peligro: true })) return
 
   borrando.value = true
 

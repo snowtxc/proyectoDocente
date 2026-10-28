@@ -8,6 +8,7 @@ export const appRoutes = {
     usuarios: () => '/admin/usuarios',
     reportes: () => '/admin/reportes',
     estilo: () => '/configuracion/estilo',
+    bienvenida: () => '/bienvenida',
     disenarFormato: () => '/disenar-formato',
 }
 

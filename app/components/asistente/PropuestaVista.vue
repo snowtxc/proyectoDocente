@@ -19,7 +19,7 @@ const titulo = computed(() => textoTramo(props.receta, props.numero, props.propu
 
 // Las etiquetas van del color del espacio de conocimiento o del que eligió el docente; en una actividad, negras.
 const etiqueta = computed(() => estiloEtiqueta(props.receta, props.propuesta.tipo === 'curricular'
-  ? colorEtiqueta(props.receta, props.propuesta.referencias.espacio, props.propuesta.referencias.color)
+  ? colorEtiqueta(props.receta, props.propuesta.referencias.espacio_oficial ?? props.propuesta.referencias.espacio, props.propuesta.referencias.color)
   : '000000'))
 
 const fondo = (color: string | null) => color ? `#${color}` : undefined

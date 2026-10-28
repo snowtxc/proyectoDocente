@@ -8,6 +8,7 @@ useSeoMeta({ title: 'Mis planificaciones · Flopi Docentes' })
 
 const { listarPlanificaciones, obtenerPlanificacion, eliminarPlanificacion, descargar } = useAsistenteService()
 const toast = useToast()
+const pedirConfirmacion = useConfirmacion()
 
 const planificaciones = ref<PlanificacionResumen[]>([])
 const total = ref(0)
@@ -47,7 +48,7 @@ const bajar = async (p: PlanificacionResumen, formato: FormatoDescarga) => {
 const borrando = ref<number | null>(null)
 
 const borrar = async (p: PlanificacionResumen) => {
-  if (!window.confirm(`¿Borrar "${p.titulo}"? No se puede deshacer.`)) return
+  if (!await pedirConfirmacion({ titulo: `¿Borrar "${p.titulo}"?`, mensaje: 'Se borran la planificación y sus archivos. No se puede deshacer.', aceptar: 'Borrar', peligro: true })) return
 
   borrando.value = p.id
 

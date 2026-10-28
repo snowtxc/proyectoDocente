@@ -243,26 +243,30 @@ const openSlideOverNuevoGrupo = () => {
     </div>
 
     <!-- Formulario de grupo -->
-    <USlideover v-model:open="isSlideoverOpen">
-        <template #header>
-          <div class="w-full flex items-center justify-between">
-            <h2 class="font-display text-2xl font-bold text-mona-900">
-              {{ titleModal }}
-            </h2>
-
-            <UButton color="neutral" variant="ghost" :icon="'tabler:x'" aria-label="Cerrar" @click="isSlideoverOpen = false"/>
-          </div>
-        </template>
-
-        <template #body>
-           <GruposForm
-            v-if="isSlideoverOpen"
-            :mode="mode"
-            :grupo-selected="grupoSelected"
-            @close="isSlideoverOpen = false"
-            @on:update="loadGrupos"
-          />
-        </template>
+    <USlideover
+      v-model:open="isSlideoverOpen"
+      :title="titleModal"
+      :description="mode === ModeEnum.UPDATE ? 'Los cambios valen para las próximas planificaciones.' : 'Con qué grupo trabajás: Flopi usa su grado para buscar en el programa.'"
+      :close="{ color: 'neutral', variant: 'ghost', size: 'lg' }"
+      :ui="{
+        content: 'max-w-lg',
+        header: 'items-start',
+        wrapper: 'pr-10',
+        title: 'font-display text-2xl font-bold text-mona-900 leading-tight',
+        description: 'text-sm text-mona-800/70 mt-0.5',
+        body: 'p-0 sm:p-0',
+      }"
+    >
+      <template #body>
+        <GruposForm
+          v-if="isSlideoverOpen && mode !== null"
+          :mode="mode"
+          :grupo-selected="grupoSelected"
+          :grados="grados"
+          @close="isSlideoverOpen = false"
+          @on:update="loadGrupos"
+        />
+      </template>
     </USlideover>
   </div>
 </template>

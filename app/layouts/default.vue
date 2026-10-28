@@ -5,6 +5,7 @@ import { apiAuthRoutes } from '~/utils/apiRoutes'
 import { appRoutes } from '~/utils/appRoutes'
 import { useSuscripcionStore } from '~/utils/suscripcionStore'
 import { useSuscripcionService } from '~/services/suscripcionService/suscripcionService'
+import { RUTAS_SIN_FORMATO, debeElegirFormato } from '~/utils/eleccionFormato'
 
 const { $apiRest } = useNuxtApp()
 const authStore = useAuthStore()
@@ -25,7 +26,13 @@ try {
 
 if (suscripcionStore.vencida && route.path !== appRoutes.suscripcion()) {
   await navigateTo(appRoutes.suscripcion())
+} else if (debeElegirFormato(authStore.user) && !RUTAS_SIN_FORMATO.includes(route.path)) {
+  // Con el usuario al día: si todavía no eligió cómo se ven sus planificaciones, primero eso.
+  await navigateTo(appRoutes.bienvenida())
 }
+
+// Mientras no elige el formato no se muestran las secciones: primero tiene que elegirlo.
+const eligiendoFormato = computed(() => debeElegirFormato(authStore.user))
 
 const secciones = [
   {
@@ -71,7 +78,7 @@ const seccionReportes = {
 
 // Con el período vencido no se muestran las secciones: no se puede entrar a ninguna.
 const links = computed(() => {
-  if (suscripcionStore.vencida) return []
+  if (suscripcionStore.vencida || eligiendoFormato.value) return []
 
   return esSuperadmin.value ? [...secciones, seccionUsuarios, seccionReportes] : secciones
 })

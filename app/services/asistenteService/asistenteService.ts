@@ -2,7 +2,7 @@ import { useNuxtApp } from '#app'
 import { HttpMethodEnum } from '~/utils/enums/HttpMethodEnum'
 import { apiAsistenteRoutes, apiDescripcionesFundadasRoutes, apiEstiloRoutes, apiPlanificacionesRoutes } from '~/utils/apiRoutes'
 import type { ListResponse } from '~/types/list-response'
-import type { ContenidoPlanificacion, DescripcionFundada, EnvioMensaje, EstadoSesion, FormatoDescarga, Planificacion, PlanificacionResumen } from '~/types/asistente'
+import type { ContenidoPlanificacion, DescripcionFundada, EnvioMensaje, EstadoSesion, FormatoDescarga, ListaPrograma, Planificacion, PlanificacionResumen, RedaccionTramo, ResultadoPrograma } from '~/types/asistente'
 import type { RecetaFormato } from '~/types/estilo'
 
 export const useAsistenteService = () => {
@@ -43,6 +43,25 @@ export const useAsistenteService = () => {
 
   const eliminarPlanificacion = async (id: number): Promise<void> => {
     await $apiRest(apiPlanificacionesRoutes.eliminar(id), HttpMethodEnum.DELETE)
+  }
+
+  // Una lista del programa (de los grados del grupo de la planificación) para el editor de un tramo.
+  const listaPrograma = async (
+    id: number,
+    lista: ListaPrograma,
+    filtros: { busqueda?: string, unidad_curricular_id?: number | null, contenido_ids?: number[] } = {},
+  ): Promise<ResultadoPrograma> => {
+    const parametros = new URLSearchParams({ lista })
+    if (filtros.busqueda) parametros.set('busqueda', filtros.busqueda)
+    if (filtros.unidad_curricular_id) parametros.set('unidad_curricular_id', String(filtros.unidad_curricular_id))
+    filtros.contenido_ids?.forEach(contenido => parametros.append('contenido_ids[]', String(contenido)))
+
+    return $apiRest<ResultadoPrograma>(`${apiPlanificacionesRoutes.programa(id)}?${parametros}`, HttpMethodEnum.GET, undefined, { silencioso: true })
+  }
+
+  // Meta y plan que redacta Flopi con los datos del programa elegidos. No se guarda nada.
+  const redactarTramo = async (id: number, datos: Record<string, unknown>): Promise<RedaccionTramo> => {
+    return $apiRest<RedaccionTramo>(apiPlanificacionesRoutes.redactarTramo(id), HttpMethodEnum.POST, datos)
   }
 
   const guardarDescripcion = async (id: number, texto: string): Promise<DescripcionFundada> => {
@@ -99,5 +118,5 @@ export const useAsistenteService = () => {
     await bajarArchivo(apiEstiloRoutes.formatoEjemploDiseno, `ejemplo-con-mi-diseno.${formato}`, { formato, receta })
   }
 
-  return { iniciar, obtenerEstado, enviar, listarPlanificaciones, planificacionesEntre, obtenerPlanificacion, guardarPlanificacion, confirmarPlanificacion, eliminarPlanificacion, descargar, guardarDescripcion, descargarDescripcion, descargarEjemploFormato, descargarEjemploDiseno }
+  return { iniciar, obtenerEstado, enviar, listarPlanificaciones, planificacionesEntre, obtenerPlanificacion, guardarPlanificacion, confirmarPlanificacion, eliminarPlanificacion, listaPrograma, redactarTramo, descargar, guardarDescripcion, descargarDescripcion, descargarEjemploFormato, descargarEjemploDiseno }
 }

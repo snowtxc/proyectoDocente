@@ -22,6 +22,8 @@ export interface FormatoExportacion {
   analizando: boolean
   archivo_pendiente: string | null
   error: string | null
+  // Ya eligió cómo se ven sus descargas (es obligatorio antes de usar Flopi).
+  elegido: boolean
 }
 
 // ---------------------------------------------------------------- Receta (RecetaFormato en el backend)

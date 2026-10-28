@@ -95,3 +95,23 @@ export const estiloEtiqueta = (receta: RecetaFormato, color: string) => ({
   textDecoration: receta.etiqueta.subrayado ? 'underline' : 'none',
   color: `#${color}`,
 })
+
+const ROMANOS: [number, string][] = [[10, 'X'], [9, 'IX'], [5, 'V'], [4, 'IV'], [1, 'I']]
+
+// "I", "II"… como el número de cada tramo en el día.
+export const numeroRomano = (numero: number) => ROMANOS.reduce((texto, [valor, letra]) => {
+  while (numero >= valor) {
+    texto += letra
+    numero -= valor
+  }
+  return texto
+}, '')
+
+// "Viernes 30 de octubre" (con el año si no es el actual).
+export const fechaEnPalabras = (fecha: string) => {
+  const [anio = 0, mes = 1, numero = 1] = fecha.split('-').map(Number)
+  const dia = new Date(anio, mes - 1, numero)
+  const texto = dia.toLocaleDateString('es', { weekday: 'long', day: 'numeric', month: 'long', ...(anio !== new Date().getFullYear() ? { year: 'numeric' } : {}) })
+
+  return texto.charAt(0).toLocaleUpperCase('es') + texto.slice(1).replace(',', '')
+}

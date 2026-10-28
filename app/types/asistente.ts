@@ -46,6 +46,18 @@ export interface PropuestaCurricular {
   // Versión con formato que escribió el docente en el editor (si la editó). Tiene prioridad.
   meta_html?: string
   plan_html?: string
+  // Redacción que le dio el docente a los textos del programa (los IDs siguen siendo los oficiales).
+  textos?: TextosAjustados
+}
+
+export interface TextosAjustados {
+  espacio?: string
+  unidad_curricular?: string
+  // Por ID: {"12": "texto ajustado"}.
+  contenidos?: Record<string, string>
+  criterios_logro?: Record<string, string>
+  competencias_generales?: Record<string, string>
+  competencias_especificas?: Record<string, string>
 }
 
 // Actividad sin datos del programa (por ejemplo, una clase a cargo de otro docente).
@@ -66,6 +78,8 @@ export interface ContenidoPlanificacion {
 export interface Referencia {
   id: number
   texto: string
+  // El texto del programa, si el docente lo ajustó.
+  oficial?: string
 }
 
 // Textos oficiales del programa de una propuesta. Solo lectura.
@@ -73,6 +87,9 @@ export interface ReferenciasPropuesta {
   espacio: string
   color: string
   unidad_curricular: string
+  // Los del programa (el espacio y la unidad pueden tener la redacción del docente).
+  espacio_oficial?: string
+  unidad_curricular_oficial?: string
   contenidos: Referencia[]
   criterios_logro: Referencia[]
   competencias_generales: Referencia[]
@@ -157,3 +174,36 @@ export interface EnvioMensaje {
 }
 
 export type FormatoDescarga = 'pdf' | 'docx'
+
+// Listas del programa para el editor de un tramo.
+export type ListaPrograma = 'unidades' | 'contenidos' | 'criterios' | 'competencias_generales' | 'competencias_especificas'
+
+export interface ItemPrograma {
+  id: number
+  texto: string
+  detalle?: string
+  // Solo las unidades curriculares: su espacio y el color del espacio.
+  espacio?: string
+  color?: string
+}
+
+// Un dato del programa elegido en el editor, con la redacción que va en la planificación.
+export interface ElegidoPrograma {
+  id: number
+  oficial: string
+  texto: string
+  espacio?: string
+  color?: string
+}
+
+export interface ResultadoPrograma {
+  resultados: ItemPrograma[]
+  total: number
+  hay_mas: boolean
+}
+
+// Meta y plan que redacta Flopi para un tramo del editor.
+export interface RedaccionTramo {
+  meta_aprendizaje: string
+  plan: PasoPlan[]
+}

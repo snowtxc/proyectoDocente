@@ -13,6 +13,7 @@ const props = defineProps<{ formato: FormatoExportacion }>()
 const { $apiRest } = useNuxtApp()
 const { descargarEjemploFormato } = useAsistenteService()
 const toast = useToast()
+const pedirConfirmacion = useConfirmacion()
 
 const actual = ref<FormatoExportacion>(props.formato)
 const cambiando = ref(false)
@@ -71,13 +72,13 @@ const usar = (cual: UsoFormato) => {
   cambiar(() => $apiRest<FormatoExportacion>(apiEstiloRoutes.formato, HttpMethodEnum.PUT, { usar: cual }), 'No se pudo cambiar')
 }
 
-const quitarCopiado = () => {
-  if (!window.confirm('¿Quitar el formato copiado? Si lo estás usando, tus descargas vuelven al formato de Flopi.')) return
+const quitarCopiado = async () => {
+  if (!await pedirConfirmacion({ titulo: '¿Quitar el formato copiado?', mensaje: 'Si lo estás usando, tus descargas vuelven al formato de Flopi.', aceptar: 'Quitar', peligro: true })) return
   cambiar(() => $apiRest<FormatoExportacion>(apiEstiloRoutes.formato, HttpMethodEnum.DELETE), 'No se pudo quitar')
 }
 
-const borrarDiseno = () => {
-  if (!window.confirm('¿Borrar tu diseño? Si lo estás usando, tus descargas vuelven al formato de Flopi.')) return
+const borrarDiseno = async () => {
+  if (!await pedirConfirmacion({ titulo: '¿Borrar tu diseño?', mensaje: 'Si lo estás usando, tus descargas vuelven al formato de Flopi.', aceptar: 'Borrar', peligro: true })) return
   cambiar(() => $apiRest<FormatoExportacion>(apiEstiloRoutes.formatoDiseno, HttpMethodEnum.DELETE), 'No se pudo borrar')
 }
 

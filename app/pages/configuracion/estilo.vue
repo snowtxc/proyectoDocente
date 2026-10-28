@@ -10,6 +10,7 @@ useSeoMeta({ title: 'Mi estilo · Flopi Docentes' })
 
 const { $apiRest } = useNuxtApp()
 const toast = useToast()
+const pedirConfirmacion = useConfirmacion()
 
 const estilo = ref<EstiloDocente | null>(null)
 const cargando = ref(true)
@@ -74,7 +75,7 @@ const subir = async (evento: Event) => {
 }
 
 const quitar = async (id: number, nombre: string) => {
-  if (!window.confirm(`¿Quitar "${nombre}"? Flopi va a volver a analizar tu estilo con las que queden.`)) return
+  if (!await pedirConfirmacion({ titulo: `¿Quitar "${nombre}"?`, mensaje: 'Flopi va a volver a analizar tu estilo con las que queden.', aceptar: 'Quitar', peligro: true })) return
 
   subiendo.value = true
 
